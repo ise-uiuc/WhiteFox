@@ -1,0 +1,7 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+{}
+
+{}
+# Model begins

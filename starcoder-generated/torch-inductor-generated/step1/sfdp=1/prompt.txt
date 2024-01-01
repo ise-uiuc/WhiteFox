@@ -1,0 +1,38 @@
+### Please generate a valid PyTorch model example with public PyTorch APIs meets the specified requirements. Plus, please also generate the input tensor for the newly generated model.
+
+# Description of requirements
+The model should contain a pattern of `mul(mul(_convolution_pointwise.default, 0.5), add(erf(mul(_convolution_pointwise.default, 0.7071067811865476)), 1))`. 
+The pattern means the first argument of the outermost operator `mul` is the output of another `mul` operation, which multiplies the output of the `_convolution_pointwise.default` operator with 0.5. The second argument of the outermost `mul` operator is the output of an `add` operation. The `add` operation adds 1 to the output of an `erf` operation, which takes as input the output of a `mul` operation. This `mul` operation multiplies the output of the `_convolution_pointwise.default` operator with 0.7071067811865476.
+
+# Model
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(3, 8, 3, stride=1, padding=1)
+ 
+    def forward(self, x):
+        v1 = self.conv(x)
+        v2 = v1 * 0.5
+        v3 = v1 * 0.7071067811865476
+        v4 = torch.erf(v3)
+        v5 = v4 + 1
+        v6 = v2 * v5
+        return v6
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+x = torch.randn(1, 3, 64, 64)
+__output__ = m(x1)
+
+### Please generate a valid PyTorch model example with public PyTorch APIs meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. The model should be different from the previous one.
+
+# Description of requirements
+The model should contain a pattern of `dropout(matmul(query, key.transpose(-2, -1)).div(inv_scale_factor).softmax(dim=-1), p=dropout_p).matmul(value)`. 
+
+The pattern means the input to the `dropout` function is the output of a `matmul` operation between `query` and the transpose of `key` along the last two dimensions. The result of this `matmul` operation is then divided by `inv_scale_factor` and a softmax operation is applied along the last dimension. The `dropout` function is applied to this result with a dropout probability of `dropout_p`. The output of the `dropout` function is then used as the input to another `matmul` operation with `value`.
+
+This pattern is commonly seen in the implementation of the scaled dot-product attention mechanism in Transformer models. The `query`, `key`, and `value` are typically outputs of linear transformations of the input, and `inv_scale_factor` is typically the square root of the dimension of `query` and `key`. The dropout is used for regularization and to prevent overfitting.
+
+# Model

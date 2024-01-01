@@ -1,0 +1,54 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = conv_transpose(input_tensor) # Apply pointwise transposed convolution to the input tensor
+t2 = sigmoid(t1) # Apply the sigmoid function to the output of the transposed convolution
+t3 = t1 * t2 # Multiply the output of the transposed convolution by the output of the sigmoid function
+```
+This pattern characterizes scenarios where a pointwise transposed convolution is applied to an input tensor, then the sigmoid function is applied to the output of the transposed convolution, and then the output of the transposed convolution is multiplied by the output of the sigmoid function. This is a typical pattern for a Gated Linear Unit (GLU) operation in a convolutional neural network.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_transpose_1 = torch.nn.ConvTranspose2d(167, 3, 5, stride=1, padding=0)
+    def forward(self, x1):
+        v1 = self.conv_transpose_1(x1)
+        v2 = torch.sigmoid(v1)
+        v3 = v1 * v2
+        return v3
+# Inputs to the model
+x1 = torch.randn(1, 167, 512, 256)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_transpose_0 = torch.nn.ConvTranspose2d(1385, 169, 9, stride=1, padding=4, dilation=2)
+    def forward(self, x1):
+        v1 = self.conv_transpose_0(x1)
+        v2 = torch.sigmoid(v1)
+        v3 = v1 * v2
+        return v3
+# Inputs to the model
+x1 = torch.randn(1, 1385, 100, 100)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_transpose_1 = torch.nn.ConvTranspose2d(785, 785, 2, stride=1, padding=0, dilation=1, groups=1)
+    def forward(self, x1):
+        v1 = self.conv_transpose_1(x1)
+        v2 = torch.sigmoid(v1)
+        v3 = v1 * v2
+        return v3
+# Inputs to the model
+x1 = torch.randn(1, 785, 32, 32)
+# Model ends
+
+# Model begins

@@ -1,0 +1,116 @@
+{
+	"mm_plus_mm": {
+		"hints": [
+			{
+				"type": "pattern",
+				"codes": [
+					"source-code-data/pytorch/inductor-post-grad/mm_plus_mm.py"
+				]
+			}
+		],
+		"cov": {
+			"file": "_inductor/fx_passes/post_grad.py",
+			"line": [
+				111
+			]
+		}
+	},
+	"cat_mm": {
+		"hints": [
+			{
+				"type": "pattern",
+				"codes": [
+					"source-code-data/pytorch/inductor-post-grad/cat_mm.py"
+				]
+			}
+		],
+		"cov": {
+			"file": "_inductor/fx_passes/post_grad.py",
+			"line": [
+				124
+			]
+		}
+	},
+	"cat_addmm": {
+		"hints": [
+			{
+				"type": "pattern",
+				"codes": [
+					"source-code-data/pytorch/inductor-post-grad/cat_addmm.py"
+				]
+			}
+		],
+		"cov": {
+			"file": "_inductor/fx_passes/post_grad.py",
+			"line": [
+				138
+			]
+		}
+	},
+	"cat_slice_cat": {
+		"hints": [
+			{
+				"type": "pattern",
+				"codes": [
+					"source-code-data/pytorch/inductor-post-grad/cat_slice_cat.py"
+				]
+			}
+		],
+		"cov": {
+			"file": "_inductor/fx_passes/post_grad.py",
+			"line": [
+				230
+			]
+		}
+	},
+	"addmm": {
+		"hints": [
+			{
+				"type": "pattern",
+				"codes": [
+					"source-code-data/pytorch/inductor-post-grad/addmm.py"
+				]
+			}
+		],
+		"cov": {
+			"file": "_inductor/fx_passes/post_grad.py",
+			"line": [
+				271
+			]
+		}
+	},
+	"splitwithsizes_cat_replace": {
+		"hints": [
+			{
+				"type": "pattern",
+				"codes": [
+					"source-code-data/pytorch/inductor-post-grad/splitwithsizes_cat_replace.py"
+				]
+			},
+			{
+				"type": "trigger",
+				"target_line": "return True",
+				"func": "is_valid_splitwithsizes_cat",
+				"codes": [
+					"source-code-data/pytorch/inductor-post-grad/is_valid_splitwithsizes_cat.py"
+				]
+			}
+		],
+		"cov": {
+			"file": "_inductor/fx_passes/post_grad.py",
+			"line": [
+				328
+			]
+		}
+	},
+	"pointless_cumsum_replacement": {
+		"hints": [
+			{
+				"type": "pattern",
+				"codes": [
+					"source-code-data/pytorch/inductor-post-grad/pointless_cumsum_replacement.py"
+				]
+			}
+		]
+	}
+}

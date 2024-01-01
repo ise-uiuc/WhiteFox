@@ -1,0 +1,9 @@
+The model should contain the following pattern:
+```
+qk = torch.matmul(query, key.transpose(-2, -1)) # Compute the dot product of the query and key tensors
+scaled_qk = qk.mul(scale_factor) # Scale the dot product by a factor
+softmax_qk = scaled_qk.softmax(dim=-1) # Apply softmax to the scaled dot product
+dropout_qk = torch.nn.functional.dropout(softmax_qk, p=dropout_p) # Apply dropout to the softmax output
+output = dropout_qk.matmul(value) # Compute the dot product of the dropout output and the value tensor
+```
+This pattern characterizes scenarios where the dot product of a query and key tensor is scaled by a factor, then softmax is applied, then dropout is applied, and finally the result is multiplied by a value tensor. This is a typical pattern found in the attention mechanism of transformer models.

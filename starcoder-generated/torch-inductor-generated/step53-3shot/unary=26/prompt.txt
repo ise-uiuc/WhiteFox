@@ -1,0 +1,60 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = conv_transpose(input_tensor) # Apply pointwise transposed convolution to the input tensor
+t2 = t1 > 0 # Create a mask where each element is True if the corresponding element in t1 is greater than 0, False otherwise
+t3 = t1 * negative_slope # Multiply the output of the transposed convolution by the negative slope
+t4 = torch.where(t2, t1, t3) # Apply the where function to select elements from t1 or t3 based on the mask t2
+```
+This pattern characterizes scenarios where a pointwise transposed convolution is applied to an input tensor, then a mask is created based on whether each element in the output of the convolution is greater than `0`. The output of the convolution is then multiplied by a negative slope. The `torch.where` function is used to select elements from the output of the convolution or the result of the multiplication based on the mask. This is a typical pattern for a Leaky ReLU operation following a transposed convolution.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self, negative_slope):
+        super().__init__()
+        self.conv_t = torch.nn.ConvTranspose2d(480, 9, 3, stride=3, padding=1)
+        self.negative_slope = negative_slope
+    def forward(self, x1):
+        t1 = self.conv_t(x1)
+        t2 = t1 > 0
+        t3 = t1 * self.negative_slope
+        t4 = torch.where(t2, t1, t3)
+        return t4
+negative_slope = 0.43
+# Inputs to the model
+x1 = torch.randn(16, 480, 16, 16)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_t = torch.nn.ConvTranspose2d(306, 254, 8, stride=1, padding=0, bias=True)
+    def forward(self, x3):
+        j1 = self.conv_t(x3)
+        j2 = j1 > 0
+        j3 = j1 * -0.909
+        j4 = torch.where(j2, j1, j3)
+        return torch.nn.functional.adaptive_avg_pool2d(j4, (1, 1))
+# Inputs to the model
+x3 = torch.randn(88, 306, 12, 20)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_t = torch.nn.ConvTranspose2d(171, 1, 2, stride=1, padding=0, bias=False)
+    def forward(self, x1):
+        i1 = self.conv_t(x1)
+        i2 = i1 > 0
+        i3 = i1 * -0.36
+        i4 = torch.where(i2, i1, i3)
+        return i4
+# Inputs to the model
+x1 = torch.randn(4, 171, 63, 1)
+# Model ends
+
+# Model begins

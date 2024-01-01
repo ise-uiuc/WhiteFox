@@ -1,0 +1,53 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `DotDecomposer` in TensorFlow XLA.
+
+# Description
+The model should contain a non-canonical dot operation. A dot operation is considered non-canonical if it meets any of the following conditions:
+
+1. There is more than one contracting dimension.
+2. It has more than one non-contracting dimension.
+3. The batch dimensions, if present, are not canonical.
+
+Here is an example of a non-canonical dot operation in TensorFlow:
+
+```python
+# Assume a, b are tensors with appropriate shapes
+c = tf.tensordot(a, b, axes=[[1, 2], [0, 1]])
+```
+
+In this example, the dot operation is non-canonical because it has more than one contracting dimension. The `DotDecomposer` optimization pass will be triggered to convert this non-canonical dot operation into a canonical form.
+
+# Model

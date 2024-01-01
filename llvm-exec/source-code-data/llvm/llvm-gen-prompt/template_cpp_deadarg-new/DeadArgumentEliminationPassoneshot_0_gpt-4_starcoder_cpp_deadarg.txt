@@ -1,0 +1,24 @@
+The C++ code should contain a function with variable arguments (denoted by `...`), which is directly called in the `main` function. This function should be defined (not just declared), have internal linkage (usually achieved by declaring it as `static`), and should not have its address taken. The function should not have the `naked` attribute, and should not contain any calls marked as `musttail` or any calls to the `llvm.vastart` intrinsic. 
+
+Here is an example of such a code:
+
+```cpp
+// define a function with variable arguments
+static int varargs_func(int x, ...) {
+    // Do something here with input arguments, but don't use va_start or similar
+    int result = x + 1; // result is related to x
+    return result;
+}
+
+int main() {
+    // declare some variables
+    int x = 10; 
+    int y = 20; 
+    int z = 30; 
+    // invoke the func varargs_func
+    int result = varargs_func(x, y, z, 40, 50); // you can pass the arguments with any number, any type
+    return result;
+}
+```
+
+In this code, `varargs_func` is a function with variable arguments that meets all the conditions mentioned above. It is directly called in the `main` function, and the result of this call is used as the return value of `main`. This code can trigger the `DeadArgumentEliminationPass` optimization in LLVM, reaching the `F.replaceAllUsesWith(ConstantExpr::getBitCast(NF, F.getType()));` line and making the boolean variable `Changed` equal to `True`.

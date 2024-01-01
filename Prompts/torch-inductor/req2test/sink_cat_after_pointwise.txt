@@ -1,0 +1,41 @@
+### Please generate a valid PyTorch model example with public PyTorch APIs meets the specified requirements. Plus, please also generate the input tensor for the newly generated model.
+
+# Description of requirements
+The model should contain the following pattern:
+```
+t1 = input_tensor.permute(...) # Permute the input tensor
+t2 = torch.nn.functional.linear(t1, ...) # Apply linear transformation to the permuted tensor.
+```
+This pattern characterizes scenarios where the tensor method 'permute' is invoked first, and then the `torch.nn.functional.linear` function is invoked on the permuted tensor.
+The permute method is invoked on an input tensor with more than 2 dimensions, and it swaps the last two dimensions of this tensor. This modified tensor is then used as the main input for the linear function.
+
+# Model
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear = torch.nn.Linear(2, 2)
+
+    def forward(self, x1):
+        v1 = x1.permute(0, 2, 1)
+        v2 = torch.nn.functional.linear(v1, self.linear.weight, self.linear.bias)
+        return v2
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+x1 = torch.randn(1, 2, 2)
+__output__ = m(x1)
+
+### Please generate a valid PyTorch model example with public PyTorch APIs meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. The model should be different from the previous one.
+
+# Description of requirements
+The model should contain the following pattern:
+```
+t1 = torch.cat([tensor1, tensor2, ...], dim=...) # Concatenate tensors along a dimension
+t2 = t1.view(...) # Reshape the concatenated tensor
+t3 = torch.relu(t2) # Apply a pointwise unary operation (e.g., ReLU or Tanh) to the reshaped tensor
+```
+This pattern characterizes scenarios where a tensor is reshaped after concatenation and then a pointwise unary operation (like ReLU or Tanh) is applied. The unary operation should be the only user of the reshaped tensor. The optimization `sink_cat_after_pointwise` is triggered when such a pattern is detected in the model.
+
+# Model

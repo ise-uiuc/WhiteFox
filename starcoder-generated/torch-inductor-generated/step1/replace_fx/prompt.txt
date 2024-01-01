@@ -1,0 +1,38 @@
+### Please generate a valid PyTorch model example with public PyTorch APIs meets the specified requirements. Plus, please also generate the input tensor for the newly generated model.
+
+# Description of requirements
+The model should contain a pattern of `torch.nn.functional.linear(tensor.permute(...), ...)`. This pattern characterizes scenarios where the torch.nn.functional.linear function is invoked with a tensor method, 'permute',  which rearranges the given tensor's dimensions, as its first argument. 
+The permute method is invoked on an input tensor, and it swaps the last two dimensions of this tensor. This modified tensor is then used as the main input for the linear function.
+
+# Model
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear = torch.nn.Linear(2, 2)
+
+    def forward(self, x1):
+        v1 = x1.permute(0, 2, 1)
+        v2 = torch.nn.functional.linear(v1, self.linear.weight, self.linear.bias)
+        return v1
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+x1 = torch.randn(1, 2, 2)
+__output__ = m(x1)
+
+### Please generate a valid PyTorch model example with public PyTorch APIs meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. The model should be different from the previous one.
+
+# Description of requirements
+The model should contain a pattern where the `torch.nn.functional.dropout` or `torch.rand_like` functions are invoked. This pattern characterizes scenarios where the `torch.nn.functional.dropout` or `torch.rand_like` functions are used in the model. 
+
+The `replace_fx` function iterates over the nodes in the graph of the model in reverse order. If a node is a function call (`node.op == "call_function"`) and the function being called (`node.target`) is in the `replacements` dictionary, then the function call is replaced with a call to the corresponding function in the `replacements` dictionary. 
+
+However, if the `config.fallback_random` is set and the replacement function is in the `replacements_using_triton_random` set, or if the model is running on a CPU and the function being replaced is in the `fallback_cpu_random` set, then the function call is not replaced. 
+
+After replacing all uses of the original function with the replacement function, the original node is erased from the graph (`gm.graph.erase_node(node)`). 
+
+The `replacements` dictionary currently contains two mappings: `torch.nn.functional.dropout` is replaced with `lowmem_dropout`, and `torch.rand_like` is replaced with `rand_like`. The `replacements_using_triton_random` set contains the `lowmem_dropout` and `rand_like` functions, indicating that these functions use the Triton random number generator.
+
+# Model

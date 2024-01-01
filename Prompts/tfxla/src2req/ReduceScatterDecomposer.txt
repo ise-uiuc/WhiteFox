@@ -1,0 +1,91 @@
+### Please describe the characteristics of the TensorFlow model that trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA. The model can be used to reach out the `return true;` line in function `ReshapeReshapeForwarding`, leading the function to return true. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# The code of the function and its helper functions:
+
+```cpp
+// Reshape(Reshape(A, []->[1]), [1]->[]) ==> A
+StatusOr<bool> ReshapeReshapeForwarding(HloInstruction* reshape) {
+  if (reshape->opcode() != HloOpcode::kReshape) {
+    return false;
+  }
+  auto reshape_2 = reshape->mutable_operand(0);
+  if (reshape_2->opcode() != HloOpcode::kReshape) {
+    return false;
+  }
+
+  if (!Shape::Equal()(reshape->shape(), reshape_2->operand(0)->shape())) {
+    return false;
+  }
+  TF_RETURN_IF_ERROR(
+      reshape->ReplaceAllUsesWith(reshape_2->mutable_operand(0)));
+
+  return true;
+}
+```
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+### Please describe the characteristics of the TensorFlow model that trigger the optimization pass `ReduceScatterDecomposer` in TensorFlow XLA. The model can be used to reach out the `return changed;` line in function `ReduceScatterDecomposer::Run`, leading the function to return true. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# The code of the function and its helper functions:
+
+```cpp
+StatusOr<bool> ReduceScatterDecomposer::Run(
+    HloModule *module,
+    const absl::flat_hash_set<absl::string_view> &execution_threads) {
+  bool changed = false;
+  int64_t next_channel_id = hlo_query::NextChannelId(*module);
+
+  for (HloComputation *computation :
+       module->MakeNonfusionComputations(execution_threads)) {
+    for (HloInstruction *instruction :
+         computation->MakeInstructionPostOrder()) {
+      auto *rs = DynCast<HloReduceScatterInstruction>(instruction);
+      if (!rs || !rs->shape().IsArray()) {
+        continue;
+      }
+
+      std::optional<int64_t> channel_id;
+      if (rs->channel_id()) {
+        channel_id = next_channel_id++;
+      }
+
+      // Create an all-reduce
+      HloInstruction *ar =
+          computation->AddInstruction(HloInstruction::CreateAllReduce(
+              rs->operand(0)->shape(), rs->operands(), rs->to_apply(),
+              rs->replica_groups(), rs->constrain_layout(), channel_id,
+              rs->use_global_device_ids()));
+      // Create start indices for a dynamic slice to decompose the all-reduce
+      // results.
+      TF_ASSIGN_OR_RETURN(
+          CollectiveOpGroupMode group_mode,
+          GetCollectiveOpGroupMode(rs->channel_id().has_value(),
+                                   rs->use_global_device_ids()));
+      TF_ASSIGN_OR_RETURN(
+          std::vector<HloInstruction *> start_indices,
+          CreateStartIndicesForCollectiveDecomposition(
+              group_mode, rs->replica_groups(), rs->shape(),
+              rs->scatter_dimension(), computation, update_layout_));
+
+      HloInstruction *ds =
+          computation->AddInstruction(HloInstruction::CreateDynamicSlice(
+              rs->shape(), ar, start_indices, rs->shape().dimensions()));
+
+      TF_RETURN_IF_ERROR(rs->ReplaceAllUsesWith(ds));
+      TF_RETURN_IF_ERROR(computation->RemoveInstruction(rs));
+      changed = true;
+    }
+  }
+  return changed;
+}
+```
+
+# Description

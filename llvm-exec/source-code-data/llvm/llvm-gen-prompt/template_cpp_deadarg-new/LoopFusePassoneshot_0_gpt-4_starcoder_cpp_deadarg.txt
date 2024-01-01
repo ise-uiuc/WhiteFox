@@ -1,0 +1,25 @@
+The C++ code should contain the following pattern:
+
+```cpp
+int main() {
+    int array1[ANY_SIZE]; // Declare an array
+    int array2[ANY_SIZE]; // Declare another array
+    int i;
+
+    // First loop
+    for (i = 0; i < ANY_SIZE; i++) {
+        array1[i] = ANY_EXPRESSION; // Perform some operation on array1
+    }
+
+    // Second loop
+    for (i = 0; i < ANY_SIZE; i++) {
+        array2[i] = ANY_EXPRESSION; // Perform some operation on array2
+    }
+
+    return 0;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exist two separate loops that iterate over two different arrays (`array1` and `array2`). The loops must be separate and not nested within each other. The size of the arrays and the number of iterations in the loops (`ANY_SIZE`) must be the same. The operations performed on the arrays within the loops (`ANY_EXPRESSION`) can be any valid C++ expressions. The `main` function must return an integer value. 
+
+This pattern is likely to trigger the `LoopFusePass` optimization in LLVM, as it involves two separate loops that could potentially be fused together for performance improvement.

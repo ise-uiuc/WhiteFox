@@ -1,0 +1,118 @@
+### Please describe the characteristics of the TensorFlow model that can trigger the optimization pass `FuseFullyConnectedAndMul` when converted to a TensorFlow Lite model. The model can be used to reach out the `return success();` line in the function `matchAndRewrite`. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# Code of the function and its helper functions
+```cpp
+// Fuse Mul with proceeding FullyConnected.
+struct FuseFullyConnectedAndMul : public OpRewritePattern<TFL::MulOp> {
+  using OpRewritePattern<TFL::MulOp>::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(TFL::MulOp mul_op,
+                                PatternRewriter &rewriter) const override {
+    // If we are broadcasting on the lhs then don't fold the multiply as it
+    // would increase the amount of compute done by the fully connected op.
+    if (mul_op.getLhs().getType() != mul_op.getType()) return failure();
+
+    // Mul.
+    DenseElementsAttr cst;
+    Value constant_val = mul_op.getRhs();
+    if (!matchPattern(constant_val, m_Constant(&cst))) return failure();
+
+    // Fully Connected.
+    auto fc_op = dyn_cast_or_null<TFL::FullyConnectedOp>(
+        mul_op.getLhs().getDefiningOp());
+    if (!fc_op) return failure();
+    Value filter = fc_op.getFilter();
+    Value bias = fc_op.getBias();
+    ElementsAttr cst_tmp;
+    if (!matchPattern(filter, m_Constant(&cst_tmp))) return failure();
+    if (!bias.getType().isa<NoneType>() &&
+        !matchPattern(bias, m_Constant(&cst_tmp)))
+      return failure();
+    if (fc_op.getFusedActivationFunction() != "NONE") return failure();
+
+    // Only fuse multiplier if all dimensions other than the depth dimension
+    // are equal to 1 since otherwise
+    // `matmul(x, filter) * cst != matmul(x, filter * cst)`
+    // even if `filter` and `cst` are be broadcastable.
+    auto shape = cst.getType().getShape();
+    if (!IsDimensionsDegenerateExceptLastOne(shape)) return failure();
+
+    int64_t element_size = shape.empty() ? 1 : shape[shape.size() - 1];
+    // Expand and transpose the multiplier since weights are using the
+    // OHWI data format in TFLite.
+    int64_t normalized_shape[2] = {element_size, 1};
+    auto new_cst = cst.reshape(RankedTensorType::get(
+        normalized_shape, cst.getType().getElementType()));
+    Type new_type = new_cst.getType();
+    if (!IsBroadcastableElementsAttrAndType(new_type, filter.getType())) {
+      return failure();
+    }
+
+    return success();
+  }
+};
+```
+
+# Description
+The model should contain the following pattern:
+```
+filter = tf.Variable([...]) # a constant tensor
+cst = tf.Variable([...]) # a constant tensor, shape = [1, 1, ..., 1, last_dim]
+y = tf.matmul(input_tensor, filter) * cst # Mul is applied on the output of FullyConnectedOp
+```
+This pattern characterizes scenarios where a FullyConnectedOp is invoked on a tensor and a constant filter input, and then a Mul operation is invoked on the output tensor and a constant tensor. The FullyConnected operation should have the following properties:
+   - The filter input should be a constant tensor.
+   - The bias input should either be of NoneType or a constant tensor.
+   - The fused activation function should be "NONE".
+The constant tensor from the Mul operation should have all dimensions equal to 1, except for the last dimension. The constant tensor from the Mul operation should be broadcastable with the filter tensor of the FullyConnected operation after reshaping and transposing the constant tensor.
+
+### Please describe the characteristics of the TensorFlow model that can trigger the optimization pass `FuseMulAndFullyConnected` when converted to a TensorFlow Lite model. The model can be used to reach out the `return success();` line in the function `matchAndRewrite`. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# Code of the function and its helper functions
+```cpp
+// Returns true if the value's element type is F32.
+bool IsF32Value(Value value) {
+  return value.getType().cast<ShapedType>().getElementType().isF32();
+}
+
+// Replace ..
+// FC(Mul(lhs, rhs), filter, bias)
+// .. with ..
+// FC(lhs, Mul(filter, rhs), bias)
+// .. if rhs, filter, and bias are all constants.
+// The generated Mul will be constant folded to a single matrix.
+struct FuseMulAndFullyConnected
+    : public OpRewritePattern<TFL::FullyConnectedOp> {
+  using OpRewritePattern<TFL::FullyConnectedOp>::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(TFL::FullyConnectedOp fc_op,
+                                PatternRewriter &rewriter) const override {
+    
+    
+    // This only works with default format.
+    if (fc_op.getWeightsFormat() != "DEFAULT") return failure();
+
+    // Match Mul.
+    auto mul_op =
+        dyn_cast_or_null<TFL::MulOp>(fc_op.getInput().getDefiningOp());
+    if (!mul_op) return failure();
+    if (mul_op.getFusedActivationFunction() != "NONE") return failure();
+
+    // Don't match muls where the multiplier constant is not 1D.
+    {
+      auto multiplier_shape = mul_op.getRhs().getType().cast<ShapedType>();
+      if (!multiplier_shape.hasStaticShape()) return failure();
+      if (multiplier_shape.getShape().size() != 1) return failure();
+    }
+
+    // We rely on constant folding, implemented only for F32. Check types.
+    if (!IsF32Value(mul_op.getRhs()) || !IsF32Value(fc_op.getFilter())) {
+      return failure();
+    }
+    
+    return success();
+  }
+};
+```
+
+# Description

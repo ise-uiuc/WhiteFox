@@ -1,0 +1,6 @@
+The model should contain the following pattern:
+```
+t1 = linear(input_tensor) # Apply a linear transformation to the input tensor
+t2 = torch.sigmoid(t1) # Apply the sigmoid function to the output of the linear transformation
+```
+This pattern characterizes scenarios where a linear transformation is applied to an input tensor, and then the sigmoid function is applied to the output of the linear transformation. This is a common pattern in neural networks, especially in the final layer of binary classification models where the sigmoid function is used to squash the output between 0 and 1, making it interpretable as a probability.

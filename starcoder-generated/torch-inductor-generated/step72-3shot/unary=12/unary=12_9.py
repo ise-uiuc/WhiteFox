@@ -1,0 +1,41 @@
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = torch.nn.Conv2d(3, 32, 3, stride=2, padding=1)
+        self.conv2 = torch.nn.Conv2d(32, 32, 3, stride=1, padding=1)
+        self.conv3 = torch.nn.Conv2d(32, 32, 3, stride=2, padding=1)
+        self.conv4 = torch.nn.Conv2d(32, 32, 3, stride=1, padding=1)
+        self.conv5 = torch.nn.Conv2d(32, 64, 3, stride=2, padding=1)
+        self.conv6 = torch.nn.Conv2d(64, 64, 3, stride=1, padding=1)
+        self.conv7 = torch.nn.Conv2d(64, 128, 3, stride=2, padding=1)
+        self.conv8 = torch.nn.Conv2d(128, 128, 3, stride=1, padding=1)
+        self.conv9 = torch.nn.Conv2d(128, 5, 3, stride=1, padding=1)
+        self.relu1 = torch.nn.ReLU()
+        self.conv10 = torch.nn.Conv2d(5, 5, 3, stride=2, padding=1)
+        self.conv11 = torch.nn.Conv2d(5, 4, 3, stride=1, padding=1)
+        self.sig = torch.nn.Sigmoid()
+        self.conv12 = torch.nn.Conv2d(4, 32, 1, stride=1, padding=1)
+        self.conv13 = torch.nn.Conv2d(32, 4, 1, stride=1, padding=1)
+    def forward(self, x1):
+        v1 = self.conv1(x1)
+        v2 = self.conv2(v1)
+        v3 = self.conv3(v2)
+        v4 = self.conv4(v3)
+        v5 = self.conv5(v4)
+        v6 = self.relu1(v5)
+        v7 = self.conv6(v6)
+        v8 = self.conv7(v7)
+        v9 = self.conv8(v8)
+        v10 = self.conv9(v9)
+        v11 = F.interpolate(v10, scale_factor=(2.0, 2.0), recompute_scale_factor=False)
+        v12 = self.conv10(v11)
+        v13 = self.conv11(v12)
+        v14 = self.sig(v13)
+        v15 = v13 * v14
+        v16 = self.conv12(v15)
+        v17 = F.interpolate(v16, scale_factor=(2.0, 2.0), recompute_scale_factor=False)
+        v18 = self.conv13(v17)
+        return v18
+# Inputs to the model
+x1 = torch.randn(1, 3, 64, 64)

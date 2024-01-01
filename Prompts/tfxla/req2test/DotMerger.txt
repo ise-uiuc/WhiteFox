@@ -1,0 +1,58 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `DotMerger` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+lhs = tf.Variable(...)
+rhs0 = tf.Variable(...)
+rhs1 = tf.Variable(...)
+dot0 = tf.linalg.matmul(lhs, rhs0)
+dot1 = tf.linalg.matmul(lhs, rhs1)
+```
+The pattern describes that there are two `matmul` (dot) operations in the model. Both `matmul` operations share the same left-hand-side (lhs) operand (`lhs`), but have different right-hand-side (rhs) operands (`rhs0` and `rhs1`). 
+
+The characteristics of the model that trigger the optimization pass `DotMerger` are:
+
+1. The model contains at least two `matmul` operations that share an operand.
+2. The two `matmul` operations do not transitively depend on each other.
+3. The two `matmul` operations have the same layout, element type, and dot dimension numbers.
+4. The two `matmul` operations have exactly one non-contracting dimension on the different operands.
+5. The byte size of the shapes of the `matmul` operations and their operands is less than or equal to `max_size_to_merge`.
+
+The `DotMerger` optimization pass merges these two `matmul` operations into a single `matmul` operation followed by two slice operations. This can potentially reduce the computational cost and memory usage.
+
+# Model

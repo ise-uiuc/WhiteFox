@@ -1,0 +1,56 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `LoopScheduleLinearizer` in TensorFlow XLA.
+
+# Description
+The model should contain a loop structure where there are write and read operations on the same memory location within the loop body. The `LoopScheduleLinearizer` optimization pass is triggered when there is a need to add control dependencies to ensure that read operations happen before write operations to prevent potential data races.
+
+The pattern in the model that triggers this optimization pass can be illustrated as follows:
+
+```python
+def loop_body(x):
+    # read operation
+    read = tf.some_operation(x)
+    # write operation
+    write = tf.assign(x, read)
+    return write
+
+# loop structure
+result = tf.while_loop(condition, loop_body, [initial_value])
+```
+
+In this pattern, `tf.some_operation(x)` represents a read operation on the tensor `x`, and `tf.assign(x, read)` represents a write operation on the same tensor. The `LoopScheduleLinearizer` optimization pass is triggered to add control dependencies to ensure that the read operation happens before the write operation within the loop body.
+
+# Model

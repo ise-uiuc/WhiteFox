@@ -1,0 +1,67 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = conv_transpose(input_tensor) # Apply pointwise transposed convolution to the input tensor
+t2 = torch.clamp_min(t1, min_value) # Clamp the output of the transposed convolution to a minimum value
+t3 = torch.clamp_max(t2, max_value) # Clamp the output of the previous operation to a maximum value
+```
+This pattern characterizes scenarios where a pointwise transposed convolution is applied to an input tensor, then the output is clamped to a minimum value, and then the output of the previous operation is clamped to a maximum value. The minimum and maximum values are provided as keyword arguments.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self, min_value=0, max_value=5.6):
+        super().__init__()
+        self.sigmoid = torch.nn.Sigmoid()
+        self.conv_transpose = torch.nn.ConvTranspose2d(3, 32, 1, stride=1, padding=1)
+        self.act_4 = torch.nn.ReLU6()
+        self.min_value = min_value
+        self.max_value = max_value
+    def forward(self, x4):
+        v5 = self.conv_transpose(x4)
+        v6 = torch.clamp_min(v5, self.min_value)
+        v7 = torch.clamp_max(v6, self.max_value)
+        v8 = self.sigmoid(v7)
+        return v8
+# Inputs to the model
+x4 = torch.randn(1, 3, 224, 224)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self, min_value=-0.3, max_value=1.3):
+        super(Model, self).__init__()
+        self.softsign = torch.nn.Softsign()
+        self.batch_norm = torch.nn.BatchNorm2d(16)
+        self.conv_transpose = torch.nn.ConvTranspose2d(10, 16, 1, stride=1, padding=1)
+        self.act_10 = torch.nn.LeakyReLU()
+        self.min_value = min_value
+        self.max_value = max_value
+    def forward(self, x4):
+        v1 = self.conv_transpose(x4)
+        v2 = torch.clamp_min(v1, self.min_value)
+        v3 = torch.clamp_max(v2, self.max_value)
+        v4 = self.softsign(v3)
+        v9 = self.act_10(v4)
+        return v9
+# Inputs to the model
+x5 = torch.randn(1, 10, 124, 124)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_transpose = torch.nn.ConvTranspose2d(3, 8, 1, stride=1, padding=1)
+        self.min_value = min_value
+    def forward(self, x1):
+        v1 = self.conv_transpose(x1)
+        v2 = torch.clamp_min(v1, self.min_value)
+        v3 = torch.clamp_max(v2, max_value)
+        return v3
+# Inputs to the model
+x1 = torch.randn(1, 3, 16, 16)
+# Model ends
+
+# Model begins

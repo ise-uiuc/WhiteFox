@@ -1,0 +1,23 @@
+The C++ code should contain the following pattern:
+
+```cpp
+// define a function with any calling convention except fastcc
+void __attribute__((noinline)) func(ANY_TYPE arg1, ANY_TYPE arg2, ...) {
+    // Do something here with input arguments
+    // The function should not be a varargs function
+    // The function should not have its address taken
+}
+
+int main() {
+    // declare some variables
+    ANY_TYPE x = ANY_VALUE; // declare variable x
+    ANY_TYPE y = ANY_VALUE; // declare variable y
+
+    // invoke the func
+    func(x, y, ANY_VALUE, ANY_VALUE); // you can pass the arguments with any number, any type
+
+    return 0;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists a call to `func`. `func` is a function with any calling convention except `fastcc`, and it accepts variable arguments. The function should not be a varargs function and should not have its address taken. The `main` function must return a value related to this optimization for further comparison.

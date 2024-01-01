@@ -1,0 +1,50 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The TensorFlow model should contain a sequence of two reshape operations where the output shape of the second reshape operation is the same as the input shape of the first reshape operation. 
+
+In TensorFlow code, this pattern can be represented as:
+
+```python
+input_tensor = ... # some tensor
+t1 = tf.reshape(input_tensor, new_shape) # first reshape
+t2 = tf.reshape(t1, input_tensor.shape) # second reshape
+```
+
+In this pattern, `new_shape` can be any shape that is compatible with `input_tensor`. The optimization pass `ReshapeReshapeForwarding` is triggered when the output shape of `t2` is the same as the shape of `input_tensor`.
+
+# Model

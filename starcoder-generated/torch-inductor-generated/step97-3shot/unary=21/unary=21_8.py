@@ -1,0 +1,35 @@
+
+class ModelTanh(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = torch.nn.Conv2d(35, 60, 1, stride=1)
+        self.conv2 = torch.nn.Conv2d(60, 19, 1, stride=1)
+        self.conv3 = torch.nn.Conv2d(19, 28, 1, stride=1)
+        self.conv4 = torch.nn.Conv2d(28, 15, 1, stride=1)
+        self.conv5 = torch.nn.Conv2d(15, 48, 1, stride=1)
+        self.conv6 = torch.nn.Conv2d(48, 13, 1, stride=1)
+        self.conv7 = torch.nn.Conv2d(13, 10, 1, stride=1)
+        self.conv8 = torch.nn.Conv2d(10, 17, 1, stride=1)
+        self.conv9 = torch.nn.Conv2d(17, 16, 1, stride=1)
+    def forward(self, x):
+        x1 = torch.tanh(x)
+        x2 = self.conv1(x1)
+        x3 = torch.tanh(x2)
+        x4 = self.conv2(x3)
+        x5 = torch.tanh(x4)
+        x6 = self.conv3(x5)
+        x7 = torch.tanh(x6)
+        x8 = self.conv4(x7)
+        x9 = torch.tanh(x8)
+        x10 = self.conv5(x9)
+        x11 = torch.tanh(x10)
+        x12 = self.conv6(x11)
+        x13 = torch.tanh(x12)
+        x14 = self.conv7(x13)
+        x15 = torch.tanh(x14)
+        x16 = self.conv8(x15)
+        x17 = torch.tanh(x16)
+        x18 = self.conv9(x17)
+        return x18
+# Inputs to the model
+x = torch.randn(2, 35, 1, 1)

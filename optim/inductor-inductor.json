@@ -1,0 +1,77 @@
+{
+	"permute_linear_fusion": {
+		"hints": [
+			{
+				"type": "trigger",
+				"target_line": "module.graph.erase_node(node)",
+				"func": "permute_linear_fusion",
+				"codes": [
+					"source-code-data/pytorch/inductor-full/permute_linear_fusion.py",
+					"source-code-data/pytorch/inductor-full/check_permute.py"
+				]
+			}
+		]
+	},
+	"permute_matmul_fusion": {
+		"hints": [
+			{
+				"type": "trigger",
+				"target_line": "module.graph.erase_node(node)",
+				"func": "permute_matmul_fusion",
+				"codes": [
+					"source-code-data/pytorch/inductor-full/permute_matmul_fusion.py",
+					"source-code-data/pytorch/inductor-full/check_permute.py"
+				]
+			}
+		]
+	},
+	"linear_permute_fusion": {
+		"hints": [
+			{
+				"type": "trigger",
+				"target_line": "module.graph.erase_node(node)",
+				"func": "linear_permute_fusion",
+				"codes": [
+					"source-code-data/pytorch/inductor-full/linear_permute_fusion.py",
+					"source-code-data/pytorch/inductor-full/check_permute.py"
+				]
+			}
+		]
+	},
+	"fuse_conv_bn": {
+		"hints": [
+			{
+				"type": "trigger",
+				"target_line": "gm.graph.erase_node(node)",
+				"func": "fuse_conv_bn",
+				"codes": [
+					"source-code-data/pytorch/inductor-full/fuse_conv_bn.py"
+				]
+			}
+		]
+	},
+	"replace_fx": {
+		"hints": [
+			{
+				"type": "trigger",
+				"target_line": "gm.graph.erase_node(node)",
+				"func": "replace_fx",
+				"codes": [
+					"source-code-data/pytorch/inductor-full/replace_fx.py"
+				]
+			}
+		]
+	},
+	"sink_cat_after_pointwise": {
+		"hints": [
+			{
+				"type": "trigger",
+				"target_line": "g.erase_node(node)",
+				"func": "sink_cat_after_pointwise",
+				"codes": [
+					"source-code-data/pytorch/inductor-full/sink_cat_after_pointwise.py"
+				]
+			}
+		]
+	}
+}

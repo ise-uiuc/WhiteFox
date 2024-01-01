@@ -1,0 +1,66 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+scaled_dot_product = torch.matmul(query, key.transpose(-2, -1)) / inv_scale
+attention_weights = scaled_dot_product.softmax(dim=-1)
+output = attention_weights.matmul(value)
+```
+This pattern characterizes the Scaled Dot-Product Attention mechanism, which is a key component of Transformer models. In this mechanism, the attention weights are computed as the softmax of the scaled dot product of the query and key tensors. These weights are then used to compute a weighted sum of the value tensor. The scaling factor `inv_scale` is typically the square root of the dimension of the key/query vectors, which helps to stabilize the gradients especially when the dimensions are large.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.key = torch.nn.Parameter(torch.randn(72, 42, 10, 73))
+    def forward(self, x1):
+        q = x1
+        k = x1
+        v = x1
+        inv_scale = math.sqrt(k.size(1))
+        scaled_dot_product = torch.matmul(q, k.transpose(-2, -1)) / inv_scale
+        attention_weights = scaled_dot_product.softmax(dim=-1)
+        output = attention_weights.matmul(v)
+        return output
+# Inputs to the model
+x1 = torch.randn(55, 7, 90, 74)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.key = torch.nn.Parameter(torch.randn(2, 92, 10, 47))
+    def forward(self, x1):
+        q = x1
+        k = x1
+        v = x1
+        inv_scale = math.sqrt(k.size(1))
+        scaled_dot_product = torch.matmul(q, k.transpose(-2, -1)) / inv_scale
+        attention_weights = scaled_dot_product.softmax(dim=-1)
+        output = attention_weights.matmul(v)
+        return output
+# Inputs to the model
+x1 = torch.randn(68, 19, 88, 20)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.key = torch.nn.Parameter(torch.randn(7, 4, 64, 26))
+    def forward(self, x1):
+        q = x1
+        k = x1
+        v = x1
+        inv_scale = math.sqrt(k.size(1))
+        scaled_dot_product = torch.matmul(q, k.transpose(-2, -1)) / inv_scale
+        attention_weights = scaled_dot_product.softmax(dim=-1)
+        output = attention_weights.matmul(v)
+        return output
+# Inputs to the model
+x1 = torch.randn(95, 15, 96, 66)
+# Model ends
+
+# Model begins

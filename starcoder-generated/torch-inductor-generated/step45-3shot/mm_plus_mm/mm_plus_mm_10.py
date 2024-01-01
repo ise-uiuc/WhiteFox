@@ -1,0 +1,11 @@
+
+class Model(torch.nn.Module):
+    def forward(self, input1, input2, input3):
+        t1 = torch.mm(input1, input2)
+        t2 = torch.mm(input3, input2)
+        t2 = t1 + t2
+        return t2.mm(input1)
+# Inputs to the model
+input1 = torch.randn(4, 4)
+input2 = torch.randn(4, 4)
+input3 = torch.randn(4, 4)

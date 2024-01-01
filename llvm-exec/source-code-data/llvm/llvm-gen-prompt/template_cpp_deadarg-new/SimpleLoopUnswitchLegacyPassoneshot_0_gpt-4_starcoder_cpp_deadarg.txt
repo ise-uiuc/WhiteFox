@@ -1,0 +1,22 @@
+The C++ code should contain the following pattern:
+
+```cpp
+// define a function with a loop that has a trivial condition
+void loop_func(int x) {
+    for (int i = 0; i < x; ++i) {
+        if (CONSTANT_CONDITION) { // The condition should be a constant
+            // Do something here
+        } else {
+            // Do something else here
+        }
+    }
+}
+
+int main() {
+    int x = ANY_VALUE; // declare variable x
+    loop_func(x);
+    return 0;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists a call to `loop_func`, which contains a loop with a trivial condition. The condition should be a constant, which means it does not change during the execution of the loop. The loop should be in a simplified form, which means it has a preheader and dedicated exits. The function should not be marked as `optsize` to avoid optimization for size. The loop should not be cold, which means it is frequently executed. The loop should be safe for non-trivial unswitching, which means it does not contain any side effects that would prevent the unswitching. The `main` function must return a value related to this optimization for further comparison.

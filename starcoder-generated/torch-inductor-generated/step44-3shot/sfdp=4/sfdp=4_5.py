@@ -1,0 +1,15 @@
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x, k2, v2, mask):
+        qk = x.transpose(-2, -1) @ k2 / math.sqrt(x.size(-1))
+        qk = qk + mask
+        attn_weight = torch.softmax(qk, dim=-1)
+        output = attn_weight @ v2
+        return output
+# Inputs to the model
+Q = torch.randn(1, 56, 56, 64)
+K = torch.randn(1, 56, 56, 64)
+V = torch.randn(1, 56, 56, 64)
+mask = (torch.rand(1, 56, 56) > 0.7).fill_(-1000000000.0)

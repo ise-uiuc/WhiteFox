@@ -1,0 +1,66 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = conv(input_tensor) # Apply pointwise convolution with kernel size 1 to the input tensor
+t2 = t1 + 3 # Add 3 to the output of the convolution
+t3 = torch.clamp_min(t2, 0) # Clamp the output of the addition operation to a minimum of 0
+t4 = torch.clamp_max(t3, 6) # Clamp the output of the previous operation to a maximum of 6
+t5 = t1 * t4 # Multiply the output of the convolution by the output of the clamp operation
+t6 = t5 / 6 # Divide the output of the multiplication operation by 6
+```
+This pattern characterizes scenarios where the output of a pointwise convolution is added to a constant `3`, then the result is clamped to a minimum of `0` and a maximum of `6`, then the output of the convolution is multiplied by the clamped result, and finally the result of the multiplication is divided by `6`. This pattern is often used in implementations of the ReLU6 activation function, which is a variant of the ReLU activation function that caps the maximum output value at `6`.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.relu6 = torch.nn.ReLU6()
+        self.conv = torch.nn.Conv2d(3, 8, 1, stride=1, padding=1)
+    def forward(self, x1):
+        v1 = self.conv(x1)
+        v2 = self.relu6(v1)
+        v3 = v1 + 3
+        v4 = torch.clamp(v3, 0, 6)
+        v5 = v1 * v4
+        v6 = v5 / 6
+        return v6
+# Inputs to the model
+x1 = torch.randn(1, 3, 64, 64)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(3, 3, 1, stride=1, padding=1)
+    def forward(self, x1):
+        v1 = self.conv(x1)
+        v2 = v1 + 3
+        v3 = torch.clamp(v2, min=0, max=6)
+        v4 = v1 * v3
+        v5 = v4 / 6
+        return v5
+# Inputs to the model
+x1 = torch.randn(1, 3, 64, 64)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(3, 16, 2, stride=2, padding=5)
+    def forward(self, x1):
+        v1 = self.conv(x1)
+        v2 = v1 + 3
+        v3 = torch.clamp_min(v2, 0)
+        v4 = torch.clamp_max(v3, 6)
+        v5 = v1 * v4
+        v6 = v5 / 6
+        return v6
+# Inputs to the model
+x1 = torch.randn(2, 3, 28, 28)
+# Model ends
+
+# Model begins

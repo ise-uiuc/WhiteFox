@@ -1,0 +1,50 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = torch.cat([tensor1, tensor2, ...], dim=...) # Concatenate tensors along a dimension
+t2 = t1.view(...) # Reshape the concatenated tensor
+t3 = torch.relu(t2) # Apply a pointwise unary operation (e.g., ReLU or Tanh) to the reshaped tensor
+```
+This pattern characterizes scenarios where a tensor is reshaped after concatenation and then a pointwise unary operation (like ReLU or Tanh) is applied. The unary operation should be the only user of the reshaped tensor. The optimization `sink_cat_after_pointwise` is triggered when such a pattern is detected in the model.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x):
+        y = torch.cat((x, x), dim=1)
+        x = y.view(x.shape[0], -1) if y.shape == (1, 6) else y.view(x.shape[0], -1)
+        x = x.tanh() if x.shape == (1, 2) else x.tanh()
+        return x
+# Inputs to the model
+x = torch.randn(2, 3, 4)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x):
+        x = torch.cat((x, x, x), dim=1)
+        x = x.view(torch.numel(x), -1)
+        x = torch.relu(x)
+        return x
+# Inputs to the model
+x = torch.randn(2, 3, 4)
+# Model ends
+
+# Model begins
+class SinkCat(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x):
+        x = torch.cat((x, x), dim=1).view(x.shape[0], -1)
+        x = torch.tanh(x)
+        return x
+# Inputs to the model
+x = torch.randn(3, 2, requires_grad=True)
+# Model ends
+
+# Model begins

@@ -1,0 +1,68 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = conv(input_tensor) # Apply pointwise convolution with kernel size 1 to the input tensor
+t2 = t1 + other # Add another tensor to the output of the convolution
+```
+This pattern characterizes scenarios where the output of a pointwise convolution is added to another tensor. The "other" tensor is passed as a keyword argument to the addition operation.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(3, 8, 1, stride=1, padding=1)
+    def forward(self, x1, x2):
+        v1 = self.conv(x1)
+        v2 = self.conv(x2)
+        t1 = torch.randn(v1.shape)
+        t2 = torch.randn(v2.shape)
+        v3 = v1 + t1
+        v4 = v2 + t2
+        return (v3, v4)
+# Inputs to the model
+x1 = torch.randn(1, 3, 128, 128)
+x2 = torch.randn(1, 3, 128, 128)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(7, 13, 1, stride=1, padding=1)
+    def forward(self, x1, other=None):
+        if other == None:
+            other = torch.ones(self.conv(x1).shape).to(x1.device)
+        v1 = self.conv(x1)
+        v2 = v1 + other
+        return v2
+# Inputs to the model
+x1 = torch.randn(1, 7, 11, 11).to('cpu')
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(14, 12, 1, stride=1, padding=1)
+    def forward(self, x1, other=None, other1=None, other2=None, other3=None):
+        v1 = self.conv(x1)
+        if other == None:
+            other = torch.randn(v1.shape)
+        v2 = v1 + other
+        if other1 == None:
+            other1 = torch.randn(v1.shape)
+        v3 = v2 + other1
+        if other2 == None:
+            other2 = torch.randn(v1.shape)
+        v4 = v3 + other2
+        if other3 == None:
+            other3 = torch.randn(v1.shape)
+        v5 = v4 + other3
+        return v5
+# Inputs to the model
+x1 = torch.randn(1, 14, 64, 64)
+# Model ends
+
+# Model begins

@@ -1,0 +1,13 @@
+The C++ code should contain the following pattern:
+
+```cpp
+int main() {
+    int *p = new int; // allocate memory
+    *p = 10; // store a value
+    *p = 20; // overwrite the value
+    delete p; // deallocate memory
+    return 0;
+}
+```
+
+This pattern characterizes scenarios where a memory location is written to more than once, with the earlier write(s) being completely overwritten by the later write(s), making the earlier write(s) dead stores. The memory location is typically allocated dynamically (e.g., using `new` or `malloc`). The `main` function must return a value related to this optimization for further comparison.

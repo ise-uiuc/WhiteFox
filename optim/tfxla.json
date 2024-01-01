@@ -1,0 +1,648 @@
+{
+    "TreeReductionRewriter": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return ReplaceWithNewInstruction(hlo, std::move(new_output));",
+                "target_type": "Status",
+                "func": "HandleReduce",
+                "codes": [
+                    "source-code-data/tfxla-mini/tree_reduction_rewriter.cc"
+                ]
+            }
+        ]
+    },
+    "AllGatherBroadcastReorder": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type":"StatusOr<bool>",
+                "func": "AllGatherBroadcastReorder::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/all_gather_broadcast_reorder.cc"
+                ]
+            }
+        ]
+    },
+    "AllReduceSimplifier": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type":"StatusOr<bool>",
+                "func": "AllReduceSimplifier::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/all_reduce_simplifier.cc"
+                ]
+            }
+        ]
+    },
+    "SliceSinker": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "SliceSinker::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/slice_sinker.cc"
+                ]
+            }
+        ]
+    },
+    "HloCse": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "HloCSE::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/hlo_cse.cc"
+                ]
+            }
+        ]
+    },
+    "TopkRewriter": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "TopkRewriter::TransformToCustomCall",
+                "codes": [
+                    "source-code-data/tfxla-mini/topk_rewriter.cc"
+                ]
+            }
+        ]
+    },
+    "ShardingRemover": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "ShardingRemover::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/sharding_remover.cc"
+                ]
+            }
+        ]
+    },
+    "ReduceScatterDecomposer": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "ReduceScatterDecomposer::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/reduce_scatter_decomposer.cc"
+                ]
+            }
+        ]
+    },
+    "WhileLoopTripCountAnnotator": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "WhileLoopTripCountAnnotator::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/while_loop_trip_count_annotator.cc"
+                ]
+            }
+        ]
+    },
+    "MapInliner": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "changed_ = true;",
+                "target_type": "StatusOr<bool>",
+                "func": "MapInlinerVisitor::HandleMap",
+                "codes": [
+                    "source-code-data/tfxla-mini/map_inliner.cc"
+                ]
+            }
+        ]
+    },
+    "BroadcastCanonicalizer": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "BroadcastCanonicalizer::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/broadcast_canonicalizer.cc"
+                ]
+            }
+        ]
+    },
+    "HloDce": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "HloDCE::RecursivelyRemoveDeadComputations",
+                "codes": [
+                    "source-code-data/tfxla-mini/hlo_dce.cc"
+                ]
+            }
+        ]
+    },
+    "ReduceScatterCombiner": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "ReduceScatterCombiner::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/reduce_scatter_combiner.cc"
+                ]
+            }
+        ]
+    },
+    "HloConstantFolding": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "HloConstantFolding::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/hlo_constant_folding.cc"
+                ]
+            }
+        ]
+    },
+    "SimplifyFpConversions": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "RunOnComputation",
+                "codes": [
+                    "source-code-data/tfxla-mini/simplify_fp_conversions.cc"
+                ]
+            }
+        ]
+    },
+    "ConvertMover": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "MoveConvertPrecisionOps",
+                "codes": [
+                    "source-code-data/tfxla-mini/convert_mover.cc"
+                ]
+            }
+        ]
+    },
+    "TupleSimplifier": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "TupleSimplifier::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/tuple_simplifier.cc"
+                ]
+            }
+        ]
+    },
+    "AllGatherCombiner": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "AllGatherCombiner::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/all_gather_combiner.cc"
+                ]
+            }
+        ]
+    },
+    "ChangeOpDataType": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "ChangeOpDataType::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/change_op_data_type.cc"
+                ]
+            }
+        ]
+    },
+    "LoopScheduleLinearizer": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "LoopScheduleLinearizer::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/loop_schedule_linearizer.cc"
+                ]
+            }
+        ]
+    },
+    "DotDecomposer": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "DotDecomposer::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/dot_decomposer.cc"
+                ]
+            }
+        ]
+    },
+    "ZeroSizedHloElimination": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "ZeroSizedHloElimination::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/zero_sized_hlo_elimination.cc"
+                ]
+            }
+        ]
+    },
+    "TransposeFolding": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "TransposeFolding::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/transpose_folding.cc"
+                ]
+            }
+        ]
+    },
+    "WhileLoopConstantSinking": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "WhileLoopConstantSinking::TrySinkingConstantsIntoWhileLoop",
+                "codes": [
+                    "source-code-data/tfxla-mini/while_loop_constant_sinking.cc"
+                ]
+            }
+        ]
+    },
+    "AllGatherDecomposer": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "AllGatherDecomposer::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/all_gather_decomposer.cc"
+                ]
+            }
+        ]
+    },
+    "WhileLoopExpensiveInvariantCodeMotion": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return true;",
+                "target_type": "StatusOr<bool>",
+                "func": "WhileLoopExpensiveInvariantCodeMotion::TryHoistingInvariantInstructionsFromWhileBody",
+                "codes": [
+                    "source-code-data/tfxla-mini/while_loop_expensive_invariant_code_motion.cc"
+                ]
+            }
+        ]
+    },
+    "Defuser": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "Defuser::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/defuser.cc"
+                ]
+            }
+        ]
+    },
+    "AllReduceFolder": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "AllReduceFolder::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/all_reduce_folder.cc"
+                ]
+            }
+        ]
+    },
+    "HloElementTypeConverter": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "HloElementTypeConverter::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/hlo_element_type_converter.cc"
+                ]
+            }
+        ]
+    },
+    "DotMerger": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return !dead_instrs.empty();",
+                "target_type": "StatusOr<bool>",
+                "func": "MergeDots",
+                "codes": [
+                    "source-code-data/tfxla-mini/dot_merger.cc"
+                ]
+            }
+        ]
+    },
+    "Bfloat16ConversionFolding": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "changed_ = true;",
+                "target_type": "Status",
+                "func": "BFloat16ConversionFoldingVisitor::FoldOperandConversion",
+                "codes": [
+                    "source-code-data/tfxla-mini/bfloat16_conversion_folding.cc"
+                ]
+            },
+            {
+                "type": "trigger",
+                "target_line": "changed_ = true;",
+                "target_type": "Status",
+                "func": "BFloat16ConversionFoldingVisitor::FoldOutputConversions",
+                "codes": [
+                    "source-code-data/tfxla-mini/bfloat16_conversion_folding.cc"
+                ]
+            }
+        ]
+    },
+    "CollectivesScheduleLinearizer": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "CollectivesScheduleLinearizer::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/collectives_schedule_linearizer.cc"
+                ]
+            }
+        ]
+    },
+    "StochasticConvertDecomposer": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return OkStatus();",
+                "target_type": "Status",
+                "func": "DecomposeStochasticConvert",
+                "codes": [
+                    "source-code-data/tfxla-mini/stochastic_convert_decomposer.cc"
+                ]
+            }
+        ]
+    },
+    "BatchDotSimplification": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return true;",
+                "target_type": "StatusOr<bool>",
+                "func": "BatchDotSimplification::ElideDegenerateBatchDimensionFromBatchDot",
+                "codes": [
+                    "source-code-data/tfxla-mini/batch_dot_simplification.cc"
+                ]
+            }
+        ]
+    },
+    "WhileLoopInvariantCodeMotion": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "WhileLoopInvariantCodeMotion::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/while_loop_invariant_code_motion.cc"
+                ]
+            }
+        ]
+    },
+    "ReduceScatterReassociate": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "ReduceScatterReassociate::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/reduce_scatter_reassociate.cc"
+                ]
+            }
+        ]
+    },
+    "ConditionalCanonicalizer": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "ConditionalCanonicalizer::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/conditional_canonicalizer.cc"
+                ]
+            }
+        ]
+    },
+    "DynamicIndexSplitter": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "DynamicIndexSplitter::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/dynamic_index_splitter.cc"
+                ]
+            }
+        ]
+    },
+    "SortSimplifier": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "",
+                "target_type": "",
+                "func": "",
+                "codes": [
+                    "source-code-data/tfxla-mini/sort_simplifier.cc"
+                ]
+            }
+        ]
+    },
+    "AsyncCollectiveCreator": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "RemoveUnusedOperandFromSort",
+                "codes": [
+                    "source-code-data/tfxla-mini/async_collective_creator.cc"
+                ]
+            }
+        ]
+    },
+    "ConvertAsyncCollectivesToSync": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return true;",
+                "target_type": "StatusOr<bool>",
+                "func": "ConvertAsyncCollectivesToSync::RunOnComputation",
+                "codes": [
+                    "source-code-data/tfxla-mini/convert_async_collectives_to_sync.cc"
+                ]
+            }
+        ]
+    },
+    "AllReduceReassociate": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "AllReduceReassociate::Run",
+                "codes": [
+                    "source-code-data/tfxla-mini/all_reduce_reassociate.cc"
+                ]
+            }
+        ]
+    },
+    "AllReduceCombiner": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "AllReduceCombiner",
+                "codes": [
+                    "source-code-data/tfxla-mini/all_reduce_combiner.cc"
+                ]
+            }
+        ]
+    },
+    "SliceConcatForwarding": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return true;",
+                "target_type": "StatusOr<bool>",
+                "func": "SliceConcatForwarding",
+                "codes": [
+                    "source-code-data/tfxla-mini/SliceConcatForwarding.cc"
+                ]
+            }
+        ]
+    },
+    "IdentityReshapeRemoving": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return true;",
+                "target_type": "StatusOr<bool>",
+                "func": "IdentityReshapeRemoving",
+                "codes": [
+                    "source-code-data/tfxla-mini/IdentityReshapeRemoving.cc"
+                ]
+            }
+        ]
+    },
+    "ReshapeReshapeForwarding": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return true;",
+                "target_type": "StatusOr<bool>",
+                "func": "ReshapeReshapeForwarding",
+                "codes": [
+                    "source-code-data/tfxla-mini/ReshapeReshapeForwarding.cc"
+                ]
+            }
+        ]
+    },
+    "ReshapeBroadcastForwarding": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return true;",
+                "target_type": "StatusOr<bool>",
+                "func": "ReshapeBroadcastForwarding",
+                "codes": [
+                    "source-code-data/tfxla-mini/ReshapeBroadcastForwarding.cc"
+                ]
+            }
+        ]
+    },
+    "IdentityConvertRemoving": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return true;",
+                "target_type": "StatusOr<bool>",
+                "func": "IdentityConverRemoving",
+                "codes": [
+                    "source-code-data/tfxla-mini/IdentityConvertRemoving.cc"
+                ]
+            }
+        ]
+    },
+    "ConcatForwarding": {
+        "hints": [
+            {
+                "type": "trigger",
+                "target_line": "return changed;",
+                "target_type": "StatusOr<bool>",
+                "func": "ConcatForwarding",
+                "codes": [
+                    "source-code-data/tfxla-mini/ConcatForwarding.cc"
+                ]
+            }
+        ]
+    }
+}

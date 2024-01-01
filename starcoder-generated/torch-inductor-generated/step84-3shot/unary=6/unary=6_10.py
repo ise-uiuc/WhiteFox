@@ -1,0 +1,35 @@
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super(Model, self).__init__()
+        self.conv1 = torch.nn.Conv2d(3, 64, 3, stride=1, padding=1)
+        self.relu1 = torch.nn.ReLU()
+        self.conv2 = torch.nn.Conv2d(64, 64, 3, stride=1, padding=1)
+        # self.conv3 = torch.nn.Conv2d(64, 64, 3, stride=1, padding=1)
+        self.relu2 = torch.nn.ReLU()
+        self.conv4 = torch.nn.Conv2d(64, 64, 3, stride=1, padding=1)
+        # self.conv5 = torch.nn.Conv2d(64, 64, 1, stride=1, padding=0)
+        # self.conv6 = torch.nn.Conv2d(64, 64, 1, stride=1, padding=0)
+        self.relu3 = torch.nn.ReLU()
+        self.conv7 = torch.nn.Conv2d(64, 128, 1, stride=1, padding=0)
+        self.avgpool = torch.nn.AvgPool2d(8, stride=1)
+        self.flatten = torch.nn.Flatten()
+        self.fc = torch.nn.Linear(128, 10)
+    def forward(self, x1, x2):
+        x1 = self.conv1(x1)
+        x1 = self.relu1(x1)
+        x1 = self.conv2(x1)
+        x1 = self.relu2(x1)
+        # x1 = self.conv3(x1)
+        # x1 = self.relu1(x1)
+        x1 = self.conv4(x1)
+        # x1 = self.conv5(x1)
+        # x1 = self.conv6(x1)
+        x1 = self.relu3(x1)
+        x1 = self.conv7(x1)
+        x1 = self.avgpool(x1)
+        x1 = self.flatten(x1)
+        x1 = self.fc(x1)
+    return x1
+# Inputs to the model
+x1 = torch.randn(2, 3, 32, 32)

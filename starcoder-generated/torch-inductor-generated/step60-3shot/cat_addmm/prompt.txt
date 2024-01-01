@@ -1,0 +1,54 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = torch.addmm(input, mat1, mat2) # Perform a matrix multiplication of mat1 and mat2 and add it to the input
+t2 = torch.cat([t1], dim) # Concatenate the result along a specified dimension
+```
+This pattern characterizes scenarios where a matrix multiplication is performed between two tensors and then added to an input tensor. The result of this operation is then concatenated along a specified dimension. This is a common pattern in fully connected layers followed by a concatenation operation.
+
+# Model begins
+class Model(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.layers = nn.Linear(2, 3)
+    def forward(self, x):
+        x = self.layers(x)
+        x = torch.stack((x, x), dim=1).flatten(1)
+        return x
+# Inputs to the model
+x = torch.randn(2, 2)
+# Model ends
+
+# Model begins
+class Model(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.layers = nn.Linear(2, 4)
+    def forward(self, x):
+        x = self.layers(x)
+        x = torch.stack((x, x), dim=1).flatten(1)
+        return x
+# Inputs to the model
+x = torch.randn(2, 2)
+# Model ends
+
+# Model begins
+class Model(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.layers = nn.Linear(2, 4)
+    def forward(self, x):
+        x = self.layers(x)
+        x = torch.stack((x, x, x), dim=1)
+        x = torch.flatten(x, 1)
+        x = x.unsqueeze_(1)
+        x = torch.cat((x.unsqueeze(0), x.unsqueeze(0)), dim=0)
+        x = x.repeat_interleave(3, dim=0)
+        return x
+# Inputs to the model
+x = torch.randn(2, 2)
+# Model ends
+
+# Model begins

@@ -1,0 +1,36 @@
+
+class Model(nn.Module):
+    def __init__(self):
+        super(Model, self).__init__()
+        self.bn0 = nn.BatchNorm1d(32, affine=True)
+        self.conv0 = GConvBNReLU0(3, 3, 1, 1, 0)
+        self.conv1 = GConvBNReLU1(3, 3, 1, 1, 0)
+        self.conv2 = GConvBNReLU0(3, 3, 1, 1, 0)
+        self.conv3 = GConvBNReLU1(3, 3, 1, 1, 0)
+        self.conv4 = GConvBNReLU0(3, 3, 1, 1, 0)
+        self.conv5 = GConvBNReLU1(3, 3, 1, 1, 0)
+        self.conv6 = GConvBNReLU0(3, 3, 1, 1, 0)
+        self.conv7 = GConvBNReLU1(3, 3, 1, 1, 0)
+        self.conv8 = GConvBNReLU0(3, 3, 1, 1, 0)
+        self.conv9 = GConvBNReLU1(3, 15, 1, 1, 0)
+        self.bn1 = nn.BatchNorm1d(32, affine=True)
+    def forward(self, x):
+        x0 = self.bn0(x)
+        x1 = F.adaptive_avg_pool2d(x0, (1, 1))
+        x2 = self.conv0(x1)
+        x3 = self.conv1(x2)
+        x4 = self.conv2(x3)
+        x5 = self.conv3(x4)
+        x6 = self.conv4(x5)
+        x7 = self.conv5(x6)
+        x8 = self.conv6(x7)
+        x9 = self.conv7(x8)
+        x10 = self.conv8(x9)
+        x11 = self.conv9(x10)
+        x12 = torch.flatten(x11, 1)
+        x13 = torch.mean(x12, dim=-1)
+        x14 = F.relu(x13)
+        x15 = self.bn1(x14)
+        return x15
+# Inputs to the model
+x = torch.randn(1, 32, 224, 224)

@@ -1,0 +1,12 @@
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(1, 8, 1)
+    def forward(self, x1):
+        v1 = self.conv(x1)
+        t1 = (v1 + 3).clamp(0, 6)
+        v1 = t1 / 6
+        return v1
+# Inputs to the model
+x1 = torch.randn(1, 1, 3, 3)

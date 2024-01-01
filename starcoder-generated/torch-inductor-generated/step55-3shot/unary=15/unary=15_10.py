@@ -1,0 +1,23 @@
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = torch.nn.Conv2d(15, 15, 5, stride=4, padding=0)
+        self.conv2 = torch.nn.Conv2d(15, 30, 17, stride=1, padding=0)
+        self.conv3 = torch.nn.Conv2d(30, 16, 11, stride=1, padding=0)
+        self.conv4 = torch.nn.Conv2d(16, 16, 7, stride=4, padding=0)
+        self.conv5 = torch.nn.Conv2d(16, 1, 1, stride=1, padding=0)
+    def forward(self, x1):
+        v1 = self.conv1(x1)
+        v2 = torch.nn.functional.relu(v1)
+        v3 = self.conv2(v2)
+        v4 = torch.nn.functional.relu(v3)
+        v5 = self.conv3(v4)
+        v6 = torch.nn.functional.relu(v5)
+        v7 = self.conv4(v6)
+        v8 = torch.nn.functional.relu(v7)
+        v9 = self.conv5(v8)
+        v10 = torch.nn.functional.logsigmoid(v9)
+        return v10
+# Inputs to the model
+x1 = torch.randn(8, 15, 20, 8)

@@ -1,0 +1,62 @@
+{
+    "sfdp=0": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-sfdp/sfdp=0.py"
+                ]
+            }
+        ]
+    },
+    "sfdp=1": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-sfdp/sfdp=1.py"
+                ]
+            }
+        ]
+    },
+    "sfdp=2": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-sfdp/sfdp=2.py"
+                ]
+            }
+        ]
+    },
+    "sfdp=3": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-sfdp/sfdp=3.py"
+                ]
+            }
+        ]
+    },
+    "sfdp=4": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-sfdp/sfdp=4.py"
+                ]
+            }
+        ]
+    },
+    "sfdp=5": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-sfdp/sfdp=5.py"
+                ]
+            }
+        ]
+    }
+}

@@ -1,0 +1,56 @@
+
+class Model(torch.nn.Module):
+    def __init__(self, min, max):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(4, 64, 3, stride=1, padding=1)
+        self.conv0 = torch.nn.Conv2d(64, 64, 3, stride=1, padding=1)
+        self.conv1 = torch.nn.Conv2d(64, 64, 3, stride=1, padding=1)
+        self.conv2 = torch.nn.Conv2d(64, 64, 3, stride=1, padding=1)
+        self.conv3 = torch.nn.Conv2d(64, 64, 3, stride=1, padding=1)
+        self.conv4 = torch.nn.Conv2d(64, 64, 3, stride=1, padding=1)
+        self.conv5 = torch.nn.Conv2d(64, 64, 3, stride=1, padding=1)
+        self.conv6 = torch.nn.Conv2d(64, 64, 3, stride=1, padding=1)
+        self.conv7 = torch.nn.Conv2d(64, 64, 3, stride=1, padding=1)
+        self.conv8 = torch.nn.Conv2d(64, 64, 3, stride=1, padding=1)
+        self.conv9 = torch.nn.Conv2d(64, 64, 3, stride=1, padding=1)
+        self.min = min
+        self.max = max
+    def forward(self, x1):
+        v1 = self.conv(x1)
+        v2 = torch.clamp_min(v1, self.min)
+        v3 = torch.clamp_max(v2, self.max)
+        v4 = self.conv0(v3)
+        v5 = torch.clamp_min(v4, self.min)
+        v6 = torch.clamp_max(v5, self.max)
+        v7 = self.conv1(v6)
+        v8 = torch.clamp_min(v7, self.min)
+        v9 = torch.clamp_max(v8, self.max)
+        v10 = self.conv2(v9)
+        v11 = torch.clamp_min(v10, self.min)
+        v12 = torch.clamp_max(v11, self.max)
+        v13 = self.conv3(v12)
+        v14 = torch.clamp_min(v13, self.min)
+        v15 = torch.clamp_max(v14, self.max)
+        v16 = self.conv4(v15)
+        v17 = torch.clamp_min(v16, self.min)
+        v18 = torch.clamp_max(v17, self.max)
+        v19 = self.conv5(v18)
+        v20 = torch.clamp_min(v19, self.min)
+        v21 = torch.clamp_max(v20, self.max)
+        v22 = self.conv6(v21)
+        v23 = torch.clamp_min(v22, self.min)
+        v24 = torch.clamp_max(v23, self.max)
+        v25 = self.conv7(v24)
+        v26 = torch.clamp_min(v25, self.min)
+        v27 = torch.clamp_max(v26, self.max)
+        v28 = self.conv8(v27)
+        v29 = torch.clamp_min(v28, self.min)
+        v30 = torch.clamp_max(v29, self.max)
+        v31 = self.conv9(v30)
+        v32 = torch.clamp_min(v31, self.min)
+        v33 = torch.clamp_max(v32, self.max)
+        return v33
+min = -36
+max = 14.5
+# Inputs to the model
+x1 = torch.randn(1, 4, 64, 64)

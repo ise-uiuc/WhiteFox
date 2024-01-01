@@ -1,0 +1,50 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `TreeReductionRewriter` in TensorFlow XLA.
+
+# Description
+The model should contain a `tf.reduce_*` operation where at least one of the dimensions being reduced is larger than a certain threshold (`reduce_window_size_`). The `tf.reduce_*` operation could be any of the reduction operations in TensorFlow such as `tf.reduce_sum`, `tf.reduce_max`, `tf.reduce_min`, etc.
+
+Here is an example of such a pattern:
+
+```python
+t1 = tf.reduce_sum(input_tensor, axis=[0, 1])
+```
+
+In this example, if the size of either the 0th or 1st dimension of `input_tensor` is larger than `reduce_window_size_`, the `TreeReductionRewriter` optimization pass will be triggered. The `reduce_window_size_` is a parameter that is set when initializing the `ReductionRewriterVisitor` object. 
+
+The optimization pass will replace the original `tf.reduce_*` operation with a sequence of `tf.nn.reduce_window` and `tf.reduce_*` operations, which can potentially improve the performance of the reduction operation.
+
+# Model

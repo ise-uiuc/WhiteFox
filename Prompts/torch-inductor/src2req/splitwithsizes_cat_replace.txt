@@ -1,0 +1,91 @@
+### Please describe the type of PyTorch model that has the pattern shown in the code. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# Code of the pattern
+CallFunction(
+    aten.mul,
+    CallFunction(
+        aten.mul,
+        CallFunction(mkldnn._convolution_pointwise.default, *_conv_args, _users=2),
+        0.5,
+    ),
+    CallFunction(
+        aten.add,
+        CallFunction(
+            aten.erf,
+            CallFunction(
+                aten.mul,
+                CallFunction(
+                    mkldnn._convolution_pointwise.default, *_conv_args, _users=2
+                ),
+                0.7071067811865476,
+            ),
+        ),
+        1,
+    ),
+)
+
+# Description
+The model should contain the following pattern:
+```
+t1 = conv(input_tensor) # Apply pointwise convolution with kernel size 1 to the input tensor
+t2 = t1 * 0.5 # Multiply the output of the convolution by 0.5
+t3 = t1 * 0.7071067811865476 # Multiply the output of the convolution by 0.7071067811865476
+t4 = torch.erf(t3) # Apply the error function to the output of the convolution
+t5 = t4 + 1 # Add 1 to the output of the error function
+t6 = t2 * t5 # Multiply the output of the convolution by the output of the error function
+```
+This pattern characterizes scenarios where the output of a pointwise convolution is multiplied by a constant `0.5`, and then the output of the convolution is multiplied by another constant `0.7071067811865476`, and then the error function is applied to the output of the convolution, and then `1` is added to the output of the error function, and then the output of the convolution is multiplied by the output of the error function.
+
+### Please describe the type of PyTorch model that 
+1) has the pattern shown in the code, and 2) can trigger the `return True` line within the `is_valid_splitwithsizes_cat` optimization. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# Code of the pattern:
+CallFunction(
+    aten.cat,
+    ListOf(
+        CallFunction(
+            operator.getitem,
+            CallFunction(
+                aten.split_with_sizes,
+                KeywordArg("input_"),
+                Ignored(),
+                Ignored(),
+                _users=MULTIPLE,
+            ),
+            Ignored(),
+        ),
+    ),
+    Ignored(),
+)
+
+# Code of the function `is_valid_splitwithsizes_cat` and its helper functions
+def is_valid_splitwithsizes_cat(match):
+    split_nodes = filter_nodes(match.nodes, aten.split_with_sizes)
+    cat_nodes = filter_nodes(match.nodes, aten.cat)
+    get_item_nodes = filter_nodes(match.nodes, operator.getitem)
+    if len(split_nodes) != 1 or len(cat_nodes) != 1:
+        return False
+    split_node, cat_node = split_nodes[0], cat_nodes[0]
+    # The dim of split and cat should match for passthrough
+    if get_arg_value(split_node, 2, "dim") != get_arg_value(cat_node, 1, "dim"):
+        return False
+    get_item_args = {
+        get_arg_value(get_item_node, 1) for get_item_node in get_item_nodes
+    }
+    assert None not in get_item_args
+    split_sizes = get_arg_value(split_node, 1, "split_sizes")
+    # All parts of split should be included in the cat
+    if get_item_args != set(range(len(split_sizes))):
+        return False
+    # The order of get_item_args should same with cat_node used.
+    # For example, if the split_node like split_with_sizes(input, [2, 2, 3], 1),
+    # the cat node should be like cat([get_item(0), get_item(1), get_item(2)], 1).
+    cat_items_args_order = [
+        get_arg_value(item_node, 1) for item_node in get_arg_value(cat_node, 0)
+    ]
+    if cat_items_args_order != list(range(len(split_sizes))):
+        return False
+
+    return True
+
+# Description

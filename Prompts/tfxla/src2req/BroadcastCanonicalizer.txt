@@ -1,0 +1,90 @@
+### Please describe the characteristics of the TensorFlow model that trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA. The model can be used to reach out the `return true;` line in function `ReshapeReshapeForwarding`, leading the function to return true. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# The code of the function and its helper functions:
+
+```cpp
+// Reshape(Reshape(A, []->[1]), [1]->[]) ==> A
+StatusOr<bool> ReshapeReshapeForwarding(HloInstruction* reshape) {
+  if (reshape->opcode() != HloOpcode::kReshape) {
+    return false;
+  }
+  auto reshape_2 = reshape->mutable_operand(0);
+  if (reshape_2->opcode() != HloOpcode::kReshape) {
+    return false;
+  }
+
+  if (!Shape::Equal()(reshape->shape(), reshape_2->operand(0)->shape())) {
+    return false;
+  }
+  TF_RETURN_IF_ERROR(
+      reshape->ReplaceAllUsesWith(reshape_2->mutable_operand(0)));
+
+  return true;
+}
+```
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+### Please describe the characteristics of the TensorFlow model that trigger the optimization pass `BroadcastCanonicalizer` in TensorFlow XLA. The model can be used to reach out the `return changed;` line in function `BroadcastCanonicalizer::Run`, leading the function to return true. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# The code of the function and its helper functions:
+
+```cpp
+BroadcastCanonicalizer::BroadcastCanonicalizer() {}
+
+StatusOr<bool> BroadcastCanonicalizer::Run(
+    HloModule* module,
+    const absl::flat_hash_set<absl::string_view>& execution_threads) {
+  bool changed = false;
+
+  // Sort broadcast dims. Then insert a transpose on the broadcast to get the
+  // original shape back.
+  for (const auto& computation :
+       module->MakeNonfusionComputations(execution_threads)) {
+    for (HloInstruction* hlo : computation->MakeInstructionPostOrder()) {
+      if (hlo->opcode() != HloOpcode::kBroadcast) {
+        continue;
+      }
+      if (absl::c_is_sorted(hlo->dimensions())) {
+        continue;
+      }
+      std::vector<int64_t> new_dims(hlo->dimensions().begin(),
+                                    hlo->dimensions().end());
+      std::vector<int64_t> original_dims(hlo->dimensions().begin(),
+                                         hlo->dimensions().end());
+
+      std::vector<int64_t> new_broadcast_dims(hlo->shape().dimensions().begin(),
+                                              hlo->shape().dimensions().end());
+      absl::c_sort(new_dims);
+      const int64_t rank = hlo->shape().rank();
+      for (int i = 0; i < new_dims.size(); ++i) {
+        new_broadcast_dims[new_dims[i]] =
+            hlo->operand(0)->shape().dimensions(i);
+      }
+
+      auto new_broadcast = MakeBroadcastHlo(hlo->mutable_operand(0), new_dims,
+                                            new_broadcast_dims);
+      std::vector<int64_t> transpose_dims(rank);
+      absl::c_iota(transpose_dims, 0);
+      for (int i = 0; i < new_dims.size(); ++i) {
+        transpose_dims[new_dims[i]] = new_dims[std::distance(
+            original_dims.begin(), absl::c_find(original_dims, new_dims[i]))];
+      }
+      TF_ASSIGN_OR_RETURN(new_broadcast,
+                          MakeTransposeHlo(new_broadcast, transpose_dims));
+      TF_RETURN_IF_ERROR(computation->ReplaceInstruction(hlo, new_broadcast));
+      changed = true;
+    }
+  }
+  return changed;
+}
+```
+
+# Description

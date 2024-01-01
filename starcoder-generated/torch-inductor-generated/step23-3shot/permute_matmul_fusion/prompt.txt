@@ -1,0 +1,62 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = input_tensor_A.permute(...) # Permute the input tensor A
+t2 = input_tensor_B.permute(...) # Permute the input tensor B
+t3 = torch.bmm(t1, t2) # or torch.matmul(t1, t2)
+```
+or
+```
+t1 = input_tensor_A.permute(...) # Permute the input tensor A
+t2 = torch.bmm(t1, input_tensor_B) # or torch.matmul(t1, input_tensor_B)
+```
+or
+```
+t1 = input_tensor_B.permute(...) # Permute the input tensor B
+t2 = torch.bmm(input_tensor_A, t1) # or torch.matmul(input_tensor_A, t1)
+```
+This pattern characterizes scenarios where the tensor method 'permute' is invoked on one or both input tensors, and then the `torch.bmm` or `torch.matmul` function is invoked on the permuted tensors. The permute method is invoked on an input tensor with more than 2 dimensions, and it swaps the last two dimensions of this tensor. This modified tensor is then used as the main input for the `torch.bmm` or `torch.matmul` function.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x1, x2):
+        v1 = x1.permute(0, 2, 1)
+        v2 = torch.bmm(v1, x2)
+        v3 = torch.bmm(x2, v1)
+        v4 = v2.permute(0, 2, 1)
+        return v4
+# Inputs to the model
+x1 = torch.randn(1, 2, 2)
+x2 = torch.randn(1, 2, 2)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x1, x2):
+        v1 = torch.matmul(x2, x1.permute(0, 2, 1))
+        return v1
+# Inputs to the model
+x1 = torch.randn(1, 2, 2)
+x2 = torch.randn(1, 2, 2)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x1, x2):
+        v1 = x2.permute(0, 2, 1)
+        v2 = torch.matmul(v1, x1)
+        return v2
+# Inputs to the model
+x1 = torch.randn(1, 2, 2)
+x2 = torch.randn(1, 2, 2)
+# Model ends
+
+# Model begins

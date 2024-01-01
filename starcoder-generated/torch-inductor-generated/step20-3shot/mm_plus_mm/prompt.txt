@@ -1,0 +1,60 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = torch.mm(input1, input2) # Matrix multiplication between input1 and input2
+t2 = torch.mm(input3, input4) # Matrix multiplication between input3 and input4
+t3 = t1 + t2 # Addition of the results of the two matrix multiplications
+```
+This pattern characterizes scenarios where two separate matrix multiplications are performed and their results are added together.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.w1 = torch.randn(2, 2)
+        self.w2 = torch.randn(2, 2)
+        self.w3 = torch.randn(2, 2)
+    def forward(self, x1, x2, x3, x4):
+        v1 = torch.mm(x1, self.w1)
+        v2 = torch.mm(x2, self.w2)
+        v3 = torch.mm(x3, self.w3)
+        v4 = torch.mm(x4, self.w2)
+        return v1 + v2 + v3 + v4
+# Inputs to the model
+x1 = torch.randn(2, 2)
+x2 = torch.randn(2, 2)
+x3 = torch.randn(2, 2)
+x4 = torch.randn(2, 2)
+# Model ends
+
+# Model begins
+class Model(nn.Module):
+    def forward(self, input):
+        v1 = torch.mm(input, input)
+        v2 = torch.mm(input, input)
+        v3 = torch.mm(input, input)
+        v3 = input.mm(input)
+        x = torch.mm(input, input)
+        v4 = x.mm(input)
+        return v1 + v2 + v3 + v4
+# Inputs to the model
+input = torch.randn(10, 10)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def forward(self, input1, input2, input3, input4):
+        mm1 = torch.mm(input1, input2)
+        mm2 = torch.mm(input3, input4)
+        t = mm1 + mm2
+        return torch.mm(t, torch.mm(input2, input4))
+# Inputs to the model
+mm1 = torch.randn(55, 55)
+input2 = torch.randn(55, 55)
+input3 = torch.randn(55, 55)
+input4 = torch.randn(55, 55)
+# Model ends
+
+# Model begins

@@ -1,0 +1,60 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = conv(input_tensor) # Apply pointwise convolution with kernel size 1 to the input tensor
+t2 = t1 + 3 # Add 3 to the output of the convolution
+t3 = torch.clamp_min(t2, 0) # Clamp the output of the addition operation to a minimum of 0
+t4 = torch.clamp_max(t3, 6) # Clamp the output of the previous operation to a maximum of 6
+t5 = t4 / 6 # Divide the output of the previous operation by 6
+```
+This pattern characterizes scenarios where the output of a pointwise convolution is added by a constant `3`, then the result is clamped to a minimum of `0` and a maximum of `6`, and finally the result is divided by `6`. This is a typical pattern for implementing a ReLU6 activation function followed by a normalization operation.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(3, 8, 1, stride=1, padding=1)
+    def forward(self, x1):
+        v1 = self.conv(x1)
+        v2 = torch.add(v1, 3)
+        v3 = v2.clamp(min=0, max=6)
+        v4 = torch.div(v3, 6)
+        return v4
+# Inputs to the model
+x1 = torch.randn(1, 3, 64, 64)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(3, 8, 1, stride=1, padding=1)
+    def forward(self, x1):
+        v1 = self.conv(x1)
+        v2 = v1 + 3
+        v3 = torch.clamp_min(v2, 0)
+        v4 = torch.clamp_max(v3, 6)
+        v5 = torch.div(v4, 6)
+        return v5
+# Inputs to the model
+x1 = torch.randn(1, 3, 64, 64)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(3, 8, 1, stride=1, padding=1)
+    def forward(self, x1):
+        y1 = self.conv(x1)
+        y2 = y1 + 3
+        y3 = y2.clamp(min=0, max=6)
+        y4 = y3.div(6)
+        return y4
+# Inputs to the model
+b1 = torch.randn(1, 3, 64, 64)
+# Model ends
+
+# Model begins

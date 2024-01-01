@@ -1,0 +1,69 @@
+### Please describe the characteristics of the TensorFlow model that trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA. The model can be used to reach out the `return true;` line in function `ReshapeReshapeForwarding`, leading the function to return true. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# The code of the function and its helper functions:
+
+```cpp
+// Reshape(Reshape(A, []->[1]), [1]->[]) ==> A
+StatusOr<bool> ReshapeReshapeForwarding(HloInstruction* reshape) {
+  if (reshape->opcode() != HloOpcode::kReshape) {
+    return false;
+  }
+  auto reshape_2 = reshape->mutable_operand(0);
+  if (reshape_2->opcode() != HloOpcode::kReshape) {
+    return false;
+  }
+
+  if (!Shape::Equal()(reshape->shape(), reshape_2->operand(0)->shape())) {
+    return false;
+  }
+  TF_RETURN_IF_ERROR(
+      reshape->ReplaceAllUsesWith(reshape_2->mutable_operand(0)));
+
+  return true;
+}
+```
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+### Please describe the characteristics of the TensorFlow model that trigger the optimization pass `ConcatForwarding` in TensorFlow XLA. The model can be used to reach out the `return changed;` line in function `ConcatForwarding`, leading the function to return true. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# The code of the function and its helper functions:
+
+```cpp
+// Concat(Concat(A, B), C) => Concat(A, B, C)
+StatusOr<bool> ConcatForwarding(HloInstruction* concat) {
+  if (concat->opcode() != HloOpcode::kConcatenate) {
+    return false;
+  }
+  bool changed = false;
+
+  auto parent = concat->parent();
+  std::vector<HloInstruction*> new_operands;
+  for (HloInstruction* operand : concat->operands()) {
+    if (operand->opcode() != HloOpcode::kConcatenate ||
+        operand->concatenate_dimension() != concat->concatenate_dimension()) {
+      new_operands.push_back(operand);
+    } else {
+      changed = true;
+      for (HloInstruction* operand_operand : operand->operands()) {
+        new_operands.push_back(operand_operand);
+      }
+    }
+  }
+  if (changed) {
+    auto new_concat = parent->AddInstruction(HloInstruction::CreateConcatenate(
+        concat->shape(), new_operands, concat->concatenate_dimension()));
+    TF_RETURN_IF_ERROR(parent->ReplaceInstruction(concat, new_concat));
+  }
+  return changed;
+}
+```
+
+# Description

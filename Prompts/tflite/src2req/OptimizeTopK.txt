@@ -1,0 +1,153 @@
+### Please describe the characteristics of the TensorFlow model that can trigger the optimization pass `FuseFullyConnectedAndMul` when converted to a TensorFlow Lite model. The model can be used to reach out the `return success();` line in the function `matchAndRewrite`. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# Code of the function and its helper functions
+```cpp
+// Fuse Mul with proceeding FullyConnected.
+struct FuseFullyConnectedAndMul : public OpRewritePattern<TFL::MulOp> {
+  using OpRewritePattern<TFL::MulOp>::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(TFL::MulOp mul_op,
+                                PatternRewriter &rewriter) const override {
+    // If we are broadcasting on the lhs then don't fold the multiply as it
+    // would increase the amount of compute done by the fully connected op.
+    if (mul_op.getLhs().getType() != mul_op.getType()) return failure();
+
+    // Mul.
+    DenseElementsAttr cst;
+    Value constant_val = mul_op.getRhs();
+    if (!matchPattern(constant_val, m_Constant(&cst))) return failure();
+
+    // Fully Connected.
+    auto fc_op = dyn_cast_or_null<TFL::FullyConnectedOp>(
+        mul_op.getLhs().getDefiningOp());
+    if (!fc_op) return failure();
+    Value filter = fc_op.getFilter();
+    Value bias = fc_op.getBias();
+    ElementsAttr cst_tmp;
+    if (!matchPattern(filter, m_Constant(&cst_tmp))) return failure();
+    if (!bias.getType().isa<NoneType>() &&
+        !matchPattern(bias, m_Constant(&cst_tmp)))
+      return failure();
+    if (fc_op.getFusedActivationFunction() != "NONE") return failure();
+
+    // Only fuse multiplier if all dimensions other than the depth dimension
+    // are equal to 1 since otherwise
+    // `matmul(x, filter) * cst != matmul(x, filter * cst)`
+    // even if `filter` and `cst` are be broadcastable.
+    auto shape = cst.getType().getShape();
+    if (!IsDimensionsDegenerateExceptLastOne(shape)) return failure();
+
+    int64_t element_size = shape.empty() ? 1 : shape[shape.size() - 1];
+    // Expand and transpose the multiplier since weights are using the
+    // OHWI data format in TFLite.
+    int64_t normalized_shape[2] = {element_size, 1};
+    auto new_cst = cst.reshape(RankedTensorType::get(
+        normalized_shape, cst.getType().getElementType()));
+    Type new_type = new_cst.getType();
+    if (!IsBroadcastableElementsAttrAndType(new_type, filter.getType())) {
+      return failure();
+    }
+
+    return success();
+  }
+};
+```
+
+# Description
+The model should contain the following pattern:
+```
+filter = tf.Variable([...]) # a constant tensor
+cst = tf.Variable([...]) # a constant tensor, shape = [1, 1, ..., 1, last_dim]
+y = tf.matmul(input_tensor, filter) * cst # Mul is applied on the output of FullyConnectedOp
+```
+This pattern characterizes scenarios where a FullyConnectedOp is invoked on a tensor and a constant filter input, and then a Mul operation is invoked on the output tensor and a constant tensor. The FullyConnected operation should have the following properties:
+   - The filter input should be a constant tensor.
+   - The bias input should either be of NoneType or a constant tensor.
+   - The fused activation function should be "NONE".
+The constant tensor from the Mul operation should have all dimensions equal to 1, except for the last dimension. The constant tensor from the Mul operation should be broadcastable with the filter tensor of the FullyConnected operation after reshaping and transposing the constant tensor.
+
+### Please describe the characteristics of the TensorFlow model that can trigger the optimization pass `OptimizeTopK` when converted to a TensorFlow Lite model. The model can be used to reach out the `return success();` line in the function `matchAndRewrite`. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# Code of the function and its helper functions
+```cpp
+// Reduce the K of a TopKV2Op for the following case.
+//
+// values, indices = tfl.topkv2(%inputs, K)
+// %1 = tfl.slice(values, 0, k)
+// %2 = tfl.slice(indices,0, k)
+// .... (values and indices only used for %1 and %2)
+//
+// %1 or %2 can be absent. If values and indices are only used here,
+// this pattern can be replaced with (conceptually)
+//
+// %values, %indices = tfl.topkv2(%inputs, k)
+// replace all use of %1 with values
+// replace all use of %2 with indices
+//
+struct OptimizeTopK : public OpRewritePattern<TFL::TopKV2Op> {
+  using OpRewritePattern::OpRewritePattern;
+
+  // It computes the last dim k of slice size of value.user.
+  // If value has no use then return 0.
+  std::optional<int32_t> ComputeSliceK(Value value) const {
+    if (value.use_empty()) return 0;
+    auto slice_op =
+        llvm::dyn_cast_or_null<TFL::SliceOp>(value.getUses().begin().getUser());
+    // We only match for the case where value is used by SliceOp.
+    if (!slice_op) return std::nullopt;
+    DenseElementsAttr begin;
+    DenseElementsAttr size;
+    if (!matchPattern(slice_op->getOperand(1), m_Constant(&begin)) ||
+        !matchPattern(slice_op->getOperand(2), m_Constant(&size)))
+      return std::nullopt;
+
+    // Check if "begin" is a zero tensor.
+    for (auto begin_idx : begin.getValues<APInt>())
+      if (begin_idx != 0) return std::nullopt;
+
+    // Check if "size" is equal to slice_op.input.shape except
+    // for last dimension.
+    // It can be done  by verifying the number of elements:
+    // i.e., num_input/input_last_dim = num_result/k
+    auto input_ty = value.getType().dyn_cast_or_null<ShapedType>();
+    auto result_ty = slice_op.getType().dyn_cast<ShapedType>();
+    if (!input_ty || !result_ty) return std::nullopt;
+    if (!input_ty.hasStaticShape() || !result_ty.hasStaticShape())
+      return std::nullopt;
+    if (!input_ty.getRank() || !result_ty.getRank()) return std::nullopt;
+    int num_input = input_ty.getNumElements();
+    int input_last_dim = input_ty.getShape().back();
+    if (input_last_dim < 1) return std::nullopt;
+    int num_result = result_ty.getNumElements();
+    auto size_last = *(--size.value_end<APInt>());
+    int32_t k = size_last.getSExtValue();
+    if (num_input / input_last_dim * k != num_result) return std::nullopt;
+    // We don't match sliceOp with last dim size = 0.
+    if (!k) return std::nullopt;
+    return k;
+  }
+
+  LogicalResult matchAndRewrite(TFL::TopKV2Op op,
+                                PatternRewriter &rewriter) const override {
+    auto values = op.getValues();
+    auto indices = op.getIndices();
+    // op.getValues() and op.getIndices() cannot be used more than once.
+    
+    if (!values.hasOneUse() && !values.use_empty()) return failure();
+    if (!indices.hasOneUse() && !indices.use_empty()) return failure();
+
+    auto k_values_or = ComputeSliceK(values);
+    auto k_indices_or = ComputeSliceK(indices);
+    if (!k_values_or.has_value() || !k_indices_or.has_value()) return failure();
+    int32_t k_values = k_values_or.value();
+    int32_t k_indices = k_indices_or.value();
+    // We don't match two SliceOp with different sizes.
+    if (k_values != k_indices && !values.use_empty() && !indices.use_empty())
+      return failure();
+
+    return success();
+  }
+};
+```
+
+# Description

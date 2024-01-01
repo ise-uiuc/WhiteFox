@@ -1,0 +1,36 @@
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(3, 3, 1, stride=1, padding=0, groups=3)
+        self.conv1 = torch.nn.Conv2d(3, 4, 1, stride=1, padding=0, groups=3, bias=False)
+        self.conv2 = torch.nn.Conv2d(3, 6, 1, stride=1, padding=0, groups=3, bias=False)
+        self.conv3 = torch.nn.Conv2d(3, 1, 1, stride=1, padding=0, groups=3, bias=False)
+        self.conv4 = torch.nn.Conv2d(3, 2, 1, stride=1, padding=0, groups=3, bias=False)
+        self.conv5 = torch.nn.Conv2d(3, 9, 1, stride=1, padding=0, groups=3, bias=False)
+        self.conv6 = torch.nn.Conv2d(3, 3, 1, stride=1, padding=0, groups=3, bias=False)
+        self.conv7 = torch.nn.Conv2d(3, 7, 1, stride=1, padding=0, groups=3, bias=False)
+        self.conv8 = torch.nn.Conv2d(3, 2, 1, stride=1, padding=0, groups=3)
+        self.conv9 = torch.nn.Conv2d(3, 7, 1, stride=1, padding=0, groups=3)
+        self.conv10 = torch.nn.Conv2d(3, 8, 1, stride=1, padding=0, groups=3)
+        self.conv11 = torch.nn.ConvTranspose2d(3, 3, kernel_size=(2, 2), stride=(2, 2))
+        self.conv12 = torch.nn.ConvTranspose2d(3, 9, kernel_size=(3, 3), stride=(3, 3), padding=(3, 3), output_padding=(3, 3))
+        self.conv13 = torch.nn.ConvTranspose2d(3, 4, kernel_size=2, stride=2, padding=0, output_padding=1, groups=3, bias=True, dilation=1)
+    def forward(self, x1):
+        v1 = self.conv(x1)
+        v1 = self.conv1(v1)
+        v1 = self.conv2(v1)
+        v1 = self.conv3(v1)
+        v1 = self.conv4(v1)
+        v1 = self.conv5(v1)
+        v1 = self.conv6(v1)
+        v1 = self.conv7(v1)
+        v1 = self.conv8(v1)
+        v1 = self.conv9(v1)
+        v1 = self.conv10(v1)
+        v1 = self.conv11(v1)
+        v1 = self.conv12(v1)
+        v1 = self.conv13(v1)
+        return v1
+# Inputs to the model
+x1 = torch.randn(1, 3, 64, 64)

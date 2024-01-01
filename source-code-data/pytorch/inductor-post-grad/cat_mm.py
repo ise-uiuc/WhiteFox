@@ -1,0 +1,1 @@
+CallFunction(aten.cat, ListOf(CallFunction(aten.mm, Arg(), Arg())), Arg())

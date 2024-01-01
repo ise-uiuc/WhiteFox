@@ -1,0 +1,78 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+qk = query @ key.transpose(-2, -1) / math.sqrt(query.size(-1)) # Compute the dot product of the query and key, and scale it
+qk = qk + attn_mask # Add the attention mask to the scaled dot product
+attn_weight = torch.softmax(qk, dim=-1) # Apply softmax to the result
+attn_weight = torch.dropout(attn_weight, dropout_p, True) # Apply dropout to the softmax output
+output = attn_weight @ value # Compute the dot product of the dropout output and the value
+```
+This pattern characterizes the attention mechanism in transformer models, where the attention weights are computed as the softmax of the scaled dot product of the query and key (plus an attention mask), followed by a dropout operation. The output is then computed as the dot product of these attention weights and the value.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.heads = 51
+        self.seq_len = 178
+        self.dim = 64 // self.heads
+    def forward(self, query, key, value, attn_mask):
+        qk = query @ key.transpose(-2, -1) / math.sqrt(query.size(-1))
+        qk = qk + attn_mask
+        attn_weight = torch.softmax(qk, dim=-1)
+        attn_weight = torch.dropout(attn_weight, 0.1, True)
+        output = attn_weight @ value
+        output = output.transpose(0, 2)
+        return output
+# Inputs to the model
+query = torch.randn(256, 51, 178, 64)
+key = torch.randn(256, 51, 178, 64)
+value = torch.randn(256, 51, 178, 64)
+attn_mask = torch.randn(1, 1, 178, 178)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.heads = 64
+        self.seq_len = 1024
+        self.dim = 1024 // self.heads
+    def forward(self, query, key, value, attn_mask):
+        qk = query @ key.transpose(-2, -1) / math.sqrt(query.size(-1))
+        qk = qk + attn_mask
+        attn_weight = torch.softmax(qk, dim=-1)
+        attn_weight = torch.dropout(attn_weight, 0.1, True)
+        output = attn_weight @ value
+        return output
+# Inputs to the model
+query = torch.randn(1, 256, 1024, 1024)
+key = torch.randn(1, 256, 1024, 1024)
+value = torch.randn(1, 256, 1024, 1024)
+attn_mask = torch.randn(1, 1, 1024, 1024)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.heads = 36
+        self.seq_len = 512
+        self.dim = 368 // self.heads
+    def forward(self, query, key, value, attn_mask):
+        qk = query @ key.transpose(-2, -1) / math.sqrt(query.size(-1))
+        qk = qk + attn_mask
+        attn_weight = torch.softmax(qk, dim=-1)
+        attn_weight = torch.dropout(attn_weight, 0.1, True)
+        output = attn_weight @ value
+        return output
+# Inputs to the model
+query = torch.randn(1, 36, 512, 368)
+key = torch.randn(1, 36, 512, 368)
+value = torch.randn(1, 36, 512, 368)
+attn_mask = torch.randn(1, 1, 512, 512)
+# Model ends
+
+# Model begins

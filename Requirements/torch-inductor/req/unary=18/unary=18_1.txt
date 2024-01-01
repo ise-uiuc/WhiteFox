@@ -1,0 +1,6 @@
+The model should contain the following pattern:
+```
+t1 = conv(input_tensor) # Apply pointwise convolution with kernel size 1 to the input tensor
+t2 = torch.sigmoid(t1) # Apply the sigmoid function to the output of the convolution
+```
+This pattern characterizes scenarios where the output of a pointwise convolution is passed through a sigmoid activation function. This is a common pattern in neural networks where the sigmoid function is used to squash the output of the convolution between 0 and 1, making it suitable for binary classification tasks.

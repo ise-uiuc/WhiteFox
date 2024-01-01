@@ -1,0 +1,21 @@
+The C++ code should contain the following pattern:
+
+```cpp
+int main() {
+    int x = ANY_VALUE; // declare variable x
+    int y = ANY_VALUE; // declare variable y
+    int z = ANY_VALUE; // declare variable z
+
+    // define a loop with a single latch
+    while (x CONDITION y) {
+        RANDOM_CODE; // Do something here with x, y, z
+        x = x OPERATOR ANY_VALUE; // x is updated in each iteration
+        if (z CONDITION ANY_VALUE) {
+            break; // a break statement with a condition that can be constant folded
+        }
+    }
+    return 0;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists a loop with a single latch. The loop condition involves a comparison (`CONDITION`) between two variables `x` and `y`. Inside the loop, there is a `break` statement with a condition that can be constant folded. The `x` variable is updated in each iteration. The `main` function must return a value related to this optimization for further comparison.

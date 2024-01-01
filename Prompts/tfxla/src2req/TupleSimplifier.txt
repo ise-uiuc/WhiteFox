@@ -1,0 +1,130 @@
+### Please describe the characteristics of the TensorFlow model that trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA. The model can be used to reach out the `return true;` line in function `ReshapeReshapeForwarding`, leading the function to return true. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# The code of the function and its helper functions:
+
+```cpp
+// Reshape(Reshape(A, []->[1]), [1]->[]) ==> A
+StatusOr<bool> ReshapeReshapeForwarding(HloInstruction* reshape) {
+  if (reshape->opcode() != HloOpcode::kReshape) {
+    return false;
+  }
+  auto reshape_2 = reshape->mutable_operand(0);
+  if (reshape_2->opcode() != HloOpcode::kReshape) {
+    return false;
+  }
+
+  if (!Shape::Equal()(reshape->shape(), reshape_2->operand(0)->shape())) {
+    return false;
+  }
+  TF_RETURN_IF_ERROR(
+      reshape->ReplaceAllUsesWith(reshape_2->mutable_operand(0)));
+
+  return true;
+}
+```
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+### Please describe the characteristics of the TensorFlow model that trigger the optimization pass `TupleSimplifier` in TensorFlow XLA. The model can be used to reach out the `return changed;` line in function `TupleSimplifier::Run`, leading the function to return true. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# The code of the function and its helper functions:
+
+```cpp
+TupleSimplifier::TupleSimplifier(bool exclude_entry_computation)
+    : exclude_entry_computation_(exclude_entry_computation) {}
+
+StatusOr<bool> TupleSimplifier::RemoveWholeTuple(HloInstruction* tuple) {
+  HloInstruction* top_tuple = nullptr;
+  for (int64_t operand_number = 0; operand_number < tuple->operand_count();
+       ++operand_number) {
+    HloInstruction* operand = tuple->mutable_operand(operand_number);
+    if (operand->opcode() != HloOpcode::kGetTupleElement ||
+        operand->tuple_index() != operand_number) {
+      return false;
+    }
+    if (top_tuple == nullptr) {
+      top_tuple = operand->mutable_operand(0);
+      if (!ShapeUtil::Compatible(top_tuple->shape(), tuple->shape())) {
+        return false;
+      }
+    } else if (top_tuple != operand->operand(0)) {
+      return false;
+    }
+  }
+  if (top_tuple == nullptr) {
+    return false;
+  }
+  TF_ASSIGN_OR_RETURN(bool changed,
+                      tuple->parent()->ReplaceInstruction(
+                          tuple, top_tuple, /*preserve_sharding=*/true));
+  return changed;
+}
+
+StatusOr<bool> TupleSimplifier::Run(
+    HloModule* module,
+    const absl::flat_hash_set<absl::string_view>& execution_threads) {
+  // Initially add all GTE and Tuple instructions to the worklist.
+  bool changed = false;
+  for (auto* computation : module->computations(execution_threads)) {
+    if (exclude_entry_computation_ &&
+        computation == module->entry_computation()) {
+      continue;
+    }
+    for (auto* instruction : computation->MakeInstructionPostOrder()) {
+      if (instruction->opcode() == HloOpcode::kTuple) {
+        TF_ASSIGN_OR_RETURN(bool c, RemoveWholeTuple(instruction));
+        changed |= c;
+      } else {
+        auto ancestor = instruction->LatestNonGteAncestorAndIndex();
+        if (ancestor.first == instruction) {
+          continue;
+        }
+        // If possible replace a chain of GTE with the operation which produces
+        // the element. For example, replace uses of GTE with below with just
+        // 'Op' (assuming 'Op' is at the index of the GTE instruction):
+        //
+        //     ...  Op ...
+        //       \  |   /
+        //        Tuple
+        //          |
+        //         GTE
+        //         ...
+        //          |
+        //         GTE
+        //          |
+        //         GTE
+        //
+        // Note that this deletes the Tuple instruction altogether. In addition,
+        // if only a subset of tuple's elements are used, this transform
+        // optimizes them one at a time, and after the last use is optimized,
+        // the Tuple will also be deleted.
+        HloInstruction* replacement = ancestor.first;
+        for (int i = 0; i < ancestor.second.size(); ++i) {
+          if (replacement->opcode() != HloOpcode::kTuple) {
+            replacement = nullptr;
+            break;
+          }
+          replacement = replacement->mutable_operand(ancestor.second[i]);
+        }
+
+        if (replacement) {
+          TF_ASSIGN_OR_RETURN(bool replaced, computation->ReplaceInstruction(
+                                                 instruction, replacement,
+                                                 /*preserve_sharding=*/true));
+          changed |= replaced;
+        }
+      }
+    }
+  }
+  return changed;
+}
+```
+
+# Description

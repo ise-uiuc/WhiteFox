@@ -1,0 +1,21 @@
+The C++ code should contain the following pattern:
+
+```cpp
+int main() {
+    int x = ANY_VALUE; // declare variable x
+    int y = ANY_VALUE; // declare variable y
+    int z = ANY_VALUE; // declare variable z
+
+    int *p = new int; // allocate memory for an integer
+    *p = x + y + z; // assign the sum of x, y, and z to the allocated memory
+
+    int result = *p; // read the value from the allocated memory
+    delete p; // deallocate the memory
+
+    return result;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists an allocation of memory (`new int`), assignment of a value to the allocated memory (`*p = x + y + z;`), reading of the value from the allocated memory (`int result = *p;`), and deallocation of the memory (`delete p;`). The `main` function must return a value related to this optimization for further comparison. 
+
+The key point here is the use of a pointer to allocate memory, assign a value, read the value, and then deallocate the memory. This pattern will trigger the `PromotePass` optimization in LLVM, which promotes memory to register.

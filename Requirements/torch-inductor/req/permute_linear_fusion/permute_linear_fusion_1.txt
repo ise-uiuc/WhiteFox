@@ -1,0 +1,7 @@
+The model should contain the following pattern:
+```
+t1 = input_tensor.permute(...) # Permute the input tensor
+t2 = torch.nn.functional.linear(t1, ...) # Apply linear transformation to the permuted tensor.
+```
+This pattern characterizes scenarios where the tensor method 'permute' is invoked first, and then the `torch.nn.functional.linear` function is invoked on the permuted tensor.
+The permute method is invoked on an input tensor with more than 2 dimensions, and it swaps the last two dimensions of this tensor. This modified tensor is then used as the main input for the linear function.

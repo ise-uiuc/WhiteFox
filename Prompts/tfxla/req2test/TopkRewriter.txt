@@ -1,0 +1,67 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `TopkRewriter` in TensorFlow XLA.
+
+# Description
+The model should contain a `tf.sort` operation that is used in a Top-K context. The characteristics of the model that trigger the `TopkRewriter` optimization pass are as follows:
+
+1. The model contains a `tf.sort` operation with one or two operands. If there are two operands, the second one must be an `Iota` operation or a broadcasted `Iota` operation.
+
+2. The comparison function used in the `tf.sort` operation must be a NaN-safe greater-than operation. This means that the comparison function should be able to handle NaN values correctly.
+
+3. The `tf.sort` operation is used in a Top-K context. This means that the output of the `tf.sort` operation is sliced to get the top K elements. The slicing operation must start at the beginning of the tensor and must not have any strides. If the input to the `tf.sort` operation has a batch dimension, slicing along the batch dimension is not supported.
+
+4. The input to the `tf.sort` operation must be a 1D or 2D tensor of type `F32` or `BF16`.
+
+5. The `TopkRewriter` optimization pass also includes a profitability check. This check determines whether it is beneficial to convert the `tf.sort` operation to a custom Top-K operation. The details of this check are not provided in the function code.
+
+Here is an example of a TensorFlow model that would trigger the `TopkRewriter` optimization pass:
+
+```python
+import tensorflow as tf
+
+# Create a 2D tensor
+input_tensor = tf.constant([[1.0, 3.0, 2.0], [4.0, 6.0, 5.0]])
+
+# Sort the tensor along the last dimension
+sorted_tensor = tf.sort(input_tensor, axis=-1, direction='DESCENDING')
+
+# Get the top 2 elements
+top_k_tensor = tf.slice(sorted_tensor, [0, 0], [-1, 2])
+```
+
+In this example, the `tf.sort` operation is used in a Top-2 context. The output of the `tf.sort` operation is sliced to get the top 2 elements. The input to the `tf.sort` operation is a 2D tensor of type `F32`. Therefore, the `TopkRewriter` optimization pass would be triggered for this model.
+
+# Model

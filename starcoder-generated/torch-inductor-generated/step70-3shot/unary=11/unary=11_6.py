@@ -1,0 +1,15 @@
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_transpose = torch.nn.ConvTranspose2d(1, 100, 10, stride=1)
+        self.relu = torch.nn.ReLU()
+    def forward(self, x1):
+        v1 = self.conv_transpose(x1)
+        v2 = v1 + 3
+        v3 = torch.clamp_min(v2, 0)
+        v4 = torch.clamp_max(v3, 6)
+        v5 = v4 / 6
+        return self.relu(v5)
+# Inputs to the model
+x1 = torch.randn(2, 1, 28, 28)

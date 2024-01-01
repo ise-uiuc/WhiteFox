@@ -1,0 +1,48 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `BatchDotSimplification` in TensorFlow XLA.
+
+# Description
+The model should contain a `tf.linalg.batch_matmul` operation (or any equivalent operation that results in a batch dot product) with the following characteristics:
+
+1. The batch dimensions of the left-hand side (lhs) and right-hand side (rhs) tensors are equal and strictly ascending. This means that the batch dimensions are arranged in increasing order from the first dimension onwards. For example, if the lhs tensor has shape `[2, 3, 4, 5]` and the rhs tensor has shape `[2, 3, 6, 7]`, the batch dimensions are `[0, 1]` for both tensors.
+
+2. The operation has exactly one contracting dimension. In the context of matrix multiplication, a contracting dimension is one along which the dot product is computed. For example, if the lhs tensor has shape `[2, 3, 4, 5]` and the rhs tensor has shape `[2, 3, 5, 6]`, the contracting dimension is `2` for the lhs tensor and `1` for the rhs tensor.
+
+3. At least one of the batch dimensions of the lhs tensor has size 1. This is referred to as a degenerate dimension. For example, if the lhs tensor has shape `[2, 1, 4, 5]`, the second dimension is a degenerate dimension.
+
+The optimization pass `BatchDotSimplification::ElideDegenerateBatchDimensionFromBatchDot` is triggered when these conditions are met. It simplifies the batch dot product operation by removing the degenerate dimensions from the lhs and rhs tensors, adjusting the batch and contracting dimensions accordingly, and reshaping the result to match the original shape.
+
+# Model

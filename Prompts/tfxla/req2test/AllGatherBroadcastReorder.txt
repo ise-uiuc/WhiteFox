@@ -1,0 +1,55 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `AllGatherBroadcastReorder` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.broadcast_to(input_tensor, ...)
+t2 = tf.all_gather(t1, ...)
+```
+The pattern describes that there is an `all_gather` operator in the model that takes as input the result of a `broadcast` operation. The `all_gather` operation should be array-shaped. 
+
+The optimization pass `AllGatherBroadcastReorder` is triggered when the model contains an `all_gather` operation that has a `broadcast` operation as its operand. The optimization pass reorders these operations to perform the `all_gather` operation first and then the `broadcast` operation. 
+
+The optimization pass is beneficial when there are uniform dimensions in the `all_gather` operation's result that have a size greater than 1. A dimension is considered uniform if the same data is present along that dimension. The `all_gather` dimension is not considered uniform because the data across the `all_gather` participants is not known to be uniform. 
+
+The optimization pass considers two cases:
+1. If the `all_gather` operation happens along one of the non-uniform dimensions of the `broadcast` operation, then the `all_gather` operation is performed first and then a `broadcast` operation is performed.
+2. If the `all_gather` operation happens along one of the uniform dimensions of the `broadcast` operation, then a reshape operation is performed to add a leading '1' dimension, followed by the `all_gather` operation, a `broadcast` operation, and finally another reshape operation to "flatten" the dimensions. 
+
+The optimization pass returns true if any changes were made to the model.
+
+# Model

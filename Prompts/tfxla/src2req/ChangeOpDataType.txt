@@ -1,0 +1,99 @@
+### Please describe the characteristics of the TensorFlow model that trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA. The model can be used to reach out the `return true;` line in function `ReshapeReshapeForwarding`, leading the function to return true. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# The code of the function and its helper functions:
+
+```cpp
+// Reshape(Reshape(A, []->[1]), [1]->[]) ==> A
+StatusOr<bool> ReshapeReshapeForwarding(HloInstruction* reshape) {
+  if (reshape->opcode() != HloOpcode::kReshape) {
+    return false;
+  }
+  auto reshape_2 = reshape->mutable_operand(0);
+  if (reshape_2->opcode() != HloOpcode::kReshape) {
+    return false;
+  }
+
+  if (!Shape::Equal()(reshape->shape(), reshape_2->operand(0)->shape())) {
+    return false;
+  }
+  TF_RETURN_IF_ERROR(
+      reshape->ReplaceAllUsesWith(reshape_2->mutable_operand(0)));
+
+  return true;
+}
+```
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+### Please describe the characteristics of the TensorFlow model that trigger the optimization pass `ChangeOpDataType` in TensorFlow XLA. The model can be used to reach out the `return changed;` line in function `ChangeOpDataType::Run`, leading the function to return true. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# The code of the function and its helper functions:
+
+```cpp
+namespace {
+std::optional<PrimitiveType> GetUniformOperandType(
+    const HloInstruction* instr) {
+  std::optional<PrimitiveType> type;
+  for (const HloInstruction* operand : instr->operands()) {
+    if (!type.has_value()) {
+      type = operand->shape().element_type();
+    } else if (operand->shape().element_type() != type.value()) {
+      return std::nullopt;
+    }
+  }
+  return type;
+}
+}  // namespace
+
+StatusOr<bool> ChangeOpDataType::Run(
+    HloModule* module,
+    const absl::flat_hash_set<absl::string_view>& execution_threads) {
+  bool changed = false;
+  HloCloner default_cloner = [](const HloInstruction* inst, const Shape& shape,
+                                absl::Span<HloInstruction* const> operands) {
+    return inst->CloneWithNewOperands(shape, operands);
+  };
+  HloCloner cloner = cloner_ ? cloner_ : default_cloner;
+
+  for (HloComputation* comp :
+       module->MakeNonfusionComputations(execution_threads)) {
+    for (HloInstruction* instr : comp->MakeInstructionPostOrder()) {
+      std::optional<PrimitiveType> operand_type = GetUniformOperandType(instr);
+      if (!op_matcher_(instr) || !operand_type.has_value() ||
+          !instr->shape().IsArray() ||
+          instr->opcode() == HloOpcode::kParameter) {
+        continue;
+      }
+      const PrimitiveType from_type = *operand_type;
+      auto it = to_type_map_.find(from_type);
+      if (it == to_type_map_.end()) {
+        continue;
+      }
+      const PrimitiveType to_type = it->second;
+      absl::InlinedVector<HloInstruction*, 8> new_operands;
+      for (HloInstruction* operand : instr->mutable_operands()) {
+        new_operands.push_back(MakeConvertToHlo(operand, to_type));
+      }
+
+      Shape new_shape = instr->shape();
+      new_shape.set_element_type(to_type);
+
+      HloInstruction* new_instr =
+          comp->AddInstruction(cloner(instr, new_shape, new_operands));
+      TF_RETURN_IF_ERROR(comp->ReplaceInstruction(
+          instr, MakeConvertToHlo(new_instr, from_type)));
+      changed = true;
+    }
+  }
+  return changed;
+}
+```
+
+# Description

@@ -1,0 +1,13 @@
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = torch.nn.Conv2d(128, 64, 3, stride=1, padding=1)
+        self.relu1 = torch.nn.Sigmoid()
+        self.conv2 = torch.nn.Conv2d(64, 32, 3, stride=1, padding=1)
+    def forward(self, x1):
+        v1 = self.conv1(x1)
+        v2 = self.relu1(v1)
+        return self.conv2(v2)
+# Inputs to the model
+x1 = torch.randn(1, 128, 64, 64)

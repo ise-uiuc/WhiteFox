@@ -1,0 +1,52 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = torch.cat([tensor1, tensor2, ...], dim=...) # Concatenate tensors along a dimension
+t2 = t1.view(...) # Reshape the concatenated tensor
+t3 = torch.relu(t2) # Apply a pointwise unary operation (e.g., ReLU or Tanh) to the reshaped tensor
+```
+This pattern characterizes scenarios where a tensor is reshaped after concatenation and then a pointwise unary operation (like ReLU or Tanh) is applied. The unary operation should be the only user of the reshaped tensor. The optimization `sink_cat_after_pointwise` is triggered when such a pattern is detected in the model.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x):
+        t = torch.ones(10, 20)
+        y = torch.cat((t, x), dim=0)
+        return y.view(y.shape[0], -1).relu()
+# Inputs to the model
+x = torch.ones(1, 20)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(in_channels=1, out_channels=8, kernel_size=3, stride=1, padding=1, dilation=1, groups=1, bias=True, padding_mode='zeros')
+    def forward(self, x):
+        y = self.conv(x)
+        x = torch.cat((y, y), dim=1).tanh()
+        return x
+# Inputs to the model
+x = torch.randn(2, 1, 32, 32)
+# Model ends
+
+# Model begins
+class SinkCat(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.weight = torch.nn.Parameter(torch.tensor(0.0))
+        self.in_features = 2
+        self.out_features = 4
+    def forward(self, x):
+        x = torch.cat((x, x), dim=1).view(self.out_features, -1)
+        x = torch.relu(x)
+        return x
+# Inputs to the model
+x = torch.randn(3, 2, requires_grad=True)
+# Model ends
+
+# Model begins

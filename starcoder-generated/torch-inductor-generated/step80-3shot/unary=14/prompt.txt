@@ -1,0 +1,54 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = conv_transpose(input_tensor) # Apply pointwise transposed convolution to the input tensor
+t2 = sigmoid(t1) # Apply the sigmoid function to the output of the transposed convolution
+t3 = t1 * t2 # Multiply the output of the transposed convolution by the output of the sigmoid function
+```
+This pattern characterizes scenarios where a pointwise transposed convolution is applied to an input tensor, then the sigmoid function is applied to the output of the transposed convolution, and then the output of the transposed convolution is multiplied by the output of the sigmoid function. This is a typical pattern for a Gated Linear Unit (GLU) operation in a convolutional neural network.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_transpose1 = torch.nn.ConvTranspose2d(1, 1, (1, 1), stride=(1, 1), padding=0)
+    def forward(self, x1):
+        v1 = self.conv_transpose1(x1)
+        v2 = torch.sigmoid(v1)
+        v3 = v1 * v2
+        return v3
+# Inputs to the model
+x1 = torch.randn(1, 1, 1, 1)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_transpose_5 = torch.nn.ConvTranspose2d(64, 64, 3, stride=2, output_padding=1)
+    def forward(self, x1):
+        v1 = self.conv_transpose_5(x1)
+        v2 = torch.sigmoid(v1)
+        v3 = v1 * v2
+        return v3
+# Inputs to the model
+x1 = torch.randn(1, 64, 128, 128)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_transpose_7 = torch.nn.ConvTranspose2d(16, 8, 3, stride=2, output_padding=1)
+    def forward(self, x1):
+        v1 = self.conv_transpose_7(x1)
+        v2 = torch.sigmoid(v1)
+        v3 = v1 * v2
+        return v3
+# Inputs to the model
+x1 = torch.randn(1, 16, 32, 24)
+# Model ends
+
+# Model begins

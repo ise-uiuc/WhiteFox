@@ -1,0 +1,14 @@
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = torch.nn.Conv2d(7, 13, 4, stride=1, padding=3)
+        self.conv2 = torch.nn.Conv2d(13, 13, 2, stride=1, padding=0)
+        self.conv3 = torch.nn.Conv2d(13, 16, 1, stride=2, padding=0)
+    def forward(self, x1):
+        v1 = self.conv1(x1)
+        v2 = self.conv2(v1)
+        v3 = self.conv3(v2)
+        return v3
+# Inputs to the model
+x1 = torch.randn(1, 7, 64, 64)

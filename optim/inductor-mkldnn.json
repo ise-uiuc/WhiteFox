@@ -1,0 +1,422 @@
+{
+    "unary=0": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=0.py"
+                ]
+            }
+        ]
+    },
+    "unary=1": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=1.py"
+                ]
+            }
+        ]
+    },
+    "unary=2": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=2.py"
+                ]
+            }
+        ]
+    },
+    "unary=3": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=3.py"
+                ]
+            }
+        ]
+    },
+    "unary=4": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=4.py"
+                ]
+            }
+        ]
+    },
+    "unary=5": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=5.py"
+                ]
+            }
+        ]
+    },
+    "unary=6": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=6.py"
+                ]
+            }
+        ]
+    },
+    "unary=7": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=7.py"
+                ]
+            }
+        ]
+    },
+    "unary=8": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=8.py"
+                ]
+            }
+        ]
+    },
+    "unary=9": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=9.py"
+                ]
+            }
+        ]
+    },
+    "unary=10": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=10.py"
+                ]
+            }
+        ]
+    },
+    "unary=11": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=11.py"
+                ]
+            }
+        ]
+    },
+    "unary=12": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=12.py"
+                ]
+            }
+        ]
+    },
+    "unary=13": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=13.py"
+                ]
+            }
+        ]
+    },
+    "unary=14": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=14.py"
+                ]
+            }
+        ]
+    },
+    "unary=15": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=15.py"
+                ]
+            }
+        ]
+    },
+    "unary=16": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=16.py"
+                ]
+            }
+        ]
+    },
+    "unary=17": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=17.py"
+                ]
+            }
+        ]
+    },
+    "unary=18": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=18.py"
+                ]
+            }
+        ]
+    },
+    "unary=19": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=19.py"
+                ]
+            }
+        ]
+    },
+    "unary=20": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=20.py"
+                ]
+            }
+        ]
+    },
+    "unary=21": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=21.py"
+                ]
+            }
+        ]
+    },
+    "unary=22": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=22.py"
+                ]
+            }
+        ]
+    },
+    "unary=23": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=23.py"
+                ]
+            }
+        ]
+    },
+    "unary=24": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=24.py"
+                ]
+            }
+        ]
+    },
+    "unary=25": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=25.py"
+                ]
+            }
+        ]
+    },
+    "unary=26": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=26.py"
+                ]
+            }
+        ]
+    },
+    "unary=27": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=27.py"
+                ]
+            }
+        ]
+    },
+    "unary=28": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=28.py"
+                ]
+            }
+        ]
+    },
+    "unary=29": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/unary=29.py"
+                ]
+            }
+        ]
+    },
+    "binary=0": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/binary=0.py"
+                ]
+            }
+        ]
+    },
+    "binary=2": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/binary=2.py"
+                ]
+            }
+        ]
+    },
+    "binary=4": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/binary=4.py"
+                ]
+            }
+        ]
+    },
+    "binary=6": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/binary=6.py"
+                ]
+            }
+        ]
+    },
+    "binary=8": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/binary=8.py"
+                ]
+            }
+        ]
+    },
+    "binary=10": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/binary=10.py"
+                ]
+            }
+        ]
+    },
+    "binary_unary=0": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/binary_unary=0.py"
+                ]
+            }
+        ]
+    },
+    "binary_unary=2": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/binary_unary=2.py"
+                ]
+            }
+        ]
+    },
+    "binary_unary=4": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/binary_unary=4.py"
+                ]
+            }
+        ]
+    },
+    "binary_unary=6": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/binary_unary=6.py"
+                ]
+            }
+        ]
+    },
+    "binary_unary=8": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/binary_unary=8.py"
+                ]
+            }
+        ]
+    },
+    "binary_unary=10": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-mkldnn/binary_unary=10.py"
+                ]
+            }
+        ]
+    }
+}

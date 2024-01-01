@@ -1,0 +1,58 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReduceScatterCombiner` in TensorFlow XLA.
+
+# Description
+The model should contain multiple `ReduceScatter` operations that meet the following conditions:
+
+1. All `ReduceScatter` operations must have exactly one operand.
+2. All `ReduceScatter` operations must have the same reduction operation.
+3. The total size of the operands of the `ReduceScatter` operations in bytes should exceed the `combine_threshold_in_bytes` parameter of the `ReduceScatterCombiner` optimization pass.
+4. The total number of `ReduceScatter` operations should exceed the `combine_threshold_count` parameter of the `ReduceScatterCombiner` optimization pass.
+5. The model should not contain any `ReduceScatter` operation with constrained layouts.
+
+The pattern in the model could look like this:
+
+```python
+# Assume x1, x2, ..., xn are tensors
+y1 = tf.raw_ops.ReduceScatter(input=x1, reduction_op='add', ...)
+y2 = tf.raw_ops.ReduceScatter(input=x2, reduction_op='add', ...)
+...
+yn = tf.raw_ops.ReduceScatter(input=xn, reduction_op='add', ...)
+```
+
+In this pattern, `x1, x2, ..., xn` are the operands of the `ReduceScatter` operations, and `'add'` is the reduction operation. The total size of `x1, x2, ..., xn` in bytes should exceed `combine_threshold_in_bytes`, and the total number of `ReduceScatter` operations (n) should exceed `combine_threshold_count`.
+
+# Model

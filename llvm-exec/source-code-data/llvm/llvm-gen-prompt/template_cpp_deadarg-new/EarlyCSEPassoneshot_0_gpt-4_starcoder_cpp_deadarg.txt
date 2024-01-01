@@ -1,0 +1,21 @@
+The C++ code should contain the following pattern:
+
+```cpp
+int main() {
+    // Declare some variables
+    int x = ANY_VALUE;
+    int y = ANY_VALUE;
+
+    // Perform some operation that can be simplified
+    int z = x + 0; // This can be simplified to z = x;
+
+    // Use the result of the operation
+    int result = z * y;
+
+    return result;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists an operation that can be simplified (e.g., adding zero to a variable). The result of this operation is then used in another operation. The `main` function must return a value related to this optimization for further comparison.
+
+The optimization pass `EarlyCSEPass` in LLVM is designed to eliminate fully redundant instructions as well as trivially dead ones. In the provided C++ code, the operation `x + 0` is fully redundant because adding zero to a variable does not change its value. Therefore, this operation can be replaced with the variable `x` itself. This triggers the `Inst.replaceAllUsesWith(V);` line in the LLVM optimization pass, setting the boolean variable `Changed` to `True`.

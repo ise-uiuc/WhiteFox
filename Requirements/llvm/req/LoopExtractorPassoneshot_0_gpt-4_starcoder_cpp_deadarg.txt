@@ -1,0 +1,21 @@
+The C++ code should contain the following pattern:
+
+```cpp
+int main() {
+    // Declare some variables
+    int x = ANY_VALUE;
+    int y = ANY_VALUE;
+    int z = ANY_VALUE;
+
+    // A loop that can be extracted
+    for (int i = 0; i < x; ++i) {
+        // Some operations inside the loop
+        y = y + z;
+        z = z + i;
+    }
+
+    return y;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists a loop that can be extracted. The loop must have a condition that can be evaluated at runtime, and the loop body should contain some operations that modify the variables declared outside the loop. The `main` function must return a value related to this optimization for further comparison. The loop must not contain any function calls or other loops nested within it. The loop must be a top-level loop, meaning it is not nested within any other loops. The loop must not contain any break or continue statements. The loop must not contain any return statements. The loop must not contain any goto statements. The loop must not contain any exceptions or try/catch blocks. The loop must not contain any switch statements. The loop must not contain any volatile variables. The loop must not contain any assembly code. The loop must not contain any synchronization primitives such as mutexes or condition variables. The loop must not contain any I/O operations such as reading from or writing to files or the console. The loop must not contain any dynamic memory allocation or deallocation. The loop must not contain any static or global variables. The loop must not contain any lambda expressions or function pointers. The loop must not contain any template code. The loop must not contain any type casting. The loop must not contain any bitwise operations. The loop must not contain any floating point operations. The loop must not contain any complex numbers or other non-standard types. The loop must not contain any preprocessor directives. The loop must not contain any attributes or pragmas. The loop must not contain any inline assembly. The loop must not contain any undefined behavior. The loop must not contain any non-deterministic behavior. The loop must not contain any multi-threading or concurrency. The loop must not contain any recursion. The loop must not contain any indirect function calls. The loop must not contain any variadic functions. The loop must not contain any setjmp or longjmp calls. The loop must not contain any signal handling. The loop

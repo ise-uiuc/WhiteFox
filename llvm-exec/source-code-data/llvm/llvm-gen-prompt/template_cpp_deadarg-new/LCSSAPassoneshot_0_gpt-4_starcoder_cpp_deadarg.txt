@@ -1,0 +1,25 @@
+The C++ code should contain the following pattern:
+
+```cpp
+int main() {
+    int x = ANY_VALUE; // declare variable x
+    int y = ANY_VALUE; // declare variable y
+    int z = ANY_VALUE; // declare variable z
+    int result = 0;
+
+    // define a loop
+    for (int i = 0; i < ANY_VALUE; ++i) {
+        if (CONDITION) { // CONDITION can be any condition that uses i, x, y, z
+            result += x + y;
+        } else {
+            result += z;
+        }
+    }
+
+    return result;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists a loop that contains a conditional statement. The loop variable `i` and other variables `x`, `y`, `z` are used in the condition and the branches of the conditional statement. The `result` variable is updated in each iteration of the loop based on the condition. The `main` function must return a value related to this optimization for further comparison. 
+
+The loop should have multiple exit points (i.e., multiple `return`, `break`, or `goto` statements) and the variables used inside the loop should also be used outside the loop. This will trigger the LCSSA pass to insert PHI nodes at the loop exits to preserve the SSA property.

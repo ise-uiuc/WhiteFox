@@ -1,0 +1,48 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `AsyncCollectiveCreator` in TensorFlow XLA.
+
+# Description
+The model should contain collective operations such as `AllReduce`, `AllGather`, `CollectivePermute`, `AllToAll`, or `ReduceScatter` that are supported and configured to be converted into their asynchronous versions by the `AsyncCollectiveCreator` optimization pass.
+
+The collective operations are identified and replaced with their asynchronous versions, which consist of a pair of `start` and `done` instructions. The `start` instruction initiates the collective operation, and the `done` instruction indicates the completion of the operation.
+
+For example, if the model contains an `AllReduce` operation, it would be replaced with `AllReduceStart` and `AllReduceDone` instructions. Similarly, an `AllGather` operation would be replaced with `AllGatherStart` and `AllGatherDone` instructions, and so on.
+
+The control dependencies of the original collective operation are transferred to the new asynchronous instructions. If the original operation had control predecessors, they are made to depend on the `start` instruction. If the original operation had control successors, the `done` instruction is made to depend on them.
+
+The replacement of the collective operations with their asynchronous versions triggers the `AsyncCollectiveCreator` optimization pass, leading the function to return `true`.
+
+# Model

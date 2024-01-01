@@ -1,0 +1,87 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = torch.full([arg1, arg2], 1, dtype=dtype, layout=layout, device=device, pin_memory=False) # Create a tensor filled with the scalar value 1, with the specified dtype, layout, and device
+t2 = convert_element_type(t1, dtype) # Convert the elements of the tensor to the specified dtype
+t3 = torch.cumsum(t2, 1) # Compute the cumulative sum of the elements of the tensor along dimension 1
+```
+This pattern characterizes scenarios where a tensor filled with the scalar value `1` is created with the specified dtype, layout, and device, then the elements of the tensor are converted to the specified dtype, and then the cumulative sum of the elements of the tensor is computed along dimension `1`.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x1):
+        b = {}
+        a = {}
+        b['dtype'] = torch.int16
+        b['layout'] = torch.strided
+        b['device'] = torch.device('cuda:0')
+        a['dtype'] = torch.long
+        a['layout'] = torch.strided
+        a['device'] = torch.device('cuda:0')
+        a['dtype_to'] = torch.int16
+        a['dtype_from'] = torch.long
+        b['dtype_to'] = torch.int16
+        b['dtype_from'] = torch.long
+        t1 = torch.full([128, 1024], 1, dtype=b['dtype'], layout=b['layout'], device=b['device'], pin_memory=False)
+        t2 = t1.to(dtype=a['dtype'])
+        t3 = torch.cumsum(t2, 1)
+        return t3
+# Inputs to the model
+x1 = torch.randn(2048, 1024, device='cuda:0')
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x1):
+        b = {}
+        a = {}
+        b['dtype'] = torch.float32
+        b['layout'] = torch.strided
+        b['device'] = torch.device('cuda:0')
+        a['dtype'] = torch.float64
+        a['layout'] = torch.strided
+        a['device'] = torch.device('cuda:0')
+        a['dtype_to'] = torch.float32
+        a['dtype_from'] = torch.float64
+        b['dtype_to'] = torch.float32
+        b['dtype_from'] = torch.float64
+        t1 = torch.full([256, 1024], 1, dtype=b['dtype'], layout=b['layout'], device=b['device'], pin_memory=False)
+        t2 = t1.to(dtype=a['dtype'])
+        t3 = torch.cumsum(t2, 1)
+        return t3
+# Inputs to the model
+x1 = torch.randn(256, 1024, device='cuda:0')
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x1):
+        b = {}
+        a = {}
+        b['dtype'] = torch.bool
+        b['layout'] = torch.strided
+        b['device'] = torch.device('cuda:0')
+        a['dtype'] = torch.float32
+        a['layout'] = torch.strided
+        a['device'] = torch.device('cuda:0')
+        a['dtype_to'] = torch.float64
+        a['dtype_from'] = torch.float32
+        b['dtype_to'] = torch.float64
+        b['dtype_from'] = torch.float32
+        t1 = torch.full([256, 1024], 1, dtype=b['dtype'], layout=b['layout'], device=b['device'], pin_memory=False)
+        t2 = t1.to(dtype=a['dtype'])
+        t3 = torch.cumsum(t2, 1)
+        return t3
+# Inputs to the model
+x1 = torch.randn(256, 1024, device='cuda:0')
+# Model ends
+
+# Model begins

@@ -1,0 +1,74 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = conv(input_tensor) # Apply pointwise convolution with kernel size 1 to the input tensor
+t2 = torch.clamp_min(t1, min_value) # Clamp the output of the convolution to a minimum value
+t3 = torch.clamp_max(t2, max_value) # Clamp the output of the previous operation to a maximum value
+```
+This pattern characterizes scenarios where the output of a pointwise convolution is first clamped to a minimum value, and then the result is clamped to a maximum value. The minimum and maximum values are provided as keyword arguments.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self, min, max):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(16, 8, 5, stride=1, padding=1)
+        self.min = min
+        self.max = max
+    def forward(self, x1):
+        v1 = self.conv(x1)
+        v2 = torch.clamp_min(v1, self.min)
+        v3 = torch.clamp_max(v2, self.max)
+        return v3
+min = 0.9
+max = 0.9
+# Inputs to the model
+x1 = torch.randn(1, 16, 110, 150)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self, min, max):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(10, 40, 1, stride=1, padding=0)
+        self.conv2 = torch.nn.Conv2d(40, 80, 1, stride=1, padding=0)
+        self.conv3 = torch.nn.Conv2d(80, 10, 1, stride=1, padding=0)
+        self.min = min
+        self.max = max
+    def forward(self, x1):
+        v1 = self.conv(x1)
+        v2 = torch.clamp_min(v1, self.min)
+        v5 = torch.clamp_max(v2, self.max)
+        v6 = self.conv2(v5)
+        v7 = torch.clamp_min(v6, self.min)
+        v8 = torch.clamp_max(v7, self.max)
+        v10 = self.conv3(v8)
+        v11 = torch.clamp_min(v10, self.min)
+        v12 = torch.clamp_max(v11, self.max)
+        return v12
+min = 5
+max = 1
+# Inputs to the model
+x1 = torch.randn(1, 10, 30, 30)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self, min, max):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(1, 1, 1, stride=1, padding=0)
+        self.min = min
+        self.max = max
+    def forward(self, x1):
+        v1 = self.conv(x1)
+        v2 = torch.clamp_min(v1, self.min)
+        v3 = torch.clamp_max(v2, self.max)
+        return v3
+min = 15
+max = 20.5
+# Inputs to the model
+x1 = torch.randn(2, 1, 32, 32)
+# Model ends
+
+# Model begins

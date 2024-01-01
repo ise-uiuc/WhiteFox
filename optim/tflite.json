@@ -1,0 +1,132 @@
+{
+    "FuseFullyConnectedAndReluX": {
+        "hints": [
+            {
+                "type": "trigger",
+                "codes": [
+                    "source-code-data/tflite_v2-full/FuseFullyConnectedAndReluX.cc"
+                ]
+            }
+        ]
+    },
+    "FuseBinaryOpToFollowingAffineOp": {
+        "hints": [
+            {
+                "type": "trigger",
+                "codes": [
+                    "source-code-data/tflite_v2-full/FuseBinaryOpToFollowingAffineOp.cc"
+                ]
+            }
+        ]
+    },
+    "FuseFullyConnectedAndMul": {
+        "hints": [
+            {
+                "type": "trigger",
+                "codes": [
+                    "source-code-data/tflite_v2-full/FuseFullyConnectedAndMul.cc"
+                ]
+            }
+        ]
+    },
+    "FuseMulAndFullyConnected": {
+        "hints": [
+            {
+                "type": "trigger",
+                "codes": [
+                    "source-code-data/tflite_v2-full/FuseMulAndFullyConnected.cc"
+                ]
+            }
+        ]
+    },
+    "FuseAddAndFullyConnected": {
+        "hints": [
+            {
+                "type": "trigger",
+                "codes": [
+                    "source-code-data/tflite_v2-full/FuseAddAndFullyConnected.cc"
+                ]
+            }
+        ]
+    },
+    "FuseFullyConnectedAndAdd": {
+        "hints": [
+            {
+                "type": "trigger",
+                "codes": [
+                    "source-code-data/tflite_v2-full/FuseFullyConnectedAndAdd.cc"
+                ]
+            }
+        ]
+    },
+    "FuseUnpackAndConcatToReshape": {
+        "hints": [
+            {
+                "type": "trigger",
+                "codes": [
+                    "source-code-data/tflite_v2-full/FuseUnpackAndConcatToReshape.cc"
+                ]
+            }
+        ]
+    },
+    "ConvertTrivialTransposeOpToReshapeOp": {
+        "hints": [
+            {
+                "type": "trigger",
+                "codes": [
+                    "source-code-data/tflite_v2-full/ConvertTrivialTransposeOpToReshapeOp.cc"
+                ]
+            }
+        ]
+    },
+    "FuseAffinOpAndMulWithQDQs": {
+        "hints": [
+            {
+                "type": "trigger",
+                "codes": [
+                    "source-code-data/tflite_v2-full/FuseAffinOpAndMulWithQDQs.cc"
+                ]
+            }
+        ]
+    },
+    "OptimizeTopK": {
+        "hints": [
+            {
+                "type": "trigger",
+                "codes": [
+                    "source-code-data/tflite_v2-full/OptimizeTopK.cc"
+                ]
+            }
+        ]
+    },
+    "RemoveReshapeBeforeFullyConnected": {
+        "hints": [
+            {
+                "type": "trigger",
+                "codes": [
+                    "source-code-data/tflite_v2-full/RemoveReshapeBeforeFullyConnected.cc"
+                ]
+            }
+        ]
+    },
+    "RemoveReshapeAfterFullyConnected": {
+        "hints": [
+            {
+                "type": "trigger",
+                "codes": [
+                    "source-code-data/tflite_v2-full/RemoveReshapeAfterFullyConnected.cc"
+                ]
+            }
+        ]
+    },
+    "ScalarizeSplatConstantForBroadcastableOps": {
+        "hints": [
+            {
+                "type": "trigger",
+                "codes": [
+                    "source-code-data/tflite_v2-full/ScalarizeSplatConstantForBroadcastableOps.cc"
+                ]
+            }
+        ]
+    }
+}

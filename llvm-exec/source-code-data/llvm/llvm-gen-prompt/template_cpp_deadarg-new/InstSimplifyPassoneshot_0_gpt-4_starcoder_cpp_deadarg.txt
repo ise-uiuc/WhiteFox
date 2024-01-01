@@ -1,0 +1,15 @@
+The C++ code should contain the following pattern:
+
+```cpp
+int main() {
+    int x = ANY_VALUE; // declare variable x
+    int y = ANY_VALUE; // declare variable y
+    int z = x + y; // perform some operation
+    if (z == x + y) { // compare the result with the same operation
+        // do something
+    }
+    return 0;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists a computation (in this case, `x + y`), and the result of this computation is being used in a comparison with the same computation. The `if` statement is redundant because it is comparing the result of a computation with the same computation, which will always be true. The variables `x` and `y` can be any type that supports the `+` operator and the `==` operator, e.g., `int`, `float`, `double`, etc. The `main` function must return a value related to this optimization for further comparison.

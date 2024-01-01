@@ -1,0 +1,19 @@
+CallFunction(
+    aten.cumsum.default,
+    CallFunction(
+        prims.convert_element_type.default,
+        CallFunction(
+            torch.ops.aten.full.default,
+            [Arg(), Arg()],
+            1,
+            dtype=Ignored(),
+            layout=Ignored(),
+            device=KeywordArg("device"),
+            pin_memory=False,
+            _users=MULTIPLE,
+        ),
+        KeywordArg("dtype"),
+        _users=MULTIPLE,
+    ),
+    1,
+)

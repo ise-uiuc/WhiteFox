@@ -1,0 +1,51 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `StochasticConvertDecomposer` in TensorFlow XLA.
+
+# Description
+The model should contain a `stochastic_convert` operation with two operands. The `stochastic_convert` operation is used to convert a floating-point number to an integer in a stochastic manner. The first operand is the floating-point number to be converted, and the second operand is a random number used for rounding.
+
+The model should trigger the `StochasticConvertDecomposer` optimization pass if the target type of the conversion is a signed integral type. The conversion process involves several steps including calculating the sign of the operand, determining whether to round up or down based on the random number, and handling minimum and maximum values.
+
+Here is an example of a TensorFlow operation that would trigger this optimization pass:
+
+```python
+# Assume `input_tensor` is a floating-point tensor and `random_tensor` is a tensor of random numbers
+output_tensor = tf.raw_ops.StochasticConvert(input_tensor, random_tensor)
+```
+
+Note that the `StochasticConvert` operation is not directly available in the TensorFlow Python API, but it can be accessed through the `tf.raw_ops` module.
+
+# Model

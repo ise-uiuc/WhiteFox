@@ -1,0 +1,59 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `SortSimplifier` in TensorFlow XLA.
+
+# Description
+The model should contain a `tf.sort` operation with a tuple shape, where some of the output values of the sort operation are not used in the subsequent computations. 
+
+The pattern describes that there is a `tf.sort` operation in the model, which sorts a tuple of tensors. However, not all elements of the sorted tuple are used in the subsequent computations. 
+
+The optimization pass `SortSimplifier` is triggered when the model contains such a pattern. The optimization pass will remove the unused output values from the sort instruction, which can potentially reduce the computational cost and memory usage of the model. 
+
+Here is an example of such a pattern:
+
+```python
+# input is a tuple of tensors
+input = (tensor1, tensor2, tensor3)
+
+# sort the tuple
+sorted_tuple = tf.sort(input)
+
+# only use the first two elements of the sorted tuple
+output = some_function(sorted_tuple[0], sorted_tuple[1])
+```
+
+In this example, `tensor3` is sorted but not used in the subsequent computations, so the optimization pass `SortSimplifier` will be triggered to remove `tensor3` from the sort instruction.
+
+# Model

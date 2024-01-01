@@ -1,0 +1,14 @@
+
+class Model(torch.nn.Module):
+    def __init__(self, p=0.5):
+        super().__init__()
+        self.linear = torch.nn.Linear(3, 3)
+        self.BatchNorm = torch.nn.BatchNorm2d(3, affine=False, momentum=1 - p, eps=1e-05)
+    def forward(self, x1):
+        v1 = x1.permute(0, 2, 1)
+        v2 = torch.nn.functional.linear(v1, self.linear.weight, self.linear.bias)
+        v3 = self.BatchNorm(v2)
+        y = v3.transpose(0, 1)
+        return y
+# Inputs to the model
+x1 = torch.randn(1, 3, 3)

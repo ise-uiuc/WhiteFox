@@ -1,0 +1,14 @@
+The C++ code should contain the following pattern:
+
+```cpp
+int main() {
+    int x = ANY_VALUE; // declare variable x
+    int y = ANY_VALUE; // declare variable y
+    while (x CONDITION y) {
+        RANDOM_CODE; // Do something here, but don't modify x and y
+    }
+    return 0;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists a loop with a condition that is invariant, i.e., the variables involved in the condition (`x` and `y` in this case) are not modified within the loop. The loop body can contain any code (`RANDOM_CODE`), as long as it does not modify `x` and `y`. The `CONDITION` can be any comparison operator, such as `==`, `!=`, `<`, `<=`, `>`, `>=`. The `main` function must return a value related to this optimization for further comparison.

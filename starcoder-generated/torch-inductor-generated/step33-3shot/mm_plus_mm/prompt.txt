@@ -1,0 +1,49 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = torch.mm(input1, input2) # Matrix multiplication between input1 and input2
+t2 = torch.mm(input3, input4) # Matrix multiplication between input3 and input4
+t3 = t1 + t2 # Addition of the results of the two matrix multiplications
+```
+This pattern characterizes scenarios where two separate matrix multiplications are performed and their results are added together.
+
+# Model begins
+class Model(torch.nn.Module):
+    def forward(self, input1, input2, input3):
+        t1 = torch.mm(input1, input3)
+        t2 = torch.mm(input2, input3)
+        return t1 + t2
+# Inputs to the model
+input1 = torch.randn(2, 10)
+input2 = torch.randn(2, 10)
+input3 = torch.randn(10, 2)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def forward(self, input1, input2, input3):
+        x1 = torch.mm(input1, input2)
+        x2 = torch.mm(input3, input1)
+        x3 = x1 + x2
+        return x3
+# Inputs to the model
+input1 = torch.randn(6, 6)
+input2 = torch.randn(6, 6)
+input3 = torch.randn(6, 6)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def forward(self, model_input):
+        t1 = torch.mm(model_input, model_input)
+        t2 = torch.mm(model_input, model_input)
+        t3 = torch.mm(model_input, model_input)
+        t4 = torch.mm(model_input, model_input)
+        return t1 + t2 + t3 + t4
+# Inputs to the model
+model_input = torch.randn(100, 100)
+# Model ends
+
+# Model begins

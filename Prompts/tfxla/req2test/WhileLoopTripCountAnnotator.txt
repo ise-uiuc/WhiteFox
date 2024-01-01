@@ -1,0 +1,53 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `WhileLoopTripCountAnnotator` in TensorFlow XLA.
+
+# Description
+The model should contain a `while` loop operation. The `WhileLoopTripCountAnnotator` optimization pass is triggered when the trip count (the number of iterations) of the `while` loop can be computed. 
+
+The pattern in the model that triggers this optimization pass is a `while` loop where the number of iterations is known and can be computed. This is typically the case when the loop condition and the loop body are deterministic and do not depend on external inputs or state.
+
+Here is an example of such a pattern in TensorFlow:
+
+```python
+i = tf.constant(0)
+c = lambda i: tf.less(i, 10)
+b = lambda i: tf.add(i, 1)
+r = tf.while_loop(c, b, [i])
+```
+
+In this example, the `while` loop will always execute exactly 10 times, so the `WhileLoopTripCountAnnotator` optimization pass can annotate the loop with its trip count.
+
+# Model

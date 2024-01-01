@@ -1,0 +1,8 @@
+### Please generate a valid TensorFlow model with public TensorFlow APIs. When converted to TensorFlow Lite model, the model should be able to trigger the optimization pass `PLACEHOLDER_TFLITE_OPTIMIZATION_NAME`. Additionally, please generate valid input tensors for the model and pass to the model.
+
+# Description
+PLACEHOLDER_DESC
+
+PLACEHOLDER_MODEL_EXAMPLES
+
+# Model begins

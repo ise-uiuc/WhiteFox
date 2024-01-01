@@ -1,0 +1,62 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = conv_transpose(input_tensor) # Apply pointwise transposed convolution to the input tensor
+t2 = t1 + 3 # Add 3 to the output of the transposed convolution
+t3 = torch.clamp_min(t2, 0) # Clamp the output of the addition operation at a minimum of 0
+t4 = torch.clamp_max(t3, 6) # Clamp the output of the previous operation at a maximum of 6
+t5 = t4 / 6 # Divide the output of the previous operation by 6
+```
+This pattern characterizes scenarios where the output of a pointwise transposed convolution is added by a constant `3`, then the result is clamped at a minimum of `0` and a maximum of `6`, and finally the result is divided by `6`.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_transpose = torch.nn.ConvTranspose2d(16, 32, 7, stride=2, padding=3, dilation=2)
+    def forward(self, x1):
+        v1 = self.conv_transpose(x1)
+        v2 = v1 + 3
+        v3 = torch.clamp_min(v2, 0)
+        v4 = torch.clamp_max(v3, 6)
+        v5 = v4 / 6
+        return v5
+# Inputs to the model
+x1 = torch.randn(1, 16, 64, 64)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_transpose = torch.nn.ConvTranspose2d(2048, 512, 3, stride=2, padding=1)
+    def forward(self, x1):
+        v1 = self.conv_transpose(x1)
+        v2 = v1 + 3
+        v3 = torch.clamp_min(v2, 0)
+        v4 = torch.clamp_max(v3, 6)
+        v5 = v4 / 6
+        return v5
+# Inputs to the model
+x1 = torch.randn(1, 2048, 7, 7)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_transpose = torch.nn.ConvTranspose2d(29, 8, (1, 6), stride=1)
+    def forward(self, x1):
+        v1 = self.conv_transpose(x1)
+        v2 = v1 + 3
+        v3 = torch.clamp_min(v2, 0)
+        v4 = torch.clamp_max(v3, 6)
+        v5 = v4 / 6
+        return v5
+# Inputs to the model
+x1 = torch.randn(1, 29, 113, 103)
+# Model ends
+
+# Model begins

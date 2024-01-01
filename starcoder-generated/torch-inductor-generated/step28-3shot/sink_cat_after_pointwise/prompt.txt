@@ -1,0 +1,54 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = torch.cat([tensor1, tensor2, ...], dim=...) # Concatenate tensors along a dimension
+t2 = t1.view(...) # Reshape the concatenated tensor
+t3 = torch.relu(t2) # Apply a pointwise unary operation (e.g., ReLU or Tanh) to the reshaped tensor
+```
+This pattern characterizes scenarios where a tensor is reshaped after concatenation and then a pointwise unary operation (like ReLU or Tanh) is applied. The unary operation should be the only user of the reshaped tensor. The optimization `sink_cat_after_pointwise` is triggered when such a pattern is detected in the model.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x):
+        y = x.view(x.shape[0], -1)
+        y = y.tanh()
+        y = torch.cat((y, y), dim=1)
+        if y.dim() == 2:
+            y = y.tanh()
+        else:
+            y = y.view(-1).tanh()
+        x = y.view(-1).tanh()
+        return x
+# Inputs to the model
+x = torch.randn(2, 3, 4)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x):
+        y = torch.cat((x, x), dim=-1)
+        x = y.view(-1).tanh() if x.shape[0] == 1 else y.tanh().view(-1)
+        return x
+# Inputs to the model
+x = torch.randn(2, 3, 4)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x):
+        y = torch.cat([x, x], dim=1)
+        x = y.view(y.shape[0], -1) if y.shape == (1, 12) else y.tanh()
+        return x
+# Inputs to the model
+x = torch.randn(2, 3, 4)
+# Model ends
+
+# Model begins

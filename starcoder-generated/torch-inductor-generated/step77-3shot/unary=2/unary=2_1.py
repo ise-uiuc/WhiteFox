@@ -1,0 +1,11 @@
+
+model = Model()
+x = torch.randn(2, 24, 7, 9)
+model(x)
+y = torch.randn(2, 24, 7, 9)
+model(y)
+z = torch.randn(2, 24, 7, 9)
+model(z)
+w = torch.randn(1, 3, 28, 28)
+model(w)
+print("Models are valid.")

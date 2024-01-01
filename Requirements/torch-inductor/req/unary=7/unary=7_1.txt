@@ -1,0 +1,7 @@
+The model should contain the following pattern:
+```
+l1 = linear(input_tensor) # Apply linear transformation to the input tensor
+l2 = l1 * clamp(min=0, max=6, l1 + 3) # Multiply the output of the linear transformation by the clamped output of the linear transformation added with 3
+l3 = l2 / 6 # Divide the output of the multiplication by 6
+```
+This pattern characterizes scenarios where the output of a linear transformation is multiplied by the clamped output (clamped between 0 and 6) of the linear transformation added with `3`, and then the output of the multiplication is divided by `6`. This pattern is typically seen in models implementing a form of scaled exponential linear unit (SELU) activation function.

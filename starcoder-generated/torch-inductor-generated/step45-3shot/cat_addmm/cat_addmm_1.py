@@ -1,0 +1,13 @@
+
+class Model(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.layers = nn.Linear(3, 2)
+    def forward(self, x):
+        x = self.layers(x)
+        x = x.transpose(0, 1)
+        x = torch.flatten(x, 1)
+        x = x.transpose(0, 1)
+        return x
+# Inputs to the model
+x = torch.randn(3, 2)

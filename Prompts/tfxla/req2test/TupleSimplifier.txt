@@ -1,0 +1,63 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `TupleSimplifier` in TensorFlow XLA.
+
+# Description
+The model should contain the following patterns:
+
+1. A `Tuple` operation where all its operands are `GetTupleElement` operations, and each `GetTupleElement` operation extracts an element from the same tuple at the same index as its position in the `Tuple` operation. The shapes of the original tuple and the new tuple created by the `Tuple` operation should be compatible. 
+
+```python
+# Python pseudocode
+t = tf.tuple([a, b, c])  # Original tuple
+a1 = tf.get_tuple_element(t, 0)
+b1 = tf.get_tuple_element(t, 1)
+c1 = tf.get_tuple_element(t, 2)
+t1 = tf.tuple([a1, b1, c1])  # New tuple
+```
+
+2. A chain of `GetTupleElement` operations that extract the same element from a tuple. The chain can be replaced by the operation that produces the element.
+
+```python
+# Python pseudocode
+t = tf.tuple([a, b, c])  # Original tuple
+a1 = tf.get_tuple_element(t, 0)
+a2 = tf.get_tuple_element(a1, 0)
+a3 = tf.get_tuple_element(a2, 0)
+```
+
+In both cases, the `TupleSimplifier` optimization pass will be triggered, and the `Run` function will return `true`.
+
+# Model

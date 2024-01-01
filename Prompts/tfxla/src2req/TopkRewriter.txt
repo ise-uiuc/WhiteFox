@@ -1,0 +1,323 @@
+### Please describe the characteristics of the TensorFlow model that trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA. The model can be used to reach out the `return true;` line in function `ReshapeReshapeForwarding`, leading the function to return true. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# The code of the function and its helper functions:
+
+```cpp
+// Reshape(Reshape(A, []->[1]), [1]->[]) ==> A
+StatusOr<bool> ReshapeReshapeForwarding(HloInstruction* reshape) {
+  if (reshape->opcode() != HloOpcode::kReshape) {
+    return false;
+  }
+  auto reshape_2 = reshape->mutable_operand(0);
+  if (reshape_2->opcode() != HloOpcode::kReshape) {
+    return false;
+  }
+
+  if (!Shape::Equal()(reshape->shape(), reshape_2->operand(0)->shape())) {
+    return false;
+  }
+  TF_RETURN_IF_ERROR(
+      reshape->ReplaceAllUsesWith(reshape_2->mutable_operand(0)));
+
+  return true;
+}
+```
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+### Please describe the characteristics of the TensorFlow model that trigger the optimization pass `TopkRewriter` in TensorFlow XLA. The model can be used to reach out the `return changed;` line in function `TopkRewriter::TransformToCustomCall`, leading the function to return true. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# The code of the function and its helper functions:
+
+```cpp
+static bool IsNanSafeGt(HloComputation* comp) {
+  namespace m = match;
+  auto match_bitcast_f32 = [](int64_t parameter_number) {
+    auto param = m::Parameter(parameter_number)
+                     .WithShape(m::Shape().WithElementType(F32));
+    auto param_s32 =
+        m::BitcastConvert(param).WithShape(m::Shape().WithElementType(S32));
+    auto param_u32 =
+        m::BitcastConvert(param).WithShape(m::Shape().WithElementType(U32));
+    return m::Select(
+        m::Lt(param_s32, m::ConstantScalar(0)),
+        m::BitcastConvert(
+            m::Subtract(m::ConstantScalar(std::numeric_limits<int32_t>::max()),
+                        param_u32))
+            .WithShape(m::Shape().WithElementType(S32)),
+        param_s32);
+  };
+
+  auto match_bitcast_f32_with_convert = [](int64_t parameter_number) {
+    auto param = m::Parameter(parameter_number)
+                     .WithShape(m::Shape().WithElementType(F32));
+    auto param_s32 =
+        m::BitcastConvert(param).WithShape(m::Shape().WithElementType(S32));
+    auto param_u32 =
+        m::BitcastConvert(param).WithShape(m::Shape().WithElementType(U32));
+    auto max_u32 =
+        m::Convert(m::ConstantScalar(std::numeric_limits<int32_t>::max()))
+            .WithShape(m::Shape().WithElementType(U32));
+    return m::Select(m::Lt(param_s32, m::ConstantScalar(0)),
+                     m::BitcastConvert(m::Subtract(max_u32, param_u32))
+                         .WithShape(m::Shape().WithElementType(S32)),
+                     param_s32);
+  };
+
+  auto match_bitcast_bf16 = [](int64_t parameter_number) {
+    auto param = m::Convert(m::Parameter(parameter_number)
+                                .WithShape(m::Shape().WithElementType(BF16)))
+                     .WithShape(m::Shape().WithElementType(F32));
+    auto param_s32 =
+        m::BitcastConvert(param).WithShape(m::Shape().WithElementType(S32));
+    auto param_u32 =
+        m::BitcastConvert(param).WithShape(m::Shape().WithElementType(U32));
+    return m::Select(
+        m::Lt(param_s32, m::ConstantScalar(0)),
+        m::BitcastConvert(
+            m::Subtract(m::ConstantScalar(std::numeric_limits<int32_t>::max()),
+                        param_u32))
+            .WithShape(m::Shape().WithElementType(S32)),
+        param_s32);
+  };
+
+  auto match_bitcast_bf16_with_convert = [](int64_t parameter_number) {
+    auto param = m::Convert(m::Parameter(parameter_number)
+                                .WithShape(m::Shape().WithElementType(BF16)))
+                     .WithShape(m::Shape().WithElementType(F32));
+    auto param_s32 =
+        m::BitcastConvert(param).WithShape(m::Shape().WithElementType(S32));
+    auto param_u32 =
+        m::BitcastConvert(param).WithShape(m::Shape().WithElementType(U32));
+    auto max_u32 =
+        m::Convert(m::ConstantScalar(std::numeric_limits<int32_t>::max()))
+            .WithShape(m::Shape().WithElementType(U32));
+    return m::Select(m::Lt(param_s32, m::ConstantScalar(0)),
+                     m::BitcastConvert(m::Subtract(max_u32, param_u32))
+                         .WithShape(m::Shape().WithElementType(S32)),
+                     param_s32);
+  };
+
+  auto match_s32 = [](int64_t parameter_number) {
+    auto param = m::Parameter(parameter_number)
+                     .WithShape(m::Shape().WithElementType(S32));
+    return param;
+  };
+
+  auto match_compare = [](PrimitiveType type) {
+    auto param0 = m::Parameter(0).WithShape(m::Shape().WithElementType(type));
+    auto param1 = m::Parameter(1).WithShape(m::Shape().WithElementType(type));
+    return m::Gt(param0, param1);
+  };
+
+  auto match_default_compare = [](PrimitiveType type) {
+    auto params_with_type = [&](int i, PrimitiveType t) {
+      return m::Parameter(i).WithShape(m::Shape().WithElementType(t));
+    };
+    auto params =
+        std::vector({// Values
+                     params_with_type(0, type), params_with_type(1, type),
+                     // Indices
+                     params_with_type(2, S32), params_with_type(3, S32)});
+    auto const_true = m::Broadcast(m::Constant());
+    auto values_gt = m::Gt(params[0], params[1]);
+    return m::Select(const_true, values_gt, const_true);
+  };
+
+  auto match_all_types = [](HloInstruction* root, auto callback) {
+    bool result = false;
+    for (auto type : {BF16, F32, S32, U32}) {
+      result = result || Match(root, callback(type));
+    }
+    return result;
+  };
+
+  return Match(comp->root_instruction(),
+               m::Gt(match_bitcast_f32(0), match_bitcast_f32(1))) ||
+         Match(comp->root_instruction(),
+               m::Gt(match_bitcast_bf16(0), match_bitcast_bf16(1))) ||
+         Match(comp->root_instruction(),
+               m::Gt(match_bitcast_f32_with_convert(0),
+                     match_bitcast_f32_with_convert(1))) ||
+         Match(comp->root_instruction(),
+               m::Gt(match_bitcast_bf16_with_convert(0),
+                     match_bitcast_bf16_with_convert(1))) ||
+         Match(comp->root_instruction(), m::Gt(match_s32(0), match_s32(1))) ||
+         match_all_types(comp->root_instruction(), match_compare) ||
+         match_all_types(comp->root_instruction(), match_default_compare);
+}
+
+// Look for the instructions emitted from: xla/client/lib/sorting.cc
+static bool HasIota(HloSortInstruction* sort, HloInstruction* data) {
+  namespace m = match;
+  const auto sort_dims = {data->shape().dimensions(sort->sort_dimension())};
+  auto match_iota = [](auto dims) {
+    return m::Iota().WithShape(m::Shape().WithElementType(S32).WithDims(dims));
+  };
+  return Match(sort->operand(1), match_iota(data->shape().dimensions())) ||
+         Match(sort->operand(1), m::Broadcast(match_iota(sort_dims)));
+}
+
+std::optional<int64_t> TopkRewriter::SortIsInTopK(HloInstruction* inst) {
+  HloSortInstruction* sort = DynCast<HloSortInstruction>(inst);
+  if (sort == nullptr) {
+    return std::nullopt;
+  }
+  if (sort->operand_count() != 1 && sort->operand_count() != 2) {
+    return std::nullopt;
+  }
+  HloInstruction* data = sort->mutable_operand(0);
+
+  if (sort->operand_count() == 2 && !HasIota(sort, data)) {
+    return std::nullopt;
+  }
+  if (!IsNanSafeGt(sort->to_apply())) {
+    return std::nullopt;
+  }
+  const int64_t sort_dim = sort->sort_dimension();
+  const int64_t batch_dim = sort_dim == 1 ? 0 : 1;
+  const bool has_batch = data->shape().rank() == 2;
+
+  bool supported = true;
+  std::optional<int64_t> k;
+  for (HloInstruction* user : sort->users()) {
+    const HloInstruction* slice = user;
+    if (sort->operand_count() == 2) {
+      if (user->opcode() != HloOpcode::kGetTupleElement ||
+          user->user_count() != 1) {
+        supported = false;
+        break;
+      }
+      slice = user->users()[0];
+    }
+    if (slice->opcode() != HloOpcode::kSlice) {
+      // Non-slice user means we are not doing a TopK
+      supported = false;
+      break;
+    }
+    if (absl::c_any_of(slice->slice_starts(), [](int x) { return x != 0; }) ||
+        absl::c_any_of(slice->slice_strides(), [](int x) { return x != 1; })) {
+      // Strided slice or slicing at the beginning isn't supported.
+      supported = false;
+      break;
+    }
+    if (has_batch && slice->slice_limits(batch_dim) !=
+                         slice->operand(0)->shape().dimensions(batch_dim)) {
+      // Slicing along the batch dimension isn't supported.
+      supported = false;
+      break;
+    }
+    if (k == std::nullopt) {
+      k = slice->slice_limits(sort_dim);
+    } else if (k != slice->slice_limits(sort_dim)) {
+      // Different k for the different operands isn't supported.
+      supported = false;
+      break;
+    }
+  }
+  if (k == std::nullopt || !supported) {
+    return std::nullopt;
+  }
+  return k;
+}
+
+StatusOr<bool> TopkRewriter::TransformToCustomCall(
+    HloModule* module,
+    const absl::flat_hash_set<absl::string_view>& execution_threads) {
+  bool changed = false;
+  for (HloComputation* comp : module->computations(execution_threads)) {
+    for (HloInstruction* inst : comp->MakeInstructionPostOrder()) {
+      // Check if sort is in TopK.
+      std::optional<int64_t> k = SortIsInTopK(inst);
+      if (!k) {
+        continue;
+      }
+
+      HloSortInstruction* sort = DynCast<HloSortInstruction>(inst);
+      HloInstruction* data = sort->mutable_operand(0);
+      const PrimitiveType element_type = data->shape().element_type();
+
+      if ((data->shape().rank() != 1 && data->shape().rank() != 2) ||
+          (element_type != F32 && element_type != BF16)) {
+        continue;
+      }
+
+      const int64_t sort_dim = sort->sort_dimension();
+      const int64_t batch_dim = sort_dim == 1 ? 0 : 1;
+      const bool has_batch = data->shape().rank() == 2;
+
+      // Profitability check.
+      if (!is_profitable_to_convert_(sort, *k)) {
+        continue;
+      }
+
+      const int64_t batch_size =
+          has_batch ? sort->operand(0)->shape().dimensions(batch_dim) : 1;
+      const int64_t input_size = sort->operand(0)->shape().dimensions(sort_dim);
+      HloInstruction* input = sort->mutable_operand(0);
+      if (has_batch && sort_dim == 0) {
+        input = comp->AddInstruction(HloInstruction::CreateTranspose(
+            ShapeUtil::MakeShape(element_type, {batch_size, input_size}), input,
+            {1, 0}));
+      }
+
+      Shape topk_shape =
+          has_batch ? ShapeUtil::MakeTupleShape(
+                          {ShapeUtil::MakeShape(element_type,
+                                                {batch_size, k.value()}),
+                           ShapeUtil::MakeShape(S32, {batch_size, k.value()})})
+                    : ShapeUtil::MakeTupleShape(
+                          {ShapeUtil::MakeShape(element_type, {k.value()}),
+                           ShapeUtil::MakeShape(S32, {k.value()})});
+      HloInstruction* topk =
+          comp->AddInstruction(HloInstruction::CreateCustomCall(
+              topk_shape, {input}, /*to_apply=*/sort->to_apply(), "TopK"));
+      HloInstruction* value_gte =
+          comp->AddInstruction(HloInstruction::CreateGetTupleElement(
+              topk->shape().tuple_shapes(0), topk, 0));
+      HloInstruction* index_gte =
+          comp->AddInstruction(HloInstruction::CreateGetTupleElement(
+              topk->shape().tuple_shapes(1), topk, 1));
+
+      if (has_batch && sort_dim == 0) {
+        value_gte = comp->AddInstruction(HloInstruction::CreateTranspose(
+            ShapeUtil::MakeShape(element_type, {k.value(), batch_size}),
+            value_gte, {1, 0}));
+        index_gte = comp->AddInstruction(HloInstruction::CreateTranspose(
+            ShapeUtil::MakeShape(S32, {k.value(), batch_size}), index_gte,
+            {1, 0}));
+      }
+
+      for (HloInstruction* user : sort->users()) {
+        if (sort->operand_count() == 2) {
+          HloInstruction* gte = user;
+          for (HloInstruction* slice : gte->users()) {
+            if (gte->tuple_index() == 0) {
+              TF_RETURN_IF_ERROR(slice->ReplaceAllUsesWith(value_gte));
+            } else if (gte->tuple_index() == 1) {
+              TF_RETURN_IF_ERROR(slice->ReplaceAllUsesWith(index_gte));
+            } else {
+              LOG(FATAL) << "Sort with more than 2 output isn't supported in "
+                            "topk rewriter";
+            }
+          }
+        } else {
+          TF_RETURN_IF_ERROR(user->ReplaceAllUsesWith(value_gte));
+        }
+      }
+      VLOG(2) << "Rewritten Topk: " << topk->ToString();
+      changed = true;
+    }
+  }
+  return changed;
+}
+```
+
+# Description

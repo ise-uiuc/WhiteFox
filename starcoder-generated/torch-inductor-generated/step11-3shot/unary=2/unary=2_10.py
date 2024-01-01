@@ -1,0 +1,28 @@
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.deconv1 = torch.nn.ConvTranspose2d(12, 12, 2, stride=2, output_padding=1)
+        self.deconv2 = torch.nn.ConvTranspose2d(12, 4, 1, stride=1)
+    def forward(self, x1):
+        v1 = self.deconv1(x1)
+        v2 = v1 * 0.5
+        v3 = v1 * v1 * v1
+        v4 = v3 * 0.044715
+        v5 = v1 + v4
+        v6 = v5 * 0.7978845608028654
+        v7 = torch.tanh(v6)
+        v8 = v7 + 1
+        v9 = v2 * v8
+        v12 = self.deconv2(v9)
+        v16 = v12 * 0.99867363
+        v15 = v12 * v12 * v12
+        v14 = v15 * 0.8936171
+        v13 = v12 + v14
+        v17 = v13 * 0.98326338
+        v11 = torch.tanh(v17)
+        v10 = v11 + 1
+        v18 = v16 * v10
+        return v18
+# Inputs to the model
+x1 = torch.randn(8, 12, 4, 4)

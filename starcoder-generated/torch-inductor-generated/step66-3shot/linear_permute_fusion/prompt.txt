@@ -1,0 +1,59 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = torch.nn.functional.linear(input_tensor, ...) # Apply linear transformation to the input tensor.
+t2 = t1.permute(...) # Permute the output tensor from the linear transformation.
+```
+This pattern characterizes scenarios where the `torch.nn.functional.linear` function is invoked first on an input tensor, and then the tensor method 'permute' is invoked on the output tensor of the linear function.
+The linear function is applied to an input tensor, and then the permute method is invoked on the output tensor with more than 2 dimensions, and it swaps the last two dimensions of this tensor.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear = torch.nn.Linear(2, 4)
+    def forward(self, x0):
+        v0 = x0
+        v1 = torch.nn.functional.linear(v0, self.linear.weight, self.linear.bias)
+        v2 = v1.permute(0, 2, 1)
+        return v2
+# Inputs to the model
+x0 = torch.randn(1, 2, 2)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear = torch.nn.Linear(2, 1)
+    def forward(self, x1):
+        v1 = torch.nn.functional.linear(x1, self.linear.weight, self.linear.bias)
+        v2 = v1.permute(0, 2, 1)
+        v4 = x1 - v2
+        v5 = False
+        if v5:
+            v3 = torch.nn.functional.linear(x1 - v2, self.linear.weight, self.linear.bias)
+            return v3
+        else:
+            v3 = torch.nn.functional.linear(x1 + v2, self.linear.weight, self.linear.bias)
+            return v3
+# Inputs to the model
+x1 = torch.randn(1, 2, 2)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear = torch.nn.Linear(3, 3)
+    def forward(self, x1):
+        v1 = torch.nn.functional.linear(x1, self.linear.weight, self.linear.bias)
+        v2 = v1.permute(0, 2, 1)
+        return v2.flip(0)
+# Inputs to the model
+x1 = torch.randn(2, 3, 3)
+# Model ends
+
+# Model begins

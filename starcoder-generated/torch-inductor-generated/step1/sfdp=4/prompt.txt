@@ -1,0 +1,40 @@
+### Please generate a valid PyTorch model example with public PyTorch APIs meets the specified requirements. Plus, please also generate the input tensor for the newly generated model.
+
+# Description of requirements
+The model should contain a pattern of `mul(mul(_convolution_pointwise.default, 0.5), add(erf(mul(_convolution_pointwise.default, 0.7071067811865476)), 1))`. 
+The pattern means the first argument of the outermost operator `mul` is the output of another `mul` operation, which multiplies the output of the `_convolution_pointwise.default` operator with 0.5. The second argument of the outermost `mul` operator is the output of an `add` operation. The `add` operation adds 1 to the output of an `erf` operation, which takes as input the output of a `mul` operation. This `mul` operation multiplies the output of the `_convolution_pointwise.default` operator with 0.7071067811865476.
+
+# Model
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(3, 8, 3, stride=1, padding=1)
+ 
+    def forward(self, x):
+        v1 = self.conv(x)
+        v2 = v1 * 0.5
+        v3 = v1 * 0.7071067811865476
+        v4 = torch.erf(v3)
+        v5 = v4 + 1
+        v6 = v2 * v5
+        return v6
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+x = torch.randn(1, 3, 64, 64)
+__output__ = m(x1)
+
+### Please generate a valid PyTorch model example with public PyTorch APIs meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. The model should be different from the previous one.
+
+# Description of requirements
+The model should contain a pattern of `attn_weight = torch.softmax((query @ key.transpose(-2, -1) / math.sqrt(query.size(-1))) + attn_mask, dim=-1)` and `attn_weight @ value`. 
+
+This pattern is typically found in attention mechanisms, specifically scaled dot-product attention, which is a key component of Transformer models used in natural language processing tasks. 
+
+In this pattern, the attention weights `attn_weight` are computed by applying a softmax function to the scaled dot product of the `query` and `key` tensors, with the scale factor being the square root of the dimension size of the `query` tensor. An `attn_mask` is added to the scaled dot product before applying the softmax, which can be used to prevent certain positions from attending to others (e.g., in the case of self-attention in Transformers). 
+
+The computed attention weights are then used to weight the `value` tensor by performing a matrix multiplication (`@` operator), resulting in a weighted sum of the `value` tensor according to the attention weights. This weighted sum can be seen as a context-sensitive representation of the input based on the attention mechanism.
+
+# Model

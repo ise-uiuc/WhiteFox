@@ -1,0 +1,30 @@
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x1, x2):
+        v1 = torch.mm(x1, x2)
+        t1 = torch.cat([v1], 1)
+        v2 = torch.mm(x1, x2)
+        t2 = torch.cat([v2, v2], 1)
+        v3 = torch.mm(x1, x2)
+        t3 = torch.cat([v3, v3, v3], 1)
+        v4 = torch.mm(x1, x2)
+        t4 = torch.cat([v4, v4, v4, v4], 1)
+        v5 = torch.mm(x1, x2)
+        v6 = torch.mm(x1, x2)
+        t5 = torch.cat([v5, v6, v5, v6, v5, v6], 1)
+        t6 = torch.cat([v5, v6, v5, v6, v5, v6], 1)
+        v7 = torch.mm(x1, x2)
+        v8 = torch.mm(x1, x2)
+        v9 = torch.mm(x1, x2)
+        t7 = torch.cat([v7, v8, v9, v7, v8, v9, v7, v8, v9], 1)
+        t8 = torch.cat([v7, v8, v9, v7, v8, v9, v7, v8, v9], 1)
+        t9 = torch.cat([v7, v8, v9, v7, v8, v9, v7, v8, v9], 1)
+        t10 = torch.cat([v7, v8, v9, v7, v8, v9, v7, v8, v9], 1)
+        t11 = torch.cat([v7, v8, v9, v7, v8, v9, v7, v8, v9], 1)
+        t12 = torch.cat([v7, v8, v9, v7, v8, v9, v7, v8, v9], 1)
+        return torch.cat([t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12], 1)
+# Inputs to the model
+x1 = torch.randn(5, 5)
+x2 = torch.randn(5, 5)

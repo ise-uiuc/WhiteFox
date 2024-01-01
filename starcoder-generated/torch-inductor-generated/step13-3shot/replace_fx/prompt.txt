@@ -1,0 +1,50 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = torch.nn.functional.dropout(input_tensor, ...) # Apply dropout to the input tensor
+t2 = torch.rand_like(input_tensor, ...) # Generate a tensor with the same size as input_tensor filled with random numbers
+```
+This pattern characterizes scenarios where the `torch.nn.functional.dropout` or `torch.rand_like` functions are invoked. The `replace_fx` optimization replaces these functions with their corresponding replacements (`lowmem_dropout` and `rand_like` respectively) in the graph of the model. The original nodes invoking `torch.nn.functional.dropout` or `torch.rand_like` are then erased from the graph. 
+
+Note that if the `fallback_random` configuration is set, or if the model is running on a CPU device, the nodes invoking these functions will not be replaced and thus will not trigger the `gm.graph.erase_node(node)` line.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x1):
+        t1 = torch.rand((x1.shape[0], 2))
+        t2 = torch.rand((x1.shape[0], 5), requires_grad=False)
+        x1 = torch.nn.functional.dropout(x1, p=0.5)
+        return x1
+# Inputs to the model
+x1 = torch.randn(12)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x1):
+        v1 = torch.nn.functional.dropout(x1, p=0.5)
+        v2 = torch.rand_like(x1, dtype=torch.double)
+        return torch.mean(v1 + v2)
+# Inputs to the model
+x1 = torch.randn(1, 2, 2)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x):
+        x1 = torch.rand_like(x, dtype=torch.long)
+        x2 = torch.nn.functional.dropout(x, p=0.2, training=False)
+        return x2
+# Inputs to the model
+x1 = torch.randn(75, 80)
+# Model ends
+
+# Model begins

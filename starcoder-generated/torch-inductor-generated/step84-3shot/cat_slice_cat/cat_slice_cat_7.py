@@ -1,0 +1,19 @@
+
+class Model(torch.nn.Module):
+    def __init__(self, size):
+        super().__init__()
+        self.size = size
+ 
+    def forward(self, x1, x2):
+        v1 = torch.cat([x1, x2])
+        v2 = v1[:, 0:9223372036854775807]
+        v3 = v2[0, 0:self.size]
+        v4 = torch.cat([v1, v3])
+        return v4
+
+# Initializing the model
+m = Model(10)
+
+# Inputs to the model
+x1 = torch.randn(1, 8, 32, 32)
+x2 = torch.randn(1, 60, 32, 32)

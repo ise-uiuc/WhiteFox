@@ -1,0 +1,9 @@
+The model should contain the following pattern:
+```
+t1 = conv(input_tensor) # Apply pointwise convolution with kernel size 1 to the input tensor
+t2 = t1 + 3 # Add 3 to the output of the convolution
+t3 = torch.clamp_min(t2, 0) # Clamp the output of the addition operation to a minimum of 0
+t4 = torch.clamp_max(t3, 6) # Clamp the output of the previous operation to a maximum of 6
+t5 = t4 / 6 # Divide the output of the previous operation by 6
+```
+This pattern characterizes scenarios where the output of a pointwise convolution is added by a constant `3`, then the result is clamped to a minimum of `0` and a maximum of `6`, and finally the result is divided by `6`. This is a typical pattern for implementing a ReLU6 activation function followed by a normalization operation.

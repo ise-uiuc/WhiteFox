@@ -1,0 +1,102 @@
+### Please describe the C++ code that can trigger the optimization pass `DeadArgumentEliminationPass` in LLVM. The C++ code can used to reach out `F.replaceAllUsesWith(ConstantExpr::getBitCast(NF, F.getType()));` line and make the boolean variable `Changed` equal to `True`. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the C++ code. Do not describe the function code or what happens after the optimization is triggered. Do not include the optimization name and target line information in your description. Your description must have the `main` function.
+
+# The code of the optimization and its helper functions:
+
+```cpp
+PreservedAnalyses DeadArgumentEliminationPass::run(Module &M,
+                                                   ModuleAnalysisManager &) {
+  bool Changed = false;
+
+  // First pass: Do a simple check to see if any functions can have their "..."
+  // removed.  We can do this if they never call va_start.  This loop cannot be
+  // fused with the next loop, because deleting a function invalidates
+  // information computed while surveying other functions.
+  LLVM_DEBUG(dbgs() << "DeadArgumentEliminationPass - Deleting dead varargs\n");
+  for (Function &F : llvm::make_early_inc_range(M))
+    if (F.getFunctionType()->isVarArg())
+      Changed |= deleteDeadVarargs(F);
+
+  if (!Changed)
+    return PreservedAnalyses::all();
+  return PreservedAnalyses::none();
+}
+
+bool DeadArgumentEliminationPass::deleteDeadVarargs(Function &F) {
+
+  assert(F.getFunctionType()->isVarArg() && "Function isn't varargs!");
+  if (F.isDeclaration() || !F.hasLocalLinkage())
+    return false;
+
+  // Ensure that the function is only directly called.
+  if (F.hasAddressTaken())
+    return false;
+
+  // Don't touch naked functions. The assembly might be using an argument, or
+  // otherwise rely on the frame layout in a way that this analysis will not
+  // see.
+  if (F.hasFnAttribute(Attribute::Naked)) {
+    return false;
+  }
+
+  // Okay, we know we can transform this function if safe.  Scan its body
+  // looking for calls marked musttail or calls to llvm.vastart.
+  for (BasicBlock &BB : F) {
+    for (Instruction &I : BB) {
+      CallInst *CI = dyn_cast<CallInst>(&I);
+      if (!CI)
+        continue;
+      if (CI->isMustTailCall())
+        return false;
+      if (IntrinsicInst *II = dyn_cast<IntrinsicInst>(CI)) {
+        if (II->getIntrinsicID() == Intrinsic::vastart)
+          return false;
+      }
+    }
+  }
+
+  // Fix up any BlockAddresses that refer to the function.
+  F.replaceAllUsesWith(ConstantExpr::getBitCast(NF, F.getType()));
+  // Delete the bitcast that we just created, so that NF does not
+  // appear to be address-taken.
+  NF->removeDeadConstantUsers();
+  // Finally, nuke the old function.
+  F.eraseFromParent();
+  return true;
+}
+```
+
+# Description
+The C++ code should contain the following pattern:
+```
+// no va_arg in stdarg.h is used
+
+// define one function which has variable arguments
+static int varargs_func(int x, ...) {
+    RANDOM_CODE; // Do something here with input arguments, but don't generate the codes contain va_args
+    int result = x OPERATOR ANY_VALUE; // result is related to x
+    return result;
+}
+
+int main() {
+    RANDOM_CODE;  // declare some variables
+    int x = ANY_VALUE; // declare variable x
+    ANY_TYPE y = ANY_VALUE; // declare y
+    ANY_TYPE z = ANY_VALUE; // declare z
+    // invoke the func varargs_func
+    int result = varargs_func(x, y, z, ANY_VALUE, ANY_VALUE); // you can pass the arguments with any number, any type
+    return result;
+}
+```
+This pattern characterizes scenarios where within the `main` function, there exists a call to `varargs_func`, and the result of this call is being used. `varargs_func` is marked as variable function, which accepts variable arguments, then returns a single `ANY_TYPE` value that is determined by the first argument. The first argument can be any type, e.g. `int`, `float`, `ptr` `struct`, and so on. The functions must be `static`(which will be translated into ir function with internel attribute), no vastart intrinsic(such as `va_arg` in `stdarg.h`). The `main` function must return a value related to this optimization for further comparison.
+
+
+### Please describe the C++ code that can trigger the optimization pass `{Passname}` in LLVM. The C++ code can used to reach out `{target_line}` line and make the boolean variable `Changed` equal to `True`. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the C++ code. Do not describe the function code or what happens after the optimization is triggered. Do not include the optimization name and target line information in your description. Your description must have the `main` function.
+
+
+# The code of the optimization and its helper functions:
+
+```
+{source_llvm}
+```
+
+# Description

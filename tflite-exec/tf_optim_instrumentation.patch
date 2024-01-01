@@ -1,0 +1,1314 @@
+diff --git a/tensorflow/compiler/mlir/lite/transforms/optimize.cc b/tensorflow/compiler/mlir/lite/transforms/optimize.cc
+index 9b74c6bf606..8354b599eec 100644
+--- a/tensorflow/compiler/mlir/lite/transforms/optimize.cc
++++ b/tensorflow/compiler/mlir/lite/transforms/optimize.cc
+@@ -20,6 +20,7 @@ limitations under the License.
+ #include <array>
+ #include <climits>
+ #include <cstdint>
++#include <stdio.h>
+ #include <functional>
+ #include <iterator>
+ #include <map>
+@@ -74,6 +75,9 @@ constexpr char kRelu[] = "RELU";
+ constexpr char kRelu6[] = "RELU6";
+ constexpr char kRelu1[] = "RELU_N1_TO_1";
+ 
++constexpr char debug_log_file[] = "/tmp/debug_tflite_trigger.log";
++constexpr char trigger_log_file[] = "/tmp/tflite_trigger.log";
++
+ ElementsAttr FlattenTo1D(Attribute a) {
+   auto elements = a.cast<DenseElementsAttr>();
+   const std::array<int64_t, 1> flattened_shape = {elements.getNumElements()};
+@@ -642,6 +646,7 @@ struct FuseFullyConnectedAndAdd : public OpRewritePattern<TFL::AddOp> {
+ 
+   LogicalResult matchAndRewrite(TFL::AddOp add_op,
+                                 PatternRewriter &rewriter) const override {
++
+     // Match Add.
+     DenseElementsAttr added_value;
+     Value constant_val = add_op.getRhs();
+@@ -758,6 +763,11 @@ struct FuseFullyConnectedAndAdd : public OpRewritePattern<TFL::AddOp> {
+         fc_op.getAsymmetricQuantizeInputsAttr());
+     rewriter.replaceOp(add_op, fc.getOutput());
+ 
++    /*instrument*/
++    FILE *fp = fopen(trigger_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseFullyConnectedAndAdd\n");
++    fclose(fp);
++
+     return success();
+   }
+ };
+@@ -775,6 +785,8 @@ struct FuseAddAndFullyConnected
+ 
+   LogicalResult matchAndRewrite(TFL::FullyConnectedOp fc_op,
+                                 PatternRewriter &rewriter) const override {
++    
++
+     // This only works with default format.
+     if (fc_op.getWeightsFormat() != "DEFAULT") return failure();
+ 
+@@ -830,6 +842,11 @@ struct FuseAddAndFullyConnected
+         /*asymmetric_quantize_inputs=*/fc_op.getAsymmetricQuantizeInputsAttr());
+     rewriter.replaceOp(fc_op.getOperation(), new_fc.getOutput());
+ 
++    /*instrument*/
++    FILE *fp = fopen(trigger_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseAddAndFullyConnected\n");
++    fclose(fp);
++
+     return success();
+   }
+ };
+@@ -846,6 +863,8 @@ struct FuseMulAndFullyConnected
+ 
+   LogicalResult matchAndRewrite(TFL::FullyConnectedOp fc_op,
+                                 PatternRewriter &rewriter) const override {
++    
++    
+     // This only works with default format.
+     if (fc_op.getWeightsFormat() != "DEFAULT") return failure();
+ 
+@@ -888,6 +907,11 @@ struct FuseMulAndFullyConnected
+         /*asymmetric_quantize_inputs=*/fc_op.getAsymmetricQuantizeInputsAttr());
+     rewriter.replaceOp(fc_op.getOperation(), new_fc.getOutput());
+ 
++    /*instrument*/
++    FILE *fp = fopen(trigger_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseMulAndFullyConnected\n");
++    fclose(fp);
++
+     return success();
+   }
+ };
+@@ -899,6 +923,7 @@ struct FuseFullyConnectedAndReluX : public OpRewritePattern<ReluXOp> {
+ 
+   LogicalResult matchAndRewrite(ReluXOp relu_op,
+                                 PatternRewriter &rewriter) const override {
++    
+     Operation *input = relu_op.getOperand().getDefiningOp();
+     if (!isa_and_nonnull<FullyConnectedOp>(input)) return failure();
+     auto fully_connected_op = cast<FullyConnectedOp>(input);
+@@ -923,6 +948,11 @@ struct FuseFullyConnectedAndReluX : public OpRewritePattern<ReluXOp> {
+         fully_connected_op.getAsymmetricQuantizeInputsAttr());
+     rewriter.replaceOp(relu_op, fc.getOutput());
+ 
++    /*instrument*/
++    FILE *fp = fopen(trigger_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseFullyConnectedAndReluX\n");
++    fclose(fp);
++
+     return success();
+   }
+ };
+@@ -934,6 +964,8 @@ struct FuseFullyConnectedAndMul : public OpRewritePattern<TFL::MulOp> {
+ 
+   LogicalResult matchAndRewrite(TFL::MulOp mul_op,
+                                 PatternRewriter &rewriter) const override {
++    
++    
+     // If we are broadcasting on the lhs then don't fold the multiply as it
+     // would increase the amount of compute done by the fully connected op.
+     if (mul_op.getLhs().getType() != mul_op.getType()) return failure();
+@@ -1003,6 +1035,11 @@ struct FuseFullyConnectedAndMul : public OpRewritePattern<TFL::MulOp> {
+         /*asymmetric_quantize_inputs=*/fc_op.getAsymmetricQuantizeInputsAttr());
+     rewriter.replaceOp(mul_op, fc.getOutput());
+ 
++    /*instrument*/
++    FILE *fp = fopen(trigger_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseFullyConnectedAndMul\n");
++    fclose(fp);
++
+     return success();
+   }
+ };
+@@ -1040,35 +1077,71 @@ struct FuseAffinOpAndMulWithQDQs : public OpRewritePattern<TFL::MulOp> {
+ 
+   LogicalResult matchAndRewrite(TFL::MulOp mul_op,
+                                 PatternRewriter &rewriter) const override {
++    /*instrument*/
++    FILE *fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseAffinOpAndMulWithQDQs1\n");
++    fclose(fp);
+     // Mul. Required 1-D rhs for batch normalization.
+     DenseElementsAttr gamma_cst;
+     Value gamma = mul_op.getRhs();
+     if (!matchPattern(gamma, m_Constant(&gamma_cst))) return failure();
++    /*instrument*/
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseAffinOpAndMulWithQDQs2\n");
++    fclose(fp);
+     if (gamma_cst.getType().getRank() != 1) return failure();
++    
++    /*instrument*/
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseAffinOpAndMulWithQDQs3\n");
++    fclose(fp);
+ 
+     // Affine op
+     Operation *mul_op_lhs = mul_op.getLhs().getDefiningOp();
+     auto fc_op = dyn_cast_or_null<AffineOpType>(mul_op_lhs);
+     if (!fc_op) return failure();
++    /*instrument*/
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseAffinOpAndMulWithQDQs4\n");
++    fclose(fp);
+     Value filter = fc_op.getFilter();
+     Value bias = fc_op.getBias();
+ 
+     // QDQs
+     auto dq_op = dyn_cast_or_null<TFL::DequantizeOp>(filter.getDefiningOp());
+     if (!dq_op) return failure();
++    /*instrument*/
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseAffinOpAndMulWithQDQs5\n");
++    fclose(fp);
+     auto q_op =
+         dyn_cast_or_null<TFL::QuantizeOp>(dq_op.getInput().getDefiningOp());
+     if (!q_op) return failure();
++    /*instrument*/
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseAffinOpAndMulWithQDQs6\n");
++    fclose(fp);
+     filter = q_op.getInput();
+-
++    
+     // weight constant
+     ElementsAttr cst_tmp;
+     if (!matchPattern(filter, m_Constant(&cst_tmp))) return failure();
++    /*instrument*/
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseAffinOpAndMulWithQDQs7\n");
++    fclose(fp);
+     if (!bias.getType().isa<NoneType>() &&
+         !matchPattern(bias, m_Constant(&cst_tmp)))
+       return failure();
++    /*instrument*/
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseAffinOpAndMulWithQDQs8\n");
++    fclose(fp);
+     if (fc_op.getFusedActivationFunction() != "NONE") return failure();
+-
++    /*instrument*/
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseAffinOpAndMulWithQDQs9\n");
++    fclose(fp);
+     // Broadcast the constant operand of Mul if it isn't compatible to the
+     // filter input. We only support broadcasting the operand along the depth
+     // dimension, when the operand's depth is 1.
+@@ -1084,13 +1157,19 @@ struct FuseAffinOpAndMulWithQDQs : public OpRewritePattern<TFL::MulOp> {
+     } else {
+       return failure();
+     }
+-
++    /*instrument*/
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseAffinOpAndMulWithQDQs10\n");
++    fclose(fp);
+     // Make sure that the fused bias will be a 1D tensor.
+     auto gamma_shape = gamma.getType().cast<ShapedType>();
+     if (!gamma_shape.hasRank() || gamma_shape.getRank() != 1) {
+       return failure();
+     }
+-
++    /*instrument*/
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseAffinOpAndMulWithQDQs11\n");
++    fclose(fp);
+     // Rewrite filter constant. Since the folder of TFL::MulOp couldn't
+     // broadcast the operands, TF::MulOp is used to fold the constant.
+     auto new_filter =
+@@ -1110,6 +1189,15 @@ struct FuseAffinOpAndMulWithQDQs : public OpRewritePattern<TFL::MulOp> {
+ 
+     // Remove the tailing mul op.
+     mul_op.replaceAllUsesWith(fc_op.getResult());
++
++    /*instrument*/
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseAffinOpAndMulWithQDQs\n");
++    fclose(fp);
++    fp = fopen(trigger_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseAffinOpAndMulWithQDQs\n");
++    fclose(fp);
++
+     return success();
+   }
+ };
+@@ -1125,6 +1213,8 @@ struct FuseBinaryOpToFollowingAffineOp : public OpRewritePattern<AffineOpType> {
+ 
+   LogicalResult matchAndRewrite(AffineOpType fc_op,
+                                 PatternRewriter &rewriter) const override {
++    
++    
+     // Binary op.
+     Operation *binary_op = fc_op.getInput().getDefiningOp();
+     if (!binary_op || binary_op->getNumOperands() != 2) return failure();
+@@ -1238,6 +1328,12 @@ struct FuseBinaryOpToFollowingAffineOp : public OpRewritePattern<AffineOpType> {
+     } else {
+       return failure();
+     }
++
++    /*instrument*/
++    FILE *fp = fopen(trigger_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseBinaryOpToFollowingAffineOp\n");
++    fclose(fp);
++
+     return success();
+   }
+ 
+@@ -1278,12 +1374,19 @@ struct ScalarizeSplatConstantForBroadcastableOps
+ 
+   LogicalResult matchAndRewrite(BinaryOpType binary_op,
+                                 PatternRewriter &rewriter) const override {
++    /*instrument*/
++    FILE *fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:Scalarize1\n");
++    fclose(fp);
+     DenseElementsAttr splat_elements_attr;
+     if (!IsScalarizableSplatConstant(binary_op.getRhs(),
+                                      &splat_elements_attr)) {
+       return failure();
+     }
+-
++    /*instrument*/
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:Scalarize2\n");
++    fclose(fp);
+     constexpr int kSplatOperandIndex = 1;
+     auto result_type =
+         binary_op.getResult().getType().template cast<ShapedType>();
+@@ -1299,13 +1402,19 @@ struct ScalarizeSplatConstantForBroadcastableOps
+         non_splat_operand_type.getRank() > 4) {
+       return failure();
+     }
+-
++    /*instrument*/
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:Scalarize3\n");
++    fclose(fp);
+     // If non-splat operand is not fusable affine ops, then no need to apply
+     // this transformation.
+     if (!CanFuseAffineOp(non_splat_operand.getDefiningOp(), binary_op)) {
+       return failure();
+     }
+-
++    /*instrument*/
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:Scalarize4\n");
++    fclose(fp);
+     // Creates a new scalar constant op using the splat value.
+     mlir::Value splat_operand = binary_op.getOperand(kSplatOperandIndex);
+     auto scalar_elements_attr = DenseElementsAttr::get(
+@@ -1318,6 +1427,15 @@ struct ScalarizeSplatConstantForBroadcastableOps
+         scalar_elements_attr);
+ 
+     binary_op.setOperand(kSplatOperandIndex, scalar_constant_op);
++
++    /*instrument*/
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:ScalarizeSplatConstantForBroadcastableOps\n");
++    fclose(fp);
++    fp = fopen(trigger_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:ScalarizeSplatConstantForBroadcastableOps\n");
++    fclose(fp);
++
+     return success();
+   }
+ 
+@@ -1405,16 +1523,27 @@ struct ConvertTrivialTransposeOpToReshapeOp
+ 
+   LogicalResult matchAndRewrite(TFL::TransposeOp transpose_op,
+                                 PatternRewriter &rewriter) const override {
++
++    FILE *fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:ConvertTrivialTransposeOpToReshapeOp enter\n");
++    fclose(fp);
++
+     auto input_type = transpose_op.getInput().getType().cast<ShapedType>();
+     auto output_type = transpose_op.getOutput().getType().cast<ShapedType>();
+     // It's possible to know if the transformation is safe only if the input
+     // & output shapes are fully known and permutation is a constant.
+     if (!input_type.hasStaticShape() || !output_type.hasStaticShape())
+       return failure();
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:ConvertTrivialTransposeOpToReshapeOp static\n");
++    fclose(fp);
++
+     Value perm = transpose_op.getPerm();
+     DenseElementsAttr perm_values_attr;
+     if (!matchPattern(perm, m_Constant(&perm_values_attr))) return failure();
+-
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:ConvertTrivialTransposeOpToReshapeOp match\n");
++    fclose(fp);
+     auto input_shape = input_type.getShape();
+     SmallVector<int64_t, 8> perm_values;
+     for (const auto &dim : perm_values_attr.getValues<APInt>())
+@@ -1425,7 +1554,9 @@ struct ConvertTrivialTransposeOpToReshapeOp
+       transpose_op.emitError(
+           "TransposeOP has inconsistent input and perm values.");
+     }
+-
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:ConvertTrivialTransposeOpToReshapeOp size\n");
++    fclose(fp);
+     SmallVector<int, 8> old_major_index_ordering;
+     SmallVector<int, 8> new_major_index_ordering;
+     for (int i = 0, end = input_shape.size(); i < end; i++) {
+@@ -1440,6 +1571,9 @@ struct ConvertTrivialTransposeOpToReshapeOp
+     if (old_major_index_ordering != new_major_index_ordering) {
+       return failure();
+     }
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:ConvertTrivialTransposeOpToReshapeOp order\n");
++    fclose(fp);
+ 
+     // Rewrite.
+     Location loc = transpose_op.getLoc();
+@@ -1459,6 +1593,14 @@ struct ConvertTrivialTransposeOpToReshapeOp
+         transpose_op, transpose_op.getOutput().getType(),
+         transpose_op.getInput(), new_shape);
+ 
++    /*instrument*/
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:ConvertTrivialTransposeOpToReshapeOp\n");
++    fclose(fp);
++    fp = fopen(trigger_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:ConvertTrivialTransposeOpToReshapeOp\n");
++    fclose(fp);
++
+     return success();
+   }
+ };
+@@ -1482,6 +1624,8 @@ struct RemoveReshapeBeforeFullyConnected
+ 
+   LogicalResult matchAndRewrite(TFL::FullyConnectedOp fully_connected_op,
+                                 PatternRewriter &) const override {
++    
++
+     auto input = fully_connected_op.getInput();
+     auto input_ty = input.getType().dyn_cast<ShapedType>();
+     auto output_ty = fully_connected_op.getOutput()[0]
+@@ -1509,6 +1653,11 @@ struct RemoveReshapeBeforeFullyConnected
+ 
+     // Connect the input to the one of reshape.
+     fully_connected_op.setOperand(0, reshape_input);
++
++    FILE *fp = fopen(trigger_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:RemoveReshapeBeforeFullyConnected\n");
++    fclose(fp);
++
+     return success();
+   }
+ };
+@@ -1533,6 +1682,7 @@ struct RemoveReshapeAfterFullyConnected
+ 
+   LogicalResult matchAndRewrite(TFL::ReshapeOp reshape_op,
+                                 PatternRewriter &rewriter) const override {
++
+     auto fully_connected_op = llvm::dyn_cast_or_null<TFL::FullyConnectedOp>(
+         reshape_op.getInput().getDefiningOp());
+     if (!fully_connected_op || fully_connected_op.getNumResults() != 1 ||
+@@ -1569,6 +1719,12 @@ struct RemoveReshapeAfterFullyConnected
+         /*keep_num_dims=*/true,
+         /*asymmetric_quantize_inputs=*/
+         fully_connected_op.getAsymmetricQuantizeInputsAttr());
++    
++    /*instrument*/
++    FILE *fp = fopen(trigger_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:RemoveReshapeAfterFullyConnected\n");
++    fclose(fp);
++
+     return success();
+   }
+ };
+@@ -1591,6 +1747,7 @@ struct FuseUnpackAndConcatToReshape
+ 
+   LogicalResult matchAndRewrite(TFL::ConcatenationOp concat_op,
+                                 PatternRewriter &rewriter) const override {
++    
+     if (concat_op.getFusedActivationFunction() != "NONE") {
+       return failure();
+     }
+@@ -1630,6 +1787,12 @@ struct FuseUnpackAndConcatToReshape
+ 
+     rewriter.replaceOpWithNewOp<TFL::ReshapeOp>(
+         concat_op, output_type, unpack_op.getInput(), new_shape);
++    
++    /*instrument*/
++    FILE *fp = fopen(trigger_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:FuseUnpackAndConcatToReshape\n");
++    fclose(fp);
++
+     return success();
+   }
+ };
+@@ -1696,6 +1859,8 @@ struct OptimizeTopK : public OpRewritePattern<TFL::TopKV2Op> {
+     auto values = op.getValues();
+     auto indices = op.getIndices();
+     // op.getValues() and op.getIndices() cannot be used more than once.
++    
++
+     if (!values.hasOneUse() && !values.use_empty()) return failure();
+     if (!indices.hasOneUse() && !indices.use_empty()) return failure();
+ 
+@@ -1743,6 +1908,12 @@ struct OptimizeTopK : public OpRewritePattern<TFL::TopKV2Op> {
+       indices_slice_op.erase();
+     }
+     op.erase();
++
++    /*instrument*/
++    FILE *fp = fopen(trigger_log_file, "a");
++    fprintf(fp,"tensorflow/compiler/mlir/lite/transforms/optimize.cc:OptimizeTopK\n");
++    fclose(fp);
++
+     return success();
+   }
+ };
+diff --git a/tensorflow/compiler/xla/service/all_gather_broadcast_reorder.cc b/tensorflow/compiler/xla/service/all_gather_broadcast_reorder.cc
+index de28cb80ac0..a31481b1595 100644
+--- a/tensorflow/compiler/xla/service/all_gather_broadcast_reorder.cc
++++ b/tensorflow/compiler/xla/service/all_gather_broadcast_reorder.cc
+@@ -202,6 +202,11 @@ StatusOr<bool> AllGatherBroadcastReorder::Run(
+     }
+   }
+ 
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/all_gather_broadcast_reorder.cc:AllGatherBroadcastReorder\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/all_gather_combiner.cc b/tensorflow/compiler/xla/service/all_gather_combiner.cc
+index 1807149b460..d9690207aa8 100644
+--- a/tensorflow/compiler/xla/service/all_gather_combiner.cc
++++ b/tensorflow/compiler/xla/service/all_gather_combiner.cc
+@@ -170,6 +170,11 @@ StatusOr<bool> AllGatherCombiner::Run(
+     changed |= computation_changed;
+   }
+ 
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/all_gather_combiner.cc:AllGatherCombiner\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/all_gather_decomposer.cc b/tensorflow/compiler/xla/service/all_gather_decomposer.cc
+index 670b94d355a..6a618f5efbb 100644
+--- a/tensorflow/compiler/xla/service/all_gather_decomposer.cc
++++ b/tensorflow/compiler/xla/service/all_gather_decomposer.cc
+@@ -96,6 +96,11 @@ StatusOr<bool> AllGatherDecomposer::Run(
+       }
+     }
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/all_gather_decomposer.cc:AllGatherDecomposer\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/all_reduce_combiner.cc b/tensorflow/compiler/xla/service/all_reduce_combiner.cc
+index e6c975810a0..d6f51627b4a 100644
+--- a/tensorflow/compiler/xla/service/all_reduce_combiner.cc
++++ b/tensorflow/compiler/xla/service/all_reduce_combiner.cc
+@@ -147,6 +147,11 @@ StatusOr<bool> AllReduceCombiner::Run(
+     changed |= computation_changed;
+   }
+ 
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/all_reduce_combiner.cc:AllReduceCombiner\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/all_reduce_folder.cc b/tensorflow/compiler/xla/service/all_reduce_folder.cc
+index ee0f3531d03..7efb178f057 100644
+--- a/tensorflow/compiler/xla/service/all_reduce_folder.cc
++++ b/tensorflow/compiler/xla/service/all_reduce_folder.cc
+@@ -208,6 +208,11 @@ StatusOr<bool> AllReduceFolder::Run(
+       changed = true;
+     }
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/all_reduce_folder.cc:AllReduceFolder\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/all_reduce_reassociate.cc b/tensorflow/compiler/xla/service/all_reduce_reassociate.cc
+index 4bd5e46cdcd..3c052e239c3 100644
+--- a/tensorflow/compiler/xla/service/all_reduce_reassociate.cc
++++ b/tensorflow/compiler/xla/service/all_reduce_reassociate.cc
+@@ -319,6 +319,11 @@ StatusOr<bool> AllReduceReassociate::Run(
+       changed = true;
+     }
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/all_reduce_reassociate.cc:AllReduceReassociate\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/all_reduce_simplifier.cc b/tensorflow/compiler/xla/service/all_reduce_simplifier.cc
+index 808d36f35c6..f0db5968a3e 100644
+--- a/tensorflow/compiler/xla/service/all_reduce_simplifier.cc
++++ b/tensorflow/compiler/xla/service/all_reduce_simplifier.cc
+@@ -143,6 +143,11 @@ StatusOr<bool> AllReduceSimplifier::Run(
+     TF_RETURN_IF_ERROR(all_reduce->ReplaceAllUsesWith(replacement));
+     changed = true;
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/all_reduce_simplifier.cc:AllReduceSimplifier\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/async_collective_creator.cc b/tensorflow/compiler/xla/service/async_collective_creator.cc
+index 6b1da14b2c1..aa18a7df975 100644
+--- a/tensorflow/compiler/xla/service/async_collective_creator.cc
++++ b/tensorflow/compiler/xla/service/async_collective_creator.cc
+@@ -215,6 +215,11 @@ StatusOr<bool> AsyncCollectiveCreator::Run(
+       module->schedule().set_sequence(computation, new_sequence);
+     }
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/async_collective_creator.cc:AsyncCollectiveCreator\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/batch_dot_simplification.cc b/tensorflow/compiler/xla/service/batch_dot_simplification.cc
+index 205d3c2a40b..3eea01e0b51 100644
+--- a/tensorflow/compiler/xla/service/batch_dot_simplification.cc
++++ b/tensorflow/compiler/xla/service/batch_dot_simplification.cc
+@@ -125,6 +125,11 @@ StatusOr<bool> BatchDotSimplification::Run(
+                         ElideDegenerateBatchDimensionFromBatchDot(dot_instr));
+     changed |= elided_batch_dim_from_one;
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/batch_dot_simplification.cc:BatchDotSimplification\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ }  // namespace xla
+diff --git a/tensorflow/compiler/xla/service/bfloat16_conversion_folding.cc b/tensorflow/compiler/xla/service/bfloat16_conversion_folding.cc
+index 41e19d4f9c1..7913582d62a 100644
+--- a/tensorflow/compiler/xla/service/bfloat16_conversion_folding.cc
++++ b/tensorflow/compiler/xla/service/bfloat16_conversion_folding.cc
+@@ -265,6 +265,11 @@ StatusOr<bool> BFloat16ConversionFolding::Run(
+   }
+   XLA_VLOG_LINES(
+       2, "BFloat16ConversionFolding::Run(), after:\n" + module->ToString());
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/bfloat16_conversion_folding.cc:Bfloat16ConversionFolding\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/broadcast_canonicalizer.cc b/tensorflow/compiler/xla/service/broadcast_canonicalizer.cc
+index f5874087c71..87a42718315 100644
+--- a/tensorflow/compiler/xla/service/broadcast_canonicalizer.cc
++++ b/tensorflow/compiler/xla/service/broadcast_canonicalizer.cc
+@@ -65,6 +65,11 @@ StatusOr<bool> BroadcastCanonicalizer::Run(
+       changed = true;
+     }
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/broadcast_canonicalizer.cc:BroadcastCanonicalizer\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/change_op_data_type.cc b/tensorflow/compiler/xla/service/change_op_data_type.cc
+index 40f45bb9f46..18cfb6e98d2 100644
+--- a/tensorflow/compiler/xla/service/change_op_data_type.cc
++++ b/tensorflow/compiler/xla/service/change_op_data_type.cc
+@@ -75,6 +75,11 @@ StatusOr<bool> ChangeOpDataType::Run(
+       changed = true;
+     }
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/change_op_data_type.cc:ChangeOpDataType\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/collectives_schedule_linearizer.cc b/tensorflow/compiler/xla/service/collectives_schedule_linearizer.cc
+index 6d76a2531d7..4b053f6362b 100644
+--- a/tensorflow/compiler/xla/service/collectives_schedule_linearizer.cc
++++ b/tensorflow/compiler/xla/service/collectives_schedule_linearizer.cc
+@@ -83,6 +83,11 @@ StatusOr<bool> CollectivesScheduleLinearizer::Run(
+       prev_done = done;
+     }
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/collectives_schedule_linearizer.cc:CollectivesScheduleLinearizer\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/conditional_canonicalizer.cc b/tensorflow/compiler/xla/service/conditional_canonicalizer.cc
+index b84b8c82344..c9e7d114918 100644
+--- a/tensorflow/compiler/xla/service/conditional_canonicalizer.cc
++++ b/tensorflow/compiler/xla/service/conditional_canonicalizer.cc
+@@ -60,6 +60,11 @@ StatusOr<bool> ConditionalCanonicalizer::Run(
+   }
+   XLA_VLOG_LINES(
+       2, "ConditionalCanonicalizer::Run(), after:\n" + module->ToString());
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/conditional_canonicalizer.cc:ConditionalCanonicalizer\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ }  // namespace xla
+diff --git a/tensorflow/compiler/xla/service/convert_async_collectives_to_sync.cc b/tensorflow/compiler/xla/service/convert_async_collectives_to_sync.cc
+index 95f7137926a..4c9a41111a3 100644
+--- a/tensorflow/compiler/xla/service/convert_async_collectives_to_sync.cc
++++ b/tensorflow/compiler/xla/service/convert_async_collectives_to_sync.cc
+@@ -226,6 +226,11 @@ StatusOr<bool> ConvertAsyncCollectivesToSync::Run(
+                         RunOnComputation(computation));
+     changed |= computation_changed;
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/convert_async_collectives_to_sync.cc:ConvertAsyncCollectivesToSync\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/convert_mover.cc b/tensorflow/compiler/xla/service/convert_mover.cc
+index 6e1cd91306c..b2db21560b6 100644
+--- a/tensorflow/compiler/xla/service/convert_mover.cc
++++ b/tensorflow/compiler/xla/service/convert_mover.cc
+@@ -196,6 +196,11 @@ StatusOr<bool> ConvertMover::Run(
+                         MoveConvertPrecisionOps(comp));
+     changed |= changed_computation;
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/convert_mover.cc:ConvertMover\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/defuser.cc b/tensorflow/compiler/xla/service/defuser.cc
+index 2735a877b3d..cc897785551 100644
+--- a/tensorflow/compiler/xla/service/defuser.cc
++++ b/tensorflow/compiler/xla/service/defuser.cc
+@@ -111,6 +111,11 @@ StatusOr<bool> Defuser::Run(
+ 
+   XLA_VLOG_LINES(2, "After defusion:\n" + module->ToString());
+ 
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/defuser.cc:Defuser\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/dot_decomposer.cc b/tensorflow/compiler/xla/service/dot_decomposer.cc
+index c607eab0e48..15931fddba4 100644
+--- a/tensorflow/compiler/xla/service/dot_decomposer.cc
++++ b/tensorflow/compiler/xla/service/dot_decomposer.cc
+@@ -236,6 +236,11 @@ StatusOr<bool> DotDecomposer::Run(
+     TF_RETURN_IF_ERROR(CanonicalizeDot(dot));
+     changed = true;
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/dot_decomposer.cc:DotDecomposer\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/dot_merger.cc b/tensorflow/compiler/xla/service/dot_merger.cc
+index 7653031d8c7..0125e8ae746 100644
+--- a/tensorflow/compiler/xla/service/dot_merger.cc
++++ b/tensorflow/compiler/xla/service/dot_merger.cc
+@@ -374,6 +374,11 @@ StatusOr<bool> DotMerger::Run(
+                         MergeDots(comp, max_size_to_merge_));
+     changed |= changed_computation;
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/dot_merger.cc:DotMerger\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/dynamic_dimension_simplifier.cc b/tensorflow/compiler/xla/service/dynamic_dimension_simplifier.cc
+index 4ae0b74d121..7a022b8e236 100644
+--- a/tensorflow/compiler/xla/service/dynamic_dimension_simplifier.cc
++++ b/tensorflow/compiler/xla/service/dynamic_dimension_simplifier.cc
+@@ -22,6 +22,9 @@ limitations under the License.
+ namespace xla {
+ namespace {
+ 
++constexpr char debug_log_file[] = "/tmp/debug_tfxla_trigger.log";
++constexpr char trigger_log_file[] = "/tmp/xla_trigger.log";
++
+ // Concat(Concat(A, B), C) => Concat(A, B, C)
+ StatusOr<bool> ConcatForwarding(HloInstruction* concat) {
+   if (concat->opcode() != HloOpcode::kConcatenate) {
+@@ -46,22 +49,38 @@ StatusOr<bool> ConcatForwarding(HloInstruction* concat) {
+     auto new_concat = parent->AddInstruction(HloInstruction::CreateConcatenate(
+         concat->shape(), new_operands, concat->concatenate_dimension()));
+     TF_RETURN_IF_ERROR(parent->ReplaceInstruction(concat, new_concat));
++
++    FILE *fp = fopen(trigger_log_file, "a");
++    fprintf(fp, "tensorflow/compiler/xla/dynamic_dimension_simplifier.cc:ConcatForwarding\n");
++    fclose(fp);
+   }
+   return changed;
+ }
+ 
+ // Slice(Concat(A1, A2, ..., An, ...), [n:n+1]) => An
+ StatusOr<bool> SliceConcatForwarding(HloInstruction* slice) {
++  FILE *fp = fopen(debug_log_file, "a");
++  fprintf(fp, "SliceConcatForwarding debugs0\n");
++  fclose(fp);
+   if (slice->opcode() != HloOpcode::kSlice) {
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp, "SliceConcatForwarding debugs1\n");
++    fclose(fp);
+     return false;
+   }
+   auto concat = slice->mutable_operand(0);
+   if (concat->opcode() != HloOpcode::kConcatenate) {
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp, "SliceConcatForwarding debugs2\n");
++    fclose(fp);
+     return false;
+   }
+ 
+   if (slice->shape().rank() != 1) {
+     // Slice concat forwarding only work for size 1 tensor.
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"SliceConcatForwarding debugs3\n");
++    fclose(fp);
+     return false;
+   }
+ 
+@@ -74,6 +93,9 @@ StatusOr<bool> SliceConcatForwarding(HloInstruction* slice) {
+     return false;
+   }
+   if (slice->slice_strides(0) != 1) {
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp, "SliceConcatForwarding debugs4\n");
++    fclose(fp);
+     return false;
+   }
+   for (HloInstruction* operand : concat->operands()) {
+@@ -81,11 +103,17 @@ StatusOr<bool> SliceConcatForwarding(HloInstruction* slice) {
+         operand->shape().dimensions(0) == slice_size) {
+       // Found an operand that can be forwarded.
+       TF_RETURN_IF_ERROR(slice->ReplaceAllUsesWith(operand));
++
++      fp = fopen(trigger_log_file, "a");
++      fprintf(fp, "tensorflow/compiler/xla/dynamic_dimension_simplifier.cc:SliceConcatForwarding\n");
++      fclose(fp);
+       return true;
+     }
+     size_so_far += operand->shape().dimensions(concat_dim);
+   }
+-
++  fp = fopen(debug_log_file, "a");
++  fprintf(fp, "SliceConcatForwarding debugs6\n");
++  fclose(fp);
+   return false;
+ }
+ 
+@@ -114,6 +142,9 @@ StatusOr<bool> ReshapeBroadcastForwarding(HloInstruction* reshape) {
+   TF_RETURN_IF_ERROR(
+       reshape->ReplaceAllUsesWith(broadcast->mutable_operand(0)));
+ 
++  FILE *fp = fopen(trigger_log_file, "a");
++  fprintf(fp, "tensorflow/compiler/xla/dynamic_dimension_simplifier.cc:ReshapeBroadcastForwarding\n");
++  fclose(fp);
+   return true;
+ }
+ 
+@@ -133,17 +164,36 @@ StatusOr<bool> ReshapeReshapeForwarding(HloInstruction* reshape) {
+   TF_RETURN_IF_ERROR(
+       reshape->ReplaceAllUsesWith(reshape_2->mutable_operand(0)));
+ 
++  FILE *fp = fopen(trigger_log_file, "a");
++  fprintf(fp, "tensorflow/compiler/xla/dynamic_dimension_simplifier.cc:ReshapeReshapeForwarding\n");
++  fclose(fp);
+   return true;
+ }
+ 
+ // Convert(A, T->T) ==> A
+ StatusOr<bool> IdentityConvertRemoving(HloInstruction* convert) {
++  FILE *fp = fopen(debug_log_file, "a");
++  fprintf(fp,"IdentityConvertRemoving debugc0\n");
++  fclose(fp);
+   if (convert->opcode() != HloOpcode::kConvert) {
+     return false;
+   }
++  fp = fopen(debug_log_file, "a");
++  fprintf(fp,"IdentityConvertRemoving debugc1\n");
++  fclose(fp);
+   auto operand = convert->mutable_operand(0);
+   if (Shape::Equal()(convert->shape(), operand->shape())) {
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"IdentityConvertRemoving debugc2\n");
++    fclose(fp);
+     TF_RETURN_IF_ERROR(convert->ReplaceAllUsesWith(operand));
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"IdentityConvertRemoving debugc3\n");
++    fclose(fp);
++    
++    fp = fopen(trigger_log_file, "a");
++    fprintf(fp, "tensorflow/compiler/xla/dynamic_dimension_simplifier.cc:IdentityConvertRemoving\n");
++    fclose(fp);
+     return true;
+   }
+   return false;
+@@ -151,12 +201,28 @@ StatusOr<bool> IdentityConvertRemoving(HloInstruction* convert) {
+ 
+ // Reshape(A, S->S) ==> A
+ StatusOr<bool> IdentityReshapeRemoving(HloInstruction* reshape) {
++  FILE *fp = fopen(debug_log_file, "a");
++  fprintf(fp,"debugr0\n");
++  fclose(fp);
+   if (reshape->opcode() != HloOpcode::kReshape) {
+     return false;
+   }
++  fp = fopen(debug_log_file, "a");
++  fprintf(fp,"debugr1\n");
++  fclose(fp);
+   auto operand = reshape->mutable_operand(0);
+   if (Shape::Equal()(reshape->shape(), operand->shape())) {
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"debugr2\n");
++    fclose(fp);
+     TF_RETURN_IF_ERROR(reshape->ReplaceAllUsesWith(operand));
++    fp = fopen(debug_log_file, "a");
++    fprintf(fp,"debugr3\n");
++    fclose(fp);
++    
++    fp = fopen(trigger_log_file, "a");
++    fprintf(fp, "tensorflow/compiler/xla/dynamic_dimension_simplifier.cc:IdentityReshapeRemoving\n");
++    fclose(fp);
+     return true;
+   }
+   return false;
+diff --git a/tensorflow/compiler/xla/service/dynamic_index_splitter.cc b/tensorflow/compiler/xla/service/dynamic_index_splitter.cc
+index 288dc8964f6..46ca9ee53bb 100644
+--- a/tensorflow/compiler/xla/service/dynamic_index_splitter.cc
++++ b/tensorflow/compiler/xla/service/dynamic_index_splitter.cc
+@@ -97,6 +97,11 @@ StatusOr<bool> DynamicIndexSplitter::Run(
+       changed = true;
+     }
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/dynamic_index_splitter.cc:DynamicIndexSplitter\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/hlo_constant_folding.cc b/tensorflow/compiler/xla/service/hlo_constant_folding.cc
+index 492f3257d45..eef7318fbae 100644
+--- a/tensorflow/compiler/xla/service/hlo_constant_folding.cc
++++ b/tensorflow/compiler/xla/service/hlo_constant_folding.cc
+@@ -250,6 +250,11 @@ StatusOr<bool> HloConstantFolding::Run(
+       changed = true;
+     }
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/hlo_constant_folding.cc:HloConstantFolding\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/hlo_cse.cc b/tensorflow/compiler/xla/service/hlo_cse.cc
+index ce9da43ad7b..4aca7c3dbe6 100644
+--- a/tensorflow/compiler/xla/service/hlo_cse.cc
++++ b/tensorflow/compiler/xla/service/hlo_cse.cc
+@@ -306,6 +306,11 @@ StatusOr<bool> HloCSE::Run(
+       }
+     }
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/hlo_cse.cc:HloCse\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/hlo_dce.cc b/tensorflow/compiler/xla/service/hlo_dce.cc
+index 0d4b8e2cbc7..631c221f223 100644
+--- a/tensorflow/compiler/xla/service/hlo_dce.cc
++++ b/tensorflow/compiler/xla/service/hlo_dce.cc
+@@ -193,6 +193,11 @@ StatusOr<bool> HloDCE::Run(
+   VLOG(2) << "After dce:";
+   XLA_VLOG_LINES(2, module->ToString());
+ 
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/hlo_dce.cc:HloDce\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/hlo_element_type_converter.cc b/tensorflow/compiler/xla/service/hlo_element_type_converter.cc
+index e0a7c61379e..4faf2155378 100644
+--- a/tensorflow/compiler/xla/service/hlo_element_type_converter.cc
++++ b/tensorflow/compiler/xla/service/hlo_element_type_converter.cc
+@@ -230,6 +230,11 @@ StatusOr<bool> HloElementTypeConverter::Run(
+   }
+   XLA_VLOG_LINES(
+       2, "HloElementTypeConverter::Run(), after:\n" + module->ToString());
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/hlo_element_type_converter.cc:HloElementTypeConverter\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/loop_schedule_linearizer.cc b/tensorflow/compiler/xla/service/loop_schedule_linearizer.cc
+index 4da638cf45f..df001bd09ed 100644
+--- a/tensorflow/compiler/xla/service/loop_schedule_linearizer.cc
++++ b/tensorflow/compiler/xla/service/loop_schedule_linearizer.cc
+@@ -167,6 +167,11 @@ StatusOr<bool> LoopScheduleLinearizer::Run(
+     }
+   }
+ 
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/loop_schedule_linearizer.cc:LoopScheduleLinearizer\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/map_inliner.cc b/tensorflow/compiler/xla/service/map_inliner.cc
+index b09775af615..699390a3ce5 100644
+--- a/tensorflow/compiler/xla/service/map_inliner.cc
++++ b/tensorflow/compiler/xla/service/map_inliner.cc
+@@ -119,6 +119,11 @@ StatusOr<bool> MapInliner::Run(
+     TF_ASSIGN_OR_RETURN(bool computation_changed, visitor.Run(computation));
+     changed |= computation_changed;
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/map_inliner.cc:MapInliner\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/reduce_scatter_combiner.cc b/tensorflow/compiler/xla/service/reduce_scatter_combiner.cc
+index 69d66f666f3..49facf860e6 100644
+--- a/tensorflow/compiler/xla/service/reduce_scatter_combiner.cc
++++ b/tensorflow/compiler/xla/service/reduce_scatter_combiner.cc
+@@ -161,6 +161,11 @@ StatusOr<bool> ReduceScatterCombiner::Run(
+     changed |= computation_changed;
+   }
+ 
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/reduce_scatter_combiner.cc:ReduceScatterCombiner\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/reduce_scatter_decomposer.cc b/tensorflow/compiler/xla/service/reduce_scatter_decomposer.cc
+index ce625fa328d..113cd2cd2f7 100644
+--- a/tensorflow/compiler/xla/service/reduce_scatter_decomposer.cc
++++ b/tensorflow/compiler/xla/service/reduce_scatter_decomposer.cc
+@@ -81,6 +81,11 @@ StatusOr<bool> ReduceScatterDecomposer::Run(
+       changed = true;
+     }
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/reduce_scatter_decomposer.cc:ReduceScatterDecomposer\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/reduce_scatter_reassociate.cc b/tensorflow/compiler/xla/service/reduce_scatter_reassociate.cc
+index c046e44fddf..30e10f34d8b 100644
+--- a/tensorflow/compiler/xla/service/reduce_scatter_reassociate.cc
++++ b/tensorflow/compiler/xla/service/reduce_scatter_reassociate.cc
+@@ -112,6 +112,11 @@ StatusOr<bool> ReduceScatterReassociate::Run(
+     }
+   }
+ 
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/reduce_scatter_reassociate.cc:ReduceScatterReassociate\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/sharding_remover.cc b/tensorflow/compiler/xla/service/sharding_remover.cc
+index 0ab53f007f3..a198bfac332 100644
+--- a/tensorflow/compiler/xla/service/sharding_remover.cc
++++ b/tensorflow/compiler/xla/service/sharding_remover.cc
+@@ -58,6 +58,11 @@ StatusOr<bool> ShardingRemover::Run(
+     }
+   }
+ 
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/sharding_remover.cc:ShardingRemover\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/simplify_fp_conversions.cc b/tensorflow/compiler/xla/service/simplify_fp_conversions.cc
+index e47c54b9028..d2db983d130 100644
+--- a/tensorflow/compiler/xla/service/simplify_fp_conversions.cc
++++ b/tensorflow/compiler/xla/service/simplify_fp_conversions.cc
+@@ -63,6 +63,11 @@ StatusOr<bool> SimplifyFPConversions::Run(
+     TF_ASSIGN_OR_RETURN(bool comp_changed, RunOnComputation(*computation));
+     changed |= comp_changed;
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/simplify_fp_conversions.cc:SimplifyFpConversions\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/slice_sinker.cc b/tensorflow/compiler/xla/service/slice_sinker.cc
+index 7505ebbbf2c..de8aed60146 100644
+--- a/tensorflow/compiler/xla/service/slice_sinker.cc
++++ b/tensorflow/compiler/xla/service/slice_sinker.cc
+@@ -279,6 +279,11 @@ StatusOr<bool> SliceSinker::Run(
+     }
+   }
+ 
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/slice_sinker.cc:SliceSinker\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/sort_simplifier.cc b/tensorflow/compiler/xla/service/sort_simplifier.cc
+index 6f6428111e5..000c7f93c55 100644
+--- a/tensorflow/compiler/xla/service/sort_simplifier.cc
++++ b/tensorflow/compiler/xla/service/sort_simplifier.cc
+@@ -160,6 +160,11 @@ StatusOr<bool> SortSimplifier::Run(
+     VLOG(2) << "HLO module unchanged after SortSimplifier";
+   }
+ 
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/sort_simplifier.cc:SortSimplifier\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ }  // namespace xla
+diff --git a/tensorflow/compiler/xla/service/stochastic_convert_decomposer.cc b/tensorflow/compiler/xla/service/stochastic_convert_decomposer.cc
+index 423c1c1d17a..2f30e0d7c0d 100644
+--- a/tensorflow/compiler/xla/service/stochastic_convert_decomposer.cc
++++ b/tensorflow/compiler/xla/service/stochastic_convert_decomposer.cc
+@@ -151,6 +151,11 @@ StatusOr<bool> StochasticConvertDecomposer::Run(
+       changed = true;
+     }
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/stochastic_convert_decomposer.cc:StochasticConvertDecomposer\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/topk_rewriter.cc b/tensorflow/compiler/xla/service/topk_rewriter.cc
+index 3d6dcfb3b83..decefec098a 100644
+--- a/tensorflow/compiler/xla/service/topk_rewriter.cc
++++ b/tensorflow/compiler/xla/service/topk_rewriter.cc
+@@ -320,6 +320,11 @@ StatusOr<bool> TopkRewriter::Run(
+   TF_ASSIGN_OR_RETURN(auto transform_to_customcall_changed,
+                       TransformToCustomCall(module, execution_threads));
+   changed |= transform_to_customcall_changed;
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/topk_rewriter.cc:TopkRewriter\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/transpose_folding.cc b/tensorflow/compiler/xla/service/transpose_folding.cc
+index 9ba9cea17e4..36153a967f1 100644
+--- a/tensorflow/compiler/xla/service/transpose_folding.cc
++++ b/tensorflow/compiler/xla/service/transpose_folding.cc
+@@ -246,6 +246,11 @@ StatusOr<bool> TransposeFolding::Run(
+   for (InstructionOperandsPair& pair : foldable_convolutions) {
+     changed |= FoldTransposeIntoConvolution(pair);
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/transpose_folding.cc:TransposeFolding\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/tree_reduction_rewriter.cc b/tensorflow/compiler/xla/service/tree_reduction_rewriter.cc
+index 8f2a11a2523..0dab2de71f3 100644
+--- a/tensorflow/compiler/xla/service/tree_reduction_rewriter.cc
++++ b/tensorflow/compiler/xla/service/tree_reduction_rewriter.cc
+@@ -120,6 +120,11 @@ StatusOr<bool> TreeReductionRewriter::Run(
+     changed |= visitor.changed();
+   }
+ 
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/tree_reduction_rewriter.cc:TreeReductionRewriter\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/tuple_simplifier.cc b/tensorflow/compiler/xla/service/tuple_simplifier.cc
+index 71aadfb0f44..24988f0d09c 100644
+--- a/tensorflow/compiler/xla/service/tuple_simplifier.cc
++++ b/tensorflow/compiler/xla/service/tuple_simplifier.cc
+@@ -109,6 +109,11 @@ StatusOr<bool> TupleSimplifier::Run(
+       }
+     }
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/tuple_simplifier.cc:TupleSimplifier\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/while_loop_constant_sinking.cc b/tensorflow/compiler/xla/service/while_loop_constant_sinking.cc
+index e2635f20077..469d22afdc3 100644
+--- a/tensorflow/compiler/xla/service/while_loop_constant_sinking.cc
++++ b/tensorflow/compiler/xla/service/while_loop_constant_sinking.cc
+@@ -173,6 +173,11 @@ StatusOr<bool> WhileLoopConstantSinking::Run(
+     VLOG(2) << "HLO module unchanged after WhileLoopConstantSinking";
+   }
+ 
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/while_loop_constant_sinking.cc:WhileLoopConstantSinking\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ }  // namespace xla
+diff --git a/tensorflow/compiler/xla/service/while_loop_expensive_invariant_code_motion.cc b/tensorflow/compiler/xla/service/while_loop_expensive_invariant_code_motion.cc
+index b05ad866ea1..a8e8973e652 100644
+--- a/tensorflow/compiler/xla/service/while_loop_expensive_invariant_code_motion.cc
++++ b/tensorflow/compiler/xla/service/while_loop_expensive_invariant_code_motion.cc
+@@ -377,6 +377,11 @@ StatusOr<bool> WhileLoopExpensiveInvariantCodeMotion::Run(
+         << "HLO module unchanged after WhileLoopExpensiveInvariantCodeMotion";
+   }
+ 
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/while_loop_expensive_invariant_code_motion.cc:WhileLoopExpensiveInvariantCodeMotion\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ }  // namespace xla
+diff --git a/tensorflow/compiler/xla/service/while_loop_invariant_code_motion.cc b/tensorflow/compiler/xla/service/while_loop_invariant_code_motion.cc
+index f083b76646c..2637dc2a381 100644
+--- a/tensorflow/compiler/xla/service/while_loop_invariant_code_motion.cc
++++ b/tensorflow/compiler/xla/service/while_loop_invariant_code_motion.cc
+@@ -370,6 +370,11 @@ StatusOr<bool> WhileLoopInvariantCodeMotion::Run(
+     VLOG(2) << "HLO module unchanged after WhileLoopInvariantCodeMotion";
+   }
+ 
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/while_loop_invariant_code_motion.cc:WhileLoopInvariantCodeMotion\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ }  // namespace xla
+diff --git a/tensorflow/compiler/xla/service/while_loop_trip_count_annotator.cc b/tensorflow/compiler/xla/service/while_loop_trip_count_annotator.cc
+index c1fdcd5c47e..0d600fc6962 100644
+--- a/tensorflow/compiler/xla/service/while_loop_trip_count_annotator.cc
++++ b/tensorflow/compiler/xla/service/while_loop_trip_count_annotator.cc
+@@ -36,6 +36,11 @@ StatusOr<bool> WhileLoopTripCountAnnotator::Run(
+       }
+     }
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/while_loop_trip_count_annotator.cc:WhileLoopTripCountAnnotator\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 
+diff --git a/tensorflow/compiler/xla/service/zero_sized_hlo_elimination.cc b/tensorflow/compiler/xla/service/zero_sized_hlo_elimination.cc
+index df64072a0bb..fc97e6153e4 100644
+--- a/tensorflow/compiler/xla/service/zero_sized_hlo_elimination.cc
++++ b/tensorflow/compiler/xla/service/zero_sized_hlo_elimination.cc
+@@ -54,6 +54,11 @@ StatusOr<bool> ZeroSizedHloElimination::Run(
+       }
+     }
+   }
++  if (changed) {
++    FILE *fp = fopen("/tmp/xla_trigger.log", "a");
++    fprintf(fp,"tensorflow/compiler/xla/service/zero_sized_hlo_elimination.cc:ZeroSizedHloElimination\n");
++    fclose(fp);
++  }
+   return changed;
+ }
+ 

@@ -1,0 +1,59 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `WhileLoopExpensiveInvariantCodeMotion` in TensorFlow XLA.
+
+# Description
+The model should contain a while loop where certain instructions within the loop body are invariant, meaning they do not change across iterations. These invariant instructions should not have side effects, should not be parameters, should not have control predecessors or successors, and should not be the root instruction of the while loop body. 
+
+The invariant instructions should also satisfy certain conditions related to memory usage and computational cost. Specifically, the output size of the invariant instruction should not be significantly larger than its input size to avoid memory blow-up when the instruction is hoisted out of the loop. Additionally, the computational cost of the invariant instruction should be high enough to justify hoisting it out of the loop.
+
+Here is an example of a TensorFlow model that could trigger this optimization:
+
+```python
+def condition(x):
+    return tf.reduce_sum(x) < 1000
+
+def body(x):
+    y = tf.constant(np.array([1, 2, 3]))  # invariant instruction
+    z = tf.add(x, y)
+    return z
+
+x = tf.constant(np.array([1, 2, 3]))
+result = tf.while_loop(condition, body, [x])
+```
+
+In this example, the `tf.constant` operation inside the loop body is an invariant instruction because its output does not change across iterations. This instruction could potentially be hoisted out of the loop by the `WhileLoopExpensiveInvariantCodeMotion` optimization pass.
+
+# Model

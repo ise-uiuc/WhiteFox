@@ -1,0 +1,51 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ConvertAsyncCollectivesToSync` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+
+```
+async_start = tf.xla.experimental.start_async_outbound_data_transfer(...)
+async_done = tf.xla.experimental.done_async_outbound_data_transfer(async_start)
+```
+
+The pattern describes that there are asynchronous collective operations in the model. The `start_async_outbound_data_transfer` operator starts an asynchronous data transfer operation, and the `done_async_outbound_data_transfer` operator marks the completion of the asynchronous data transfer operation.
+
+The optimization pass `ConvertAsyncCollectivesToSync` is triggered when there are no other operations that can be scheduled to overlap with these asynchronous collective operations. In other words, if all operations between the `start_async_outbound_data_transfer` and `done_async_outbound_data_transfer` are NOPs (no operation), then the optimization pass is triggered. 
+
+The optimization pass converts these asynchronous collective operations to their synchronous counterparts to improve the performance of the model.
+
+# Model

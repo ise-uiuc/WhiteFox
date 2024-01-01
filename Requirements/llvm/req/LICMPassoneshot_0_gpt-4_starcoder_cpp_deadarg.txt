@@ -1,0 +1,24 @@
+The C++ code should contain the following pattern:
+
+```cpp
+// define a function that does not have side effects
+int no_side_effect_func(int x) {
+    int result = x OPERATOR ANY_VALUE; // result is related to x
+    return result;
+}
+
+int main() {
+    // define a loop
+    for (int i = 0; i < ANY_VALUE; ++i) {
+        int x = ANY_VALUE; // declare variable x
+        int result = no_side_effect_func(x); // invoke the function no_side_effect_func
+        // use the result in a condition that affects the control flow
+        if (result CONDITION ANY_VALUE) {
+            // do something
+        }
+    }
+    return 0;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists a loop. Inside the loop, a function `no_side_effect_func` is called, and the result of this call is used in a condition that affects the control flow. The function `no_side_effect_func` does not have side effects, meaning that it does not modify any global or static variables, does not perform I/O, and does not throw exceptions. The function must return a single `int` value that is determined by the first argument. The first argument can be any type, e.g. `int`, `float`, `ptr` `struct`, and so on. The `main` function must return a value related to this optimization for further comparison.

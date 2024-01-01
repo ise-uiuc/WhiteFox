@@ -1,0 +1,63 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = input_tensor.permute(...) # Permute the input tensor
+t2 = torch.nn.functional.linear(t1, ...) # Apply linear transformation to the permuted tensor.
+```
+This pattern characterizes scenarios where the tensor method 'permute' is invoked first, and then the `torch.nn.functional.linear` function is invoked on the permuted tensor.
+The permute method is invoked on an input tensor with more than 2 dimensions, and it swaps the last two dimensions of this tensor. This modified tensor is then used as the main input for the linear function.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear = torch.nn.Linear(4, 2)
+        self.linear2 = torch.nn.Linear(2, 2)
+    def forward(self, x1):
+        v1 = x1.permute(0, 2, 1)
+        v2 = torch.nn.functional.linear(v1, self.linear.weight, self.linear.bias)
+        x1 = torch.nn.functional.relu(v2)
+        v3 = torch.nn.functional.linear(x1, self.linear2.weight, self.linear2.bias)
+        return v3
+# Inputs to the model
+x1 = torch.randn(1, 4, 2)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear = torch.nn.Linear(2, 2)
+        self.ReLU = torch.nn.ReLU()
+    def forward(self, x1):
+        v1 = x1.permute(0, 2, 1)
+        v2 = torch.nn.functional.linear(v1, self.linear.weight, self.linear.bias)
+        x2 = self.ReLU(v2)
+        y = torch.matmul(v2, self.linear.bias)
+        z = torch.nn.functional.relu(y)
+        return (x2 + z) * x1
+# Inputs to the model
+x1 = torch.randn(1, 2, 2)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear = torch.nn.Linear(2, 2)
+        self.bn2d = torch.nn.BatchNorm2d(1)
+    def forward(self, x):
+        v1 = x.permute(0, 2, 1)
+        v2 = torch.nn.functional.linear(v1, self.linear.weight, self.linear.bias)
+        v3 = v2.unsqueeze(1)
+        v4 = self.bn2d(v3)
+        v5 = v4.squeeze(1)
+        v6 = v2 + v5
+        return v6
+# Inputs to the model
+x = torch.randn(1, 2, 2)
+# Model ends
+
+# Model begins

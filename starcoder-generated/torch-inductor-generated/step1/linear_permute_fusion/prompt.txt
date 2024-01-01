@@ -1,0 +1,31 @@
+### Please generate a valid PyTorch model example with public PyTorch APIs meets the specified requirements. Plus, please also generate the input tensor for the newly generated model.
+
+# Description of requirements
+The model should contain a pattern of `torch.nn.functional.linear(tensor.permute(...), ...)`. This pattern characterizes scenarios where the torch.nn.functional.linear function is invoked with a tensor method, 'permute',  which rearranges the given tensor's dimensions, as its first argument. 
+The permute method is invoked on an input tensor, and it swaps the last two dimensions of this tensor. This modified tensor is then used as the main input for the linear function.
+
+# Model
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear = torch.nn.Linear(2, 2)
+
+    def forward(self, x1):
+        v1 = x1.permute(0, 2, 1)
+        v2 = torch.nn.functional.linear(v1, self.linear.weight, self.linear.bias)
+        return v1
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+x1 = torch.randn(1, 2, 2)
+__output__ = m(x1)
+
+### Please generate a valid PyTorch model example with public PyTorch APIs meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. The model should be different from the previous one.
+
+# Description of requirements
+The model should contain a pattern of `torch.nn.functional.linear(...).permute(...)`. This pattern characterizes scenarios where the torch.nn.functional.linear function is invoked first and its output tensor is then used as the input for the 'permute' method. 
+The permute method rearranges the given tensor's dimensions, specifically swapping the last two dimensions of this tensor. This pattern is typically used when the output of a linear layer needs to be rearranged before being passed to the next layer in the model.
+
+# Model

@@ -1,0 +1,17 @@
+CallFunction(
+    aten.cat,
+    ListOf(
+        CallFunction(
+            operator.getitem,
+            CallFunction(
+                aten.split_with_sizes,
+                KeywordArg("input_"),
+                Ignored(),
+                Ignored(),
+                _users=MULTIPLE,
+            ),
+            Ignored(),
+        ),
+    ),
+    Ignored(),
+)

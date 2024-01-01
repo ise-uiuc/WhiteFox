@@ -1,0 +1,58 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = conv(input_tensor) # Apply pointwise convolution with kernel size 1 to the input tensor
+t2 = t1 + other # Add another tensor to the output of the convolution
+```
+This pattern characterizes scenarios where the output of a pointwise convolution is added to another tensor. The "other" tensor is passed as a keyword argument to the addition operation.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(3, 8, 1, stride=1, padding=1)
+    def forward(self, x1, other=1.0):
+        v1 = self.conv(x1)
+        v2 = v1 + other
+        return v2
+# Inputs to the model
+x1 = torch.randn(1, 3, 64, 64)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(3, 4, 1, stride=1, padding=1, groups=1)
+    def forward(self, x1):
+        v1 = self.conv(x1)
+        v2 = v1 + 1.0
+        return v2
+# Inputs to the model
+x1 = torch.randn(1, 3, 64, 64)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(8, 1, 1, stride=1, padding=1)
+    def forward(self, x1, x2, v2, v3, other=None):
+        v1 = self.conv(x1)
+        v4 = v1 + 1
+        v5 = v4 + v2
+        v6 = v5.mean()
+        v7 = v6 + 1
+        v8 = v7 + v3
+        final = v8 + x2
+        return final
+# Inputs to the model
+x1 = torch.randn(1, 8, 64, 64)
+x2 = 1
+v2 = 1
+v3 = 1
+# Model ends
+
+# Model begins

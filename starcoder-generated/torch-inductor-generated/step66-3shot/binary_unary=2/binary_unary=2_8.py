@@ -1,0 +1,18 @@
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = torch.nn.Conv2d(3, 6, 1, stride=1, padding=0)
+        self.conv2 = torch.nn.Conv1d(6, 12, 3, stride=1, padding=1)
+    def forward(self, x1):
+        v1 = self.conv1(x1)
+        v2 = v1 - 0.5
+        v3 = F.relu(v2)
+        v4 = v3 - 0.5
+        v5 = F.relu(v4)
+        v6 = self.conv2(v5)
+        v7 = v6 - 0.5
+        v8 = F.relu(v7)
+        return v8
+# Inputs to the model
+x1 = torch.randn(1, 3, 16, 16)

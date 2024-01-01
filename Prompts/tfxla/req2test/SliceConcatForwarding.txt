@@ -1,0 +1,52 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `SliceConcatForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.concat([A1, A2, ..., An, ...], axis=n)
+t2 = tf.slice(t1, [start], [size])
+```
+The pattern describes that there is a `concat` operator followed by a `slice` operator in the model. The `concat` operator concatenates a list of tensors `[A1, A2, ..., An, ...]` along a certain axis `n`. The `slice` operator then slices the concatenated tensor `t1` starting from `start` with a size of `size`.
+
+The constraints for the optimization to be triggered are:
+1. The slice size should be equal to the difference between the slice limit and the slice start.
+2. The slice stride should be 1.
+3. The slice should be a rank 1 tensor.
+4. The slice start should be equal to the cumulative size of the concatenated tensors before the tensor that can be forwarded.
+5. The size of the tensor that can be forwarded should be equal to the slice size.
+
+# Model

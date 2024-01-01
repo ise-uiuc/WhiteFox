@@ -1,0 +1,52 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = torch.mm(input1, input2) # Perform matrix multiplication on two input tensors
+t2 = t1 + inp # Add the result of the matrix multiplication to another tensor 'inp'
+```
+This pattern characterizes scenarios where a matrix multiplication operation is performed on two input tensors, and then the result of this operation is added to another tensor. The 'inp' tensor is passed as a keyword argument.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x1, x2, inp):
+        v1 = torch.mm(x1, x2)
+        v2 = v1 + inp
+        return v2
+# Inputs to the model
+x1 = torch.randn(3, 1)
+x2 = torch.randn(1, 3)
+inp = torch.randn(3, 3)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x1, x2, inp):
+        v1 = torch.mm(x1, x2)
+        return v1 + inp
+# Inputs to the model
+x1 = torch.randn(3, 3)
+x2 = torch.randn(3, 1)
+inp = torch.randn(1, 3)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x1, x2, inp):
+        v1 = torch.mm(x1, x2)
+        v2 = v1 + inp
+        return v2
+# Inputs to the model
+x1 = torch.randn(3, 5)
+x2 = torch.randn(5, 3)
+inp = torch.randn(3, 3, 3)
+# Model ends
+
+# Model begins

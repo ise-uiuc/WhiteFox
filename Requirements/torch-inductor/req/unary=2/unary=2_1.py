@@ -1,0 +1,9 @@
+t1 = conv_transpose(input_tensor) # Apply pointwise transposed convolution to the input tensor
+t2 = t1 * 0.5 # Multiply the output of the transposed convolution by 0.5
+t3 = t1 * t1 * t1 # Cube the output of the transposed convolution
+t4 = t3 * 0.044715 # Multiply the cubed output by 0.044715
+t5 = t1 + t4 # Add the output of the transposed convolution to the output of the multiplication
+t6 = t5 * 0.7978845608028654 # Multiply the output of the addition by 0.7978845608028654
+t7 = torch.tanh(t6) # Apply the hyperbolic tangent function to the output of the multiplication
+t8 = t7 + 1 # Add 1 to the output of the hyperbolic tangent function
+t9 = t2 * t8 # Multiply the output of the multiplication by the output of the addition

@@ -1,0 +1,71 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `MapInliner` in TensorFlow XLA.
+
+# Description
+The model should contain a `map` operation where the function applied by the `map` operation is a single operation and all its operands are parameters. This means that the function applied by the `map` operation does not contain any nested operations or computations, but only a single operation that is applied to the parameters.
+
+Here are some examples of such patterns:
+
+1. If the function applied by the `map` operation is a parameter itself, the pattern would look like this:
+
+```python
+def func(x):
+    return x
+
+t1 = tf.map_fn(func, input_tensor)
+```
+
+2. If the function applied by the `map` operation is a constant, the pattern would look like this:
+
+```python
+def func(x):
+    return tf.constant(1.0)
+
+t1 = tf.map_fn(func, input_tensor)
+```
+
+3. If the function applied by the `map` operation is a single operation (other than a parameter or a constant), the pattern would look like this:
+
+```python
+def func(x):
+    return tf.math.abs(x)
+
+t1 = tf.map_fn(func, input_tensor)
+```
+
+In all these cases, the `MapInliner` optimization pass would be triggered.
+
+# Model

@@ -1,0 +1,12 @@
+The model should contain the following pattern:
+```
+split_tensors = torch.split(input_tensor, split_sizes, dim) # Split the input tensor into several tensors along a given dimension
+concatenated_tensor = torch.cat([split_tensors[i] for i in range(len(split_sizes))], dim) # Concatenate the split tensors along the same dimension
+```
+This pattern characterizes scenarios where an input tensor is split into several tensors along a given dimension using `torch.split`, and then these split tensors are concatenated along the same dimension using `torch.cat`.
+
+The `return True` line within the `is_valid_splitwithsizes_cat` optimization can be triggered if the following conditions are met:
+1. There is only one `torch.split` operation and one `torch.cat` operation in the model.
+2. The dimension along which the split and concatenation operations are performed is the same.
+3. All split tensors are used in the concatenation operation.
+4. The order of the split tensors in the concatenation operation is the same as their original order in the split operation.

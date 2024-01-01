@@ -1,0 +1,37 @@
+
+class Mod(torch.nn.Module):
+    def __init__(self):
+        super(Mod, self).__init__()
+        self.a = torch.nn.Conv2d(1, 20, 5)
+        self.b = torch.nn.BatchNorm2d(20)
+        self.c = torch.nn.Conv2d(32, 56, 3)
+        self.d = torch.nn.Linear(120, 84)
+        self.e = torch.nn.Conv2d(64, 56, 1)
+        self.f = torch.nn.Sigmoid()
+        self.g = torch.nn.BatchNorm1d(120)
+        self.h = torch.nn.Conv1d(20, 20, 5)
+        self.j = torch.nn.BatchNorm1d(32)
+        self.k = torch.nn.BatchNorm1d(20)
+        self.m = torch.nn.Softmax()
+        self.n = torch.nn.BatchNorm1d(120)
+        self.o = torch.nn.Conv1d(120, 80, 1)
+        self.p = torch.nn.Tanh()
+    def forward(self, x):
+        x = self.a(x)
+        x = self.m(x)
+        x = self.b(x)
+        x = self.c(x)
+        x = self.n(x)
+        x = self.d(x)
+        x = self.e(x)
+        x = self.f(x)
+        x = self.g(x)
+        x = self.h(x)
+        x = self.j(x)
+        x = self.k(x)
+        x = self.m(x)
+        x = self.o(x)
+        x = self.p(x)
+        return x
+# Inputs to the model
+x_test = torch.randn(1, 1, 28, 28)

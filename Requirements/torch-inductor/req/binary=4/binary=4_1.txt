@@ -1,0 +1,6 @@
+The model should contain the following pattern:
+```
+t1 = linear(input_tensor) # Apply a linear transformation to the input tensor
+t2 = t1 + other # Add another tensor to the output of the linear transformation
+```
+This pattern characterizes scenarios where a linear transformation is applied to an input tensor, and then another tensor (specified by the keyword argument "other") is added to the output of the linear transformation. This is a common pattern in neural networks, where the output of a layer is often added to another tensor (for example, in residual connections).

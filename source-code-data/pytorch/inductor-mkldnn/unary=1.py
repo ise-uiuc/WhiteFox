@@ -1,0 +1,50 @@
+CallFunction(
+    aten.mul,
+    CallFunction(
+        aten.mul,
+        CallFunction(mkldnn._linear_pointwise.default, *_linear_args, _users=4),
+        0.5,
+    ),
+    CallFunction(
+        aten.add,
+        CallFunction(
+            aten.tanh,
+            CallFunction(
+                aten.mul,
+                CallFunction(
+                    aten.add,
+                    CallFunction(
+                        mkldnn._linear_pointwise.default, *_linear_args, _users=4
+                    ),
+                    CallFunction(
+                        aten.mul,
+                        CallFunction(
+                            aten.mul,
+                            CallFunction(
+                                aten.mul,
+                                CallFunction(
+                                    mkldnn._linear_pointwise.default,
+                                    *_linear_args,
+                                    _users=4
+                                ),
+                                CallFunction(
+                                    mkldnn._linear_pointwise.default,
+                                    *_linear_args,
+                                    _users=4
+                                ),
+                            ),
+                            CallFunction(
+                                mkldnn._linear_pointwise.default,
+                                *_linear_args,
+                                _users=4
+                            ),
+                        ),
+                        0.044715,
+                    ),
+                ),
+                0.7978845608028654,
+            ),
+        ),
+        1,
+    ),
+)

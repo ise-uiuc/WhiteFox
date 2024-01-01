@@ -1,0 +1,44 @@
+### Please generate a valid PyTorch model example with public PyTorch APIs meets the specified requirements. Plus, please also generate the input tensor for the newly generated model.
+
+# Description of requirements
+The model should contain a pattern of `mul(mul(_convolution_pointwise.default, 0.5), add(erf(mul(_convolution_pointwise.default, 0.7071067811865476)), 1))`. 
+The pattern means the first argument of the outermost operator `mul` is the output of another `mul` operation, which multiplies the output of the `_convolution_pointwise.default` operator with 0.5. The second argument of the outermost `mul` operator is the output of an `add` operation. The `add` operation adds 1 to the output of an `erf` operation, which takes as input the output of a `mul` operation. This `mul` operation multiplies the output of the `_convolution_pointwise.default` operator with 0.7071067811865476.
+
+# Model
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(3, 8, 3, stride=1, padding=1)
+ 
+    def forward(self, x):
+        v1 = self.conv(x)
+        v2 = v1 * 0.5
+        v3 = v1 * 0.7071067811865476
+        v4 = torch.erf(v3)
+        v5 = v4 + 1
+        v6 = v2 * v5
+        return v6
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+x = torch.randn(1, 3, 64, 64)
+__output__ = m(x1)
+
+### Please generate a valid PyTorch model example with public PyTorch APIs meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. The model should be different from the previous one.
+
+# Description of requirements
+The model should contain a pattern of `matmul(query, key.transpose(-2, -1)).div(inv_scale).softmax(dim=-1).matmul(value)`. 
+
+The pattern represents a scaled dot-product attention mechanism, which is a key component in Transformer models. 
+
+The pattern starts with a matrix multiplication (`matmul`) between the `query` and the transpose of the `key` tensor. The transpose operation is applied to the last two dimensions of the `key` tensor. 
+
+The result of this multiplication is then divided (`div`) by the `inv_scale` tensor, which is typically the square root of the dimension of the key. This scaling is done to prevent the dot product between the `query` and `key` from growing too large as the dimension increases.
+
+The scaled result is then passed through a softmax function along the last dimension to generate attention weights. 
+
+Finally, these attention weights are used to weight the `value` tensor through another matrix multiplication (`matmul`). The output of this operation is the final result of the scaled dot-product attention mechanism.
+
+# Model

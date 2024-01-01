@@ -1,0 +1,68 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+conv = torch.nn.ConvXd(...) # X can be 1, 2, or 3 representing the dimension
+bn = torch.nn.BatchNormXd(...) # X should match with ConvXd
+output = bn(conv(input_tensor))
+```
+This pattern characterizes scenarios where a convolution layer (`torch.nn.ConvXd`) is followed by a batch normalization layer (`torch.nn.BatchNormXd`). The output of the convolution layer is used as the input to the batch normalization layer. 
+
+The `fuse_conv_bn` optimization is triggered when the convolution and batch normalization layers are in evaluation mode (not in training mode), and the batch normalization layer is tracking running statistics. 
+
+After the optimization, the convolution and batch normalization layers are fused into a single convolution layer, and the batch normalization layer is removed from the graph. If the output of the convolution layer is used by other nodes, the optimization will not be performed. 
+
+The optimization also applies to the functional API equivalent of the above pattern, where `torch.nn.functional.convXd` and `torch.nn.functional.batch_norm` are used instead of the module API. The constraints for the functional API pattern are similar to the module API pattern.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = torch.nn.Conv2d(1, 1, 2)
+        self.bn = torch.nn.BatchNorm2d(1)
+        self.conv2 = torch.nn.Conv2d(1, 1, 2)
+        self.relu = torch.nn.ReLU()
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.bn(x)
+        x = self.relu(x)
+        x = self.conv2(x)
+        return x
+# Inputs to the model
+x = torch.randn(1, 1, 4, 4)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(3, 3, 1)
+        self.bn = torch.nn.BatchNorm2d(3)
+    def forward(self, x1):
+        v1 = self.conv(x1)
+        v2 = self.bn(v1)
+        v2 = self.conv(v2)
+        v2 = self.bn(v2)
+        v2 = v2 + self.conv(self.conv(v2 / 2))
+        v2 = torch.relu(v2 / 2)
+        return self.conv(v2)
+# Inputs to the model
+x1 = torch.randn(1, 3, 3, 3)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(3, 3, 1)
+        self.bn = torch.nn.BatchNorm2d(3)
+    def forward(self, x1):
+        y = self.conv(x1)
+        y = self.bn(y)
+        return y
+# Inputs to the model
+x1 = torch.randn(1, 3, 3, 3)
+# Model ends
+
+# Model begins

@@ -1,0 +1,21 @@
+The C++ code should contain the following pattern:
+
+```cpp
+int main() {
+    int x = ANY_VALUE; // declare variable x
+    int y = ANY_VALUE; // declare variable y
+    int z = ANY_VALUE; // declare variable z
+
+    // A block of code where the same operation is performed multiple times
+    // with the same operands
+    if (CONDITION) { // any condition
+        z = x + y; // an operation with x and y
+    } else {
+        z = x + y; // the same operation with x and y
+    }
+
+    return z;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists a conditional statement (`if-else`), and within each branch of this conditional statement, the same operation is performed on the same operands. The `main` function must return a value related to this optimization for further comparison. The operation can be any binary operation, such as addition, subtraction, multiplication, division, etc. The operands can be any type, e.g. `int`, `float`, `ptr`, `struct`, and so on. The condition in the `if` statement can be any boolean expression.

@@ -1,0 +1,73 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `HloCse` in TensorFlow XLA.
+
+# Description
+The TensorFlow model should contain the following characteristics to trigger the optimization pass `HloCSE`:
+
+1. The model should contain computations that have identical instructions. Identical instructions are those that have the same opcode, the same shape (or compatible shape if layout is not sensitive), and the same set of operands. 
+
+2. The model can contain computations with identical constants or iota instructions. Constants are considered identical if they have the same type and value. Iota instructions are considered identical if they have the same dimensions and shape (or compatible shape if layout is not sensitive).
+
+3. The model can contain computations with instructions that have side effects. These instructions will be skipped during the optimization pass.
+
+4. The model can contain computations with instructions that have no operands (like constants, parameters, etc.). These instructions will also be skipped during the optimization pass.
+
+Here is an example of a pattern that can trigger the `HloCSE` optimization pass:
+
+```python
+# Python TensorFlow code
+import tensorflow as tf
+
+# Define a computation
+x = tf.constant([1, 2, 3, 4, 5])
+y = tf.constant([6, 7, 8, 9, 10])
+
+# Identical instructions
+z1 = tf.add(x, y)
+z2 = tf.add(x, y)
+
+# Identical constants
+c1 = tf.constant([1, 2, 3, 4, 5])
+c2 = tf.constant([1, 2, 3, 4, 5])
+
+# Identical iota instructions
+i1 = tf.raw_ops.Iota(dtype=tf.int32, iota_dimension=0, shape=[5])
+i2 = tf.raw_ops.Iota(dtype=tf.int32, iota_dimension=0, shape=[5])
+```
+
+In this example, `z1` and `z2` are identical instructions, `c1` and `c2` are identical constants, and `i1` and `i2` are identical iota instructions. This pattern can trigger the `HloCSE` optimization pass.
+
+# Model

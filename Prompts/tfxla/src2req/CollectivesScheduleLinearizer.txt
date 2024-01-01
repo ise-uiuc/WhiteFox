@@ -1,0 +1,94 @@
+### Please describe the characteristics of the TensorFlow model that trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA. The model can be used to reach out the `return true;` line in function `ReshapeReshapeForwarding`, leading the function to return true. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# The code of the function and its helper functions:
+
+```cpp
+// Reshape(Reshape(A, []->[1]), [1]->[]) ==> A
+StatusOr<bool> ReshapeReshapeForwarding(HloInstruction* reshape) {
+  if (reshape->opcode() != HloOpcode::kReshape) {
+    return false;
+  }
+  auto reshape_2 = reshape->mutable_operand(0);
+  if (reshape_2->opcode() != HloOpcode::kReshape) {
+    return false;
+  }
+
+  if (!Shape::Equal()(reshape->shape(), reshape_2->operand(0)->shape())) {
+    return false;
+  }
+  TF_RETURN_IF_ERROR(
+      reshape->ReplaceAllUsesWith(reshape_2->mutable_operand(0)));
+
+  return true;
+}
+```
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+### Please describe the characteristics of the TensorFlow model that trigger the optimization pass `CollectivesScheduleLinearizer` in TensorFlow XLA. The model can be used to reach out the `return changed;` line in function `CollectivesScheduleLinearizer::Run`, leading the function to return true. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# The code of the function and its helper functions:
+
+```cpp
+// TODO(b/181653482): Fix for interprocedural collectives as well.
+StatusOr<bool> CollectivesScheduleLinearizer::Run(
+    HloModule* module,
+    const absl::flat_hash_set<absl::string_view>& execution_threads) {
+  if (is_enabled_ && !is_enabled_(module)) {
+    return false;
+  }
+  bool changed = false;
+  for (HloComputation* computation :
+       module->MakeNonfusionComputations(execution_threads)) {
+    std::unique_ptr<HloReachabilityMap> reachability;
+    HloInstruction* prev_done = nullptr;
+    for (HloInstruction* inst : computation->MakeInstructionPostOrder()) {
+      auto* next = DynCast<HloCollectiveInstruction>(inst);
+      if (!next) {
+        continue;
+      }
+      // Build reachability map on demand if we actually see collectives.
+      if (!reachability) {
+        reachability = HloReachabilityMap::Build(computation);
+      }
+      // Derive the 'start' and 'done' peers of this instruction. For non-async
+      // variants of collectives, they are the same as this instruction. For
+      // async variants, the start is this instruction and the 'done' is the
+      // matching async-done instruction.
+      HloInstruction* start = next;
+      HloInstruction* done = next;
+      switch (next->opcode()) {
+        case HloOpcode::kAllReduceStart:
+        case HloOpcode::kAllGatherStart:
+        case HloOpcode::kCollectivePermuteStart:
+        case HloOpcode::kAsyncStart:
+          // Find the async-done corresponding to this async start instruction.
+          CHECK_EQ(start->user_count(), 1);
+          done = start->users()[0];
+          break;
+        default:
+          break;
+      }
+
+      if (prev_done && !reachability->IsConnected(start, prev_done)) {
+        // If prev_done and start are independent, enforce ordering.
+        TF_RETURN_IF_ERROR(prev_done->AddControlDependencyTo(next));
+        VLOG(1) << "Adding control dependency from " << prev_done->ToString()
+                << " to " << start->ToString();
+        changed = true;
+      }
+      prev_done = done;
+    }
+  }
+  return changed;
+}
+```
+
+# Description

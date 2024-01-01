@@ -1,0 +1,9 @@
+The model should contain the following pattern:
+```
+l1 = linear(input_tensor) # Apply a linear transformation to the input tensor
+l2 = l1 + 3 # Add 3 to the output of the linear transformation
+l3 = torch.clamp_min(l2, 0) # Clamp the output of the addition operation to a minimum of 0
+l4 = torch.clamp_max(l3, 6) # Clamp the output of the previous operation to a maximum of 6
+l5 = l4 / 6 # Divide the output of the previous operation by 6
+```
+This pattern characterizes scenarios where a linear transformation is applied to an input tensor, then `3` is added to the output, then the output is clamped to a minimum of `0` and a maximum of `6`, and finally the output is divided by `6`. This is a typical pattern for implementing a scaled and shifted ReLU6 activation function in a neural network.

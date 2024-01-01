@@ -1,0 +1,56 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ConditionalCanonicalizer` in TensorFlow XLA.
+
+# Description
+The model should contain a `tf.cond` operation where the output is not a tuple. 
+
+In TensorFlow, `tf.cond` is a conditional operation that allows you to choose to execute a specific function depending on a predicate. In the model, the `tf.cond` operation should be used in such a way that the output of the operation is not a tuple. 
+
+Here is an example of such a pattern:
+
+```python
+def true_fn():
+  return tf.constant(1)
+
+def false_fn():
+  return tf.constant(0)
+
+result = tf.cond(tf.constant(True), true_fn, false_fn)
+```
+
+In this example, the `tf.cond` operation returns a single tensor, not a tuple of tensors. This pattern will trigger the `ConditionalCanonicalizer` optimization pass in TensorFlow XLA.
+
+# Model

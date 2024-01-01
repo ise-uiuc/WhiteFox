@@ -1,0 +1,23 @@
+The C++ code should contain the following pattern:
+
+```cpp
+// define one function which has pointer arguments
+static ANY_TYPE func_with_ptr_args(ANY_TYPE* arg1, ANY_TYPE* arg2, ...) {
+    RANDOM_CODE; // Do something here with input arguments
+    ANY_TYPE result = ANY_OPERATION; // result is related to the input arguments
+    return result;
+}
+
+int main() {
+    RANDOM_CODE;  // declare some variables
+    ANY_TYPE x = ANY_VALUE; // declare variable x
+    ANY_TYPE y = ANY_VALUE; // declare variable y
+    ANY_TYPE* ptr_x = &x; // get the pointer of x
+    ANY_TYPE* ptr_y = &y; // get the pointer of y
+    // invoke the func_with_ptr_args
+    ANY_TYPE result = func_with_ptr_args(ptr_x, ptr_y, ...); // you can pass the arguments with any number, any type
+    return result;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists a call to `func_with_ptr_args`, and the result of this call is being used. `func_with_ptr_args` is marked as a function which accepts pointer arguments, then returns a single `ANY_TYPE` value that is determined by the input arguments. The input arguments can be any type, e.g. `int`, `float`, `ptr` `struct`, and so on. The functions must be `static`(which will be translated into ir function with internal attribute), and the function should not be a variadic function, naked function, or a function with inalloca attribute. The `main` function must return a value related to this optimization for further comparison.

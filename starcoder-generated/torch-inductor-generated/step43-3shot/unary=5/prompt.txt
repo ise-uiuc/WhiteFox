@@ -1,0 +1,66 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = conv_transpose(input_tensor) # Apply pointwise transposed convolution to the input tensor
+t2 = t1 * 0.5 # Multiply the output of the transposed convolution by 0.5
+t3 = t1 * 0.7071067811865476 # Multiply the output of the transposed convolution by 0.7071067811865476
+t4 = torch.erf(t3) # Apply the error function to the output of the transposed convolution
+t5 = t4 + 1 # Add 1 to the output of the error function
+t6 = t2 * t5 # Multiply the output of the transposed convolution by the output of the error function
+```
+This pattern characterizes scenarios where the output of a pointwise transposed convolution is multiplied by a constant `0.5`, and then the output of the transposed convolution is multiplied by another constant `0.7071067811865476`, and then the error function is applied to the output of the transposed convolution, and then `1` is added to the output of the error function, and then the output of the transposed convolution is multiplied by the output of the error function.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_transpose = torch.nn.ConvTranspose2d(4, 1, 1, stride=1, padding=0)
+    def forward(self, x1):
+        v1 = self.conv_transpose(x1)
+        v2 = v1 * 0.5
+        v3 = v1 * 0.7071067811865476
+        v4 = torch.erf(v3)
+        v5 = v4 + 1
+        v6 = v2 * v5
+        return v6
+# Inputs to the model
+x1 = torch.randn(1, 4, 64, 64)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_transpose = torch.nn.ConvTranspose2d(8, 1, 1, stride=1, padding=1)
+    def forward(self, x1):
+        v1 = self.conv_transpose(x1)
+        v2 = v1 * 0.5
+        v3 = v1 * 0.7071067811865476
+        v4 = torch.erf(v3)
+        v5 = v4 + 1
+        v6 = v2 * v5
+        return v6
+# Inputs to the model
+x1 = torch.randn(1, 8, 64, 64)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_transpose = torch.nn.ConvTranspose2d(4, 1, 3, stride=1, padding=1)
+    def forward(self, x1):
+        v1 = self.conv_transpose(x1)
+        v2 = v1 * 0.5
+        v3 = v1 * 0.7071067811865476
+        v4 = torch.erf(v3)
+        v5 = v4 + 1
+        v6 = v2 * v5
+        return v6
+# Inputs to the model
+x1 = torch.randn(1, 4, 512, 512)
+# Model ends
+
+# Model begins

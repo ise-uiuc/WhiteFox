@@ -1,0 +1,55 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = torch.mm(input1, input2) # Matrix multiplication between input1 and input2
+t2 = torch.mm(input3, input4) # Matrix multiplication between input3 and input4
+t3 = t1 + t2 # Addition of the results of the two matrix multiplications
+```
+This pattern characterizes scenarios where two separate matrix multiplications are performed and their results are added together.
+
+# Model begins
+class Model(torch.nn.Module):
+    def forward(self, input1, input2):
+        t1 = torch.mm(input1, input2)
+        t2 = torch.mm(input1, input1)
+        return t2 + t1
+# Inputs to the model
+input1 = torch.randn(5, 5)
+input2 = torch.randn(5, 5)
+# Model ends
+
+# Model begins
+class Model(nn.Module):
+    def forward(self, input1, input2, input3, input4):
+        t1 = torch.mm(input1, input2)
+        t1 = torch.mm(input1, input1)
+        t2 = torch.mm(input3, input4)
+        return t1 + t2
+# Inputs to the model
+input1 = torch.randn(4, 4)
+input2 = torch.randn(4, 4)
+input3 = torch.randn(4, 4)
+input4 = torch.randn(4, 4)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def forward(self, input1, input2, input3, input4, input5):
+        t1 = torch.mm(input1, input4)
+        t2 = torch.mm(input2, input3)
+        t3 = torch.mm(input5, input3)
+        t4 = torch.mm(input1, input4)
+        t5 = torch.mm(input2, input3)
+        t6 = torch.mm(input5, input3)
+        return t1 + t2 + t3 + t4 + t5 + t6
+# Inputs to the model
+input1 = torch.randn(128, 128)
+input2 = torch.randn(128, 128)
+input3 = torch.randn(128, 128)
+input4 = torch.randn(128, 128)
+input5 = torch.randn(128, 128)
+# Model ends
+
+# Model begins

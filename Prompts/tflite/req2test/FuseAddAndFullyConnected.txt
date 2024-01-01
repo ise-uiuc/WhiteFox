@@ -1,0 +1,60 @@
+### Please generate a valid TensorFlow model with public TensorFlow APIs. When converted to TensorFlow Lite model, the model should be able to trigger the optimization pass `FuseFullyConnectedAndMul`. Additionally, please generate valid input tensors for the model and pass to the model.
+
+# Description
+The model should contain the following pattern:
+```
+filter = tf.Variable([...]) # a constant tensor
+cst = tf.Variable([...]) # a constant tensor, shape = [1, 1, ..., 1, last_dim]
+y = tf.matmul(input_tensor, filter) * cst # Mul is applied on the output of FullyConnectedOp
+```
+This pattern characterizes scenarios where a FullyConnectedOp is invoked on a tensor and a constant filter input, and then a Mul operation is invoked on the output tensor and a constant tensor. The FullyConnected operation should have the following properties:
+   - The filter input should be a constant tensor.
+   - The bias input should either be of NoneType or a constant tensor.
+   - The fused activation function should be "NONE".
+The constant tensor from the Mul operation should have all dimensions equal to 1, except for the last dimension. The constant tensor from the Mul operation should be broadcastable with the filter tensor of the FullyConnected operation after reshaping and transposing the constant tensor.
+
+
+# Model
+```python
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+    self.w1 = tf.Variable([[3., 4.], [5., 6.]])
+    self.m1 = tf.Variable([7., 8.])
+
+  def call(self, x1):
+    return tf.matmul(x1, self.w1) * self.m1
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [1, 2]
+x1 = tf.constant([1., 2.], shape=input_shape)
+
+# Call model
+y1 = m(x1)
+```
+
+### Please generate a valid TensorFlow model with public TensorFlow APIs. When converted to TensorFlow Lite model, the model should be able to trigger the optimization pass `FuseAddAndFullyConnected`. Additionally, please generate valid input tensors for the model and pass to the model.
+
+# Description
+The model should contain the following pattern:
+```
+filter = tf.Variable([...]) # a constant tensor of float32 type
+bias = tf.Variable([...]) # a constant tensor of float32 type
+rhs = tf.Variable([...]) # a constant tensor of float32 type, shape = [dim]
+y = tf.matmul(tf.add(input_tensor, rhs), filter) + bias # Add is applied on the input of FullyConnectedOp
+```
+This pattern characterizes scenarios where an Add operation is invoked on a tensor and a constant tensor, and then a FullyConnected operation is invoked on the output tensor, a constant filter tensor, and a constant bias tensor. The Add operation should have the following properties:
+   - The rhs input should be a constant tensor of float32 type.
+   - The fused activation function should be "NONE".
+   - The rhs tensor should have a 1D shape.
+The FullyConnected operation should have the following properties:
+   - The weights format should be "DEFAULT".
+   - The filter input should be a constant tensor of float32 type.
+   - The bias input should be a constant tensor of float32 type.
+
+# Model
+```python

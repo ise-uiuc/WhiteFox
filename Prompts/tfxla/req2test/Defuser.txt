@@ -1,0 +1,52 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `Defuser` in TensorFlow XLA.
+
+# Description
+The model should contain a fusion instruction. A fusion instruction is a special type of instruction in TensorFlow XLA that combines multiple operations into a single kernel for execution. The `Defuser` optimization pass is triggered when the model contains a fusion computation. 
+
+The pattern in the model that triggers the `Defuser` optimization pass can be illustrated as follows:
+
+```python
+@tf.function(experimental_compile=True)
+def model(input):
+    t1 = tf.add(input, input)
+    t2 = tf.multiply(t1, t1)
+    return t2
+```
+
+In this example, the `add` and `multiply` operations could be fused into a single operation by TensorFlow XLA. The `Defuser` optimization pass would then be triggered to defuse this fused operation, copying all the instructions in the fused operation into the parent computation and replacing the use of the fused operation with the copy of the fused expression root.
+
+# Model

@@ -1,0 +1,6 @@
+The model should contain the following pattern:
+```
+t1 = conv(input_tensor) # Apply pointwise convolution with kernel size 1 to the input tensor
+t2 = relu(t1) # Apply the ReLU activation function to the output of the convolution
+```
+This pattern characterizes scenarios where a pointwise convolution is applied to an input tensor, and then the ReLU (Rectified Linear Unit) activation function is applied to the output of the convolution. This is a common pattern in convolutional neural networks, where the ReLU function is used to introduce non-linearity after each convolution operation.

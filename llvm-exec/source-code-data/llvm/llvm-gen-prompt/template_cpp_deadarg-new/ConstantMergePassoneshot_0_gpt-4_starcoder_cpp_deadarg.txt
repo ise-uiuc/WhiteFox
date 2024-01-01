@@ -1,0 +1,15 @@
+The C++ code should contain the following pattern:
+```cpp
+// define two or more global variables with the same initial value
+static const int global_var1 = ANY_VALUE;
+static const int global_var2 = ANY_VALUE;
+
+int main() {
+    RANDOM_CODE;  // declare some variables
+    int x = global_var1; // use global_var1
+    int y = global_var2; // use global_var2
+    int result = x OPERATOR y; // result is related to x and y
+    return result;
+}
+```
+This pattern characterizes scenarios where within the `main` function, there exist two or more global variables with the same initial value. These global variables must be `static` and `const`, and their initial values can be any type, e.g. `int`, `float`, `ptr`, `struct`, and so on. The `main` function must use these global variables and return a value related to these global variables for further comparison.

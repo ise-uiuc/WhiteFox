@@ -1,0 +1,87 @@
+### Please generate a valid TensorFlow model with public TensorFlow APIs. When converted to TensorFlow Lite model, the model should be able to trigger the optimization pass `FuseFullyConnectedAndMul`. Additionally, please generate valid input tensors for the model and pass to the model.
+
+# Description
+The model should contain the following pattern:
+```
+filter = tf.Variable([...]) # a constant tensor
+cst = tf.Variable([...]) # a constant tensor, shape = [1, 1, ..., 1, last_dim]
+y = tf.matmul(input_tensor, filter) * cst # Mul is applied on the output of FullyConnectedOp
+```
+This pattern characterizes scenarios where a FullyConnectedOp is invoked on a tensor and a constant filter input, and then a Mul operation is invoked on the output tensor and a constant tensor. The FullyConnected operation should have the following properties:
+   - The filter input should be a constant tensor.
+   - The bias input should either be of NoneType or a constant tensor.
+   - The fused activation function should be "NONE".
+The constant tensor from the Mul operation should have all dimensions equal to 1, except for the last dimension. The constant tensor from the Mul operation should be broadcastable with the filter tensor of the FullyConnected operation after reshaping and transposing the constant tensor.
+
+
+# Model
+```python
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+    self.w1 = tf.Variable([[3., 4.], [5., 6.]])
+    self.m1 = tf.Variable([7., 8.])
+
+  def call(self, x1):
+    return tf.matmul(x1, self.w1) * self.m1
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [1, 2]
+x1 = tf.constant([1., 2.], shape=input_shape)
+
+# Call model
+y1 = m(x1)
+```
+
+### Please generate a valid TensorFlow model with public TensorFlow APIs. When converted to TensorFlow Lite model, the model should be able to trigger the optimization pass `FuseFullyConnectedAndMul`. Additionally, please generate valid input tensors for the model and pass to the model.
+
+# Description
+The TensorFlow model should have the following characteristics to trigger the optimization pass `FuseFullyConnectedAndMul` when converted to a TensorFlow Lite model:
+
+1. The model should contain a `MulOp` operation where the left-hand side (lhs) and the operation itself have the same type. This means that there is no broadcasting happening on the lhs of the `MulOp`.
+
+2. The right-hand side (rhs) of the `MulOp` operation should be a constant tensor.
+
+3. The lhs of the `MulOp` operation should be defined by a `FullyConnectedOp`.
+
+4. The `FullyConnectedOp` should have the following characteristics:
+   - The filter input should be a constant tensor.
+   - The bias input should either be of NoneType or a constant tensor.
+   - The fused activation function should be "NONE".
+
+5. The constant tensor from the `MulOp` operation should have all dimensions equal to 1, except for the last dimension.
+
+6. After reshaping and transposing the constant tensor from the `MulOp` operation, it should be broadcastable with the filter tensor of the `FullyConnectedOp`.
+
+Here is an example of a TensorFlow model that meets these characteristics:
+
+```python
+import tensorflow as tf
+
+# Define a constant tensor for the filter of the FullyConnectedOp
+filter = tf.constant([1.0, 2.0, 3.0, 4.0])
+
+# Define a constant tensor for the bias of the FullyConnectedOp
+bias = tf.constant([0.1, 0.2, 0.3, 0.4])
+
+# Define a constant tensor for the MulOp
+cst = tf.constant([1.0, 1.0, 1.0, 1.0])
+
+# Define an input tensor
+input_tensor = tf.constant([0.5, 0.6, 0.7, 0.8])
+
+# Apply the FullyConnectedOp
+fc_op = tf.linalg.matmul(input_tensor, filter) + bias
+
+# Apply the MulOp
+mul_op = tf.multiply(fc_op, cst)
+```
+
+In this model, the `FullyConnectedOp` is followed by a `MulOp` where the rhs is a constant tensor. The filter and bias of the `FullyConnectedOp` are also constant tensors, and the fused activation function is "NONE". The constant tensor from the `MulOp` has all dimensions equal to 1, except for the last dimension. After reshaping and trans
+
+# Model
+```python

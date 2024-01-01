@@ -1,0 +1,21 @@
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.l1 = torch.nn.Linear(64, 64)
+ 
+    def forward(self, x2):
+        v1 = self.l1(x2)
+        v2 = v1 * 0.5
+        v3 = v1 + torch.pow(v1, 3).mul(0.044715)
+        v4 = v3 * 0.7978845608028654
+        v5 = torch.tanh(v4)
+        v6 = v5 + 1
+        v7 = v2 * v6
+        return v7
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+x1 = torch.randn(1, 64)

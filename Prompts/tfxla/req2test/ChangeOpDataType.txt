@@ -1,0 +1,46 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ChangeOpDataType` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.some_operator(input_tensors)
+```
+The pattern describes that there is an operator in the model that takes one or more tensors as input. The operator should be matched by `op_matcher_` and all input tensors should have the same data type, which is not a parameter. The operator's output tensor should be an array. The data type of the input tensors should be in the `to_type_map_`, which means there is a mapping from the current data type to a new data type. 
+
+The `ChangeOpDataType` optimization pass will change the data type of the input tensors to the new data type, and then change the data type of the output tensor back to the original data type.
+
+# Model

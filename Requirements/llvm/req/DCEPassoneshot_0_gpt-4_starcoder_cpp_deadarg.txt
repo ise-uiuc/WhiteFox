@@ -1,0 +1,18 @@
+The C++ code should contain the following pattern:
+
+```cpp
+int main() {
+    int x = ANY_VALUE; // declare variable x
+    int y = ANY_VALUE; // declare variable y
+    int z = ANY_VALUE; // declare variable z
+
+    // define a dead code block
+    if (false) {
+        z = x + y; // this code will never be executed
+    }
+
+    return 0;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists a block of code that will never be executed. This is typically represented by an `if (false)` statement, followed by some operations. The operations inside the `if (false)` block are considered "dead code" because they will never be executed, regardless of the input or state of the program. The `main` function must return a value related to this optimization for further comparison.

@@ -1,0 +1,38 @@
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = torch.nn.Conv2d(3, 96, 1)
+        self.conv2 = torch.nn.Conv2d(96, 96, 3)
+        self.conv3 = torch.nn.Conv2d(96, 96, 3)
+        self.conv4 = torch.nn.Conv2d(96, 96, 3)
+        self.conv5 = torch.nn.Conv2d(96, 96, 1)
+        self.conv6 = torch.nn.Conv2d(96, 96, 1)
+        self.conv7 = torch.nn.Conv2d(96, 96, 3)
+        self.conv8 = torch.nn.Conv2d(96, 96, 1)
+        self.conv9 = torch.nn.Conv2d(96, 96, 3)
+        self.conv10 = torch.nn.Conv2d(96, 96, 3)
+        self.conv11 = torch.nn.Conv2d(96, 96, 1)
+        self.conv12 = torch.nn.Conv2d(96, 96, 3)
+        self.conv13 = torch.nn.Conv2d(96, 96, 3)
+        self.conv14 = torch.nn.Conv2d(96, 96, 1)
+        self.conv15 = torch.nn.Conv2d(96, 96, 3)
+    def forward(self, x1):
+        v1 = self.conv1(x1)
+        v2 = self.conv2(v1)
+        v3 = self.conv3(v1)
+        v4 = self.conv4(v1)
+        v5 = self.conv5(v4)
+        v6 = self.conv6(v5)
+        v7 = self.conv7(v2)
+        v8 = self.conv8(v7)
+        v9 = self.conv9(v5)
+        v10 = self.conv10(v9)
+        v11 = self.conv11(v3)
+        v12 = self.conv12(v7)
+        v13 = self.conv13(v5)
+        v14 = self.conv14(v11)
+        v15 = self.conv15(v4)
+        return v15
+# Inputs to the model
+x1 = torch.randn(8, 3, 512, 512)

@@ -1,0 +1,38 @@
+### Please generate a valid PyTorch model example with public PyTorch APIs meets the specified requirements. Plus, please also generate the input tensor for the newly generated model.
+
+# Description of requirements
+The model should contain a pattern of `mul(mul(_convolution_pointwise.default, 0.5), add(erf(mul(_convolution_pointwise.default, 0.7071067811865476)), 1))`. 
+The pattern means the first argument of the outermost operator `mul` is the output of another `mul` operation, which multiplies the output of the `_convolution_pointwise.default` operator with 0.5. The second argument of the outermost `mul` operator is the output of an `add` operation. The `add` operation adds 1 to the output of an `erf` operation, which takes as input the output of a `mul` operation. This `mul` operation multiplies the output of the `_convolution_pointwise.default` operator with 0.7071067811865476.
+
+# Model
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(3, 8, 3, stride=1, padding=1)
+ 
+    def forward(self, x):
+        v1 = self.conv(x)
+        v2 = v1 * 0.5
+        v3 = v1 * 0.7071067811865476
+        v4 = torch.erf(v3)
+        v5 = v4 + 1
+        v6 = v2 * v5
+        return v6
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+x = torch.randn(1, 3, 64, 64)
+__output__ = m(x1)
+
+### Please generate a valid PyTorch model example with public PyTorch APIs meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. The model should be different from the previous one.
+
+# Description of requirements
+The model should contain a pattern of `aten.cat(operator.getitem(aten.split_with_sizes(input_, _, _), _), _)`. The pattern means the first argument of the `aten.cat` operator is a list of tensors obtained by applying the `operator.getitem` to the output of the `aten.split_with_sizes` operator. The `aten.split_with_sizes` operator splits the input tensor into multiple sub-tensors along a given dimension. The `operator.getitem` operator retrieves a specific sub-tensor from the list of sub-tensors.
+
+The function `is_valid_splitwithsizes_cat` checks if the pattern is valid. It first filters out the nodes that are `aten.split_with_sizes`, `aten.cat`, and `operator.getitem` from the match nodes. If there is not exactly one `aten.split_with_sizes` node and one `aten.cat` node, it returns `False`. It then checks if the dimension along which the split and concatenation occur is the same. If not, it returns `False`. It also checks if all parts of the split are included in the concatenation by comparing the arguments of the `operator.getitem` nodes with the split sizes. If not, it returns `False`. Finally, it checks if the order of the arguments of the `operator.getitem` nodes in the `aten.cat` node is the same as the order of the split sizes. If not, it returns `False`. If all checks pass, it returns `True`.
+
+To reach the `return True` line in the `is_valid_splitwithsizes_cat` function, the model should have a pattern where the `aten.split_with_sizes` and `aten.cat` operators are used exactly once, the dimension along which the split and concatenation occur is the same, all parts of the split are included in the concatenation, and the order of the arguments of the `operator.getitem` nodes in the `aten.cat` node is the same as the order of the split sizes.
+
+# Model

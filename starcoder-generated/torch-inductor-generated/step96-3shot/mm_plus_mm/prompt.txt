@@ -1,0 +1,58 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+t1 = torch.mm(input1, input2) # Matrix multiplication between input1 and input2
+t2 = torch.mm(input3, input4) # Matrix multiplication between input3 and input4
+t3 = t1 + t2 # Addition of the results of the two matrix multiplications
+```
+This pattern characterizes scenarios where two separate matrix multiplications are performed and their results are added together.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, x1, x2, x3, x4):
+        xx1 = torch.mm(x1, x2)
+        xx2 = torch.mm(x3, x4)
+        xx3 = xx1 + xx2
+        return xx3
+# Inputs to the model
+x1 = torch.randn(1, 65)
+x2 = torch.randn(65, 5)
+x3 = torch.randn(1, 65)
+x4 = torch.randn(65, 5)
+# Model ends
+
+# Model begins
+class ModelMul(torch.nn.Module):
+    def forward(self, A, B, C, D, E):
+        t1 = torch.mm(A, B)
+        t2 = torch.mm(C, D)
+        return torch.mm(t1, E) + torch.mm(t2, E)
+# Inputs to the model
+A = torch.rand(3, 5)
+B = torch.rand(5, 5)
+C = torch.rand(3, 5)
+D = torch.rand(5, 5)
+E = torch.rand(5, 2)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def forward(self, x1, x2, x3, x4):
+        h1 = torch.mm(x1, x2)
+        h2 = torch.mm(x1, x2)
+        h3 = torch.mm(x3, x4)
+        h4 = torch.mm(x3, x4)
+        h3 = torch.mm(x1, x2)
+        return h1 + h2 + h3 + h4
+# Inputs to the model
+x1 = torch.randn(4, 4)
+x2 = torch.randn(4, 4)
+x3 = torch.randn(4, 4)
+x4 = torch.randn(4, 4)
+# Model ends
+
+# Model begins

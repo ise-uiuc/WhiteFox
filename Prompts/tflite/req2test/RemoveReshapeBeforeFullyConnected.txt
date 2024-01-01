@@ -1,0 +1,56 @@
+### Please generate a valid TensorFlow model with public TensorFlow APIs. When converted to TensorFlow Lite model, the model should be able to trigger the optimization pass `FuseFullyConnectedAndMul`. Additionally, please generate valid input tensors for the model and pass to the model.
+
+# Description
+The model should contain the following pattern:
+```
+filter = tf.Variable([...]) # a constant tensor
+cst = tf.Variable([...]) # a constant tensor, shape = [1, 1, ..., 1, last_dim]
+y = tf.matmul(input_tensor, filter) * cst # Mul is applied on the output of FullyConnectedOp
+```
+This pattern characterizes scenarios where a FullyConnectedOp is invoked on a tensor and a constant filter input, and then a Mul operation is invoked on the output tensor and a constant tensor. The FullyConnected operation should have the following properties:
+   - The filter input should be a constant tensor.
+   - The bias input should either be of NoneType or a constant tensor.
+   - The fused activation function should be "NONE".
+The constant tensor from the Mul operation should have all dimensions equal to 1, except for the last dimension. The constant tensor from the Mul operation should be broadcastable with the filter tensor of the FullyConnected operation after reshaping and transposing the constant tensor.
+
+
+# Model
+```python
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+    self.w1 = tf.Variable([[3., 4.], [5., 6.]])
+    self.m1 = tf.Variable([7., 8.])
+
+  def call(self, x1):
+    return tf.matmul(x1, self.w1) * self.m1
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [1, 2]
+x1 = tf.constant([1., 2.], shape=input_shape)
+
+# Call model
+y1 = m(x1)
+```
+
+### Please generate a valid TensorFlow model with public TensorFlow APIs. When converted to TensorFlow Lite model, the model should be able to trigger the optimization pass `RemoveReshapeBeforeFullyConnected`. Additionally, please generate valid input tensors for the model and pass to the model.
+
+# Description
+The model should contain the following pattern:
+```
+input_tensor = tf.Variable([...]) # a tensor with static shape
+reshape_tensor = tf.reshape(input_tensor, shape) # shape is a tensor that reshapes input_tensor
+output_tensor = tf.matmul(reshape_tensor, filter) # FullyConnectedOp is applied on the reshaped tensor
+```
+This pattern characterizes scenarios where a Reshape operation is invoked on a tensor, and then a FullyConnected operation is invoked on the reshaped tensor. The FullyConnected operation should have the following properties:
+   - The weights format should be "DEFAULT".
+   - The keep_num_dims attribute should be false.
+   - The output tensor should have a static shape and a rank of 2.
+The Reshape operation should not change the last dimension of the input tensor. The input tensor to the Reshape operation should have a static shape.
+
+# Model
+```python

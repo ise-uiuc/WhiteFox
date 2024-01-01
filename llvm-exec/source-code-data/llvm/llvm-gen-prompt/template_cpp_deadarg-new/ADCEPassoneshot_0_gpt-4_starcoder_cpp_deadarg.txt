@@ -1,0 +1,20 @@
+The C++ code should contain the following pattern:
+
+```cpp
+int main() {
+    int x = ANY_VALUE; // declare variable x
+    int y = ANY_VALUE; // declare variable y
+    int z = ANY_VALUE; // declare variable z
+
+    // Perform some operations that do not affect the final result
+    int a = x + y; // a is not used afterwards
+    int b = y * z; // b is not used afterwards
+
+    // The final result is not related to a and b
+    int result = x * z; // result is only related to x and z
+
+    return result;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there are some computations (like `a = x + y` and `b = y * z`) that do not affect the final result of the function. These computations are considered "dead code" because their results are not used in any subsequent computations or in the return statement. The `main` function must return a value related to this optimization for further comparison.

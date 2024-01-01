@@ -1,0 +1,115 @@
+### Please describe the PyTorch model that can trigger the `module.graph.erase_node(node)` line within the `permute_linear_fusion` optimization. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# Code of the function `permute_linear_fusion` and its helper functions
+def permute_linear_fusion(module: torch.fx.GraphModule) -> torch.fx.GraphModule:
+    for node in module.graph.nodes:
+        if node.op == "call_function" and node.target == torch.nn.functional.linear:
+            if len(node.args) > 0:
+                input_node = node.args[0]
+            else:
+                input_node = node.kwargs["input"]
+            if (
+                input_node.op == "call_method"
+                and input_node.target == "permute"
+                and check_permute(input_node)
+            ):
+                normalized = NormalizedLinearNode(node)
+                if len(input_node.args) > 0:
+                    input = input_node.args[0]
+                else:
+                    input = input_node.kwargs["input"]
+                weight = normalized.get_weight()
+                bias = normalized.get_bias()
+                with module.graph.inserting_before(node):
+                    fused_node = module.graph.call_function(
+                        transpose_linear, args=(input, weight, bias)
+                    )
+                    node.replace_all_uses_with(fused_node)
+                    module.graph.erase_node(node)
+                    if len(input_node.users) == 0:
+                        module.graph.erase_node(input_node)
+
+    module.graph.lint()
+    module.recompile()
+    return module
+
+def check_permute(node: torch.fx.Node):
+    ranks = len(node.meta["tensor_meta"].shape)
+    if len(node.args) > 3:
+        permutation = [node.args[i] % ranks for i in range(1, ranks + 1)]
+    elif (
+        "permutation" in node.kwargs
+        and node.kwargs["permutation"] is not None
+        and len(node.kwargs["permutation"]) > 2
+    ):
+        permutation = [i % ranks for i in node.kwargs["permutation"]]
+    else:
+        return False
+    allowed_permutation = list(range(ranks))
+    allowed_permutation[-1] = ranks - 2
+    allowed_permutation[-2] = ranks - 1
+    return permutation == allowed_permutation
+
+# Description
+The model should contain the following pattern:
+```
+t1 = input_tensor.permute(...) # Permute the input tensor
+t2 = torch.nn.functional.linear(t1, ...) # Apply linear transformation to the permuted tensor.
+```
+This pattern characterizes scenarios where the tensor method 'permute' is invoked first, and then the `torch.nn.functional.linear` function is invoked on the permuted tensor.
+The permute method is invoked on an input tensor with more than 2 dimensions, and it swaps the last two dimensions of this tensor. This modified tensor is then used as the main input for the linear function.
+
+
+### Please describe the PyTorch model that can trigger the `module.graph.erase_node(node)` line within the `permute_linear_fusion` optimization. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# Code of the function `permute_linear_fusion` and its helper functions
+def permute_linear_fusion(module: torch.fx.GraphModule) -> torch.fx.GraphModule:
+    for node in module.graph.nodes:
+        if node.op == "call_function" and node.target == torch.nn.functional.linear:
+            if len(node.args) > 0:
+                input_node = node.args[0]
+            else:
+                input_node = node.kwargs["input"]
+            if (
+                input_node.op == "call_method"
+                and input_node.target == "permute"
+                and check_permute(input_node)
+            ):
+                normalized = NormalizedLinearNode(node)
+                if len(input_node.args) > 0:
+                    input = input_node.args[0]
+                else:
+                    input = input_node.kwargs["input"]
+                weight = normalized.get_weight()
+                bias = normalized.get_bias()
+                with module.graph.inserting_before(node):
+                    fused_node = module.graph.call_function(
+                        transpose_linear, args=(input, weight, bias)
+                    )
+                    node.replace_all_uses_with(fused_node)
+                    module.graph.erase_node(node)
+                    if len(input_node.users) == 0:
+                        module.graph.erase_node(input_node)
+
+    module.graph.lint()
+    module.recompile()
+    return module
+
+def check_permute(node: torch.fx.Node):
+    ranks = len(node.meta["tensor_meta"].shape)
+    if len(node.args) > 3:
+        permutation = [node.args[i] % ranks for i in range(1, ranks + 1)]
+    elif (
+        "permutation" in node.kwargs
+        and node.kwargs["permutation"] is not None
+        and len(node.kwargs["permutation"]) > 2
+    ):
+        permutation = [i % ranks for i in node.kwargs["permutation"]]
+    else:
+        return False
+    allowed_permutation = list(range(ranks))
+    allowed_permutation[-1] = ranks - 2
+    allowed_permutation[-2] = ranks - 1
+    return permutation == allowed_permutation
+
+# Description

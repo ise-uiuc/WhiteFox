@@ -1,0 +1,48 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `BroadcastCanonicalizer` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.broadcast_to(input_tensor, new_shape)
+```
+The pattern describes that there is a broadcast operator in the model. The `broadcast_to` operator transforms a tensor `input_tensor` to a new shape `new_shape`. 
+
+The optimization pass `BroadcastCanonicalizer` is triggered when the dimensions of the broadcast are not sorted. In other words, if the dimensions of the broadcast are in a non-ascending order, the optimization pass will be triggered. 
+
+For example, if the broadcast dimensions are `[2, 0, 1]`, the optimization pass will be triggered because the dimensions are not in ascending order. However, if the broadcast dimensions are `[0, 1, 2]`, the optimization pass will not be triggered because the dimensions are already sorted in ascending order.
+
+# Model

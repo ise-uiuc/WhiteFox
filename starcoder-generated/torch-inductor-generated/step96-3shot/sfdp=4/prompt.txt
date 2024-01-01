@@ -1,0 +1,64 @@
+### Please generate different valid PyTorch models with public PyTorch APIs that meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. Be creative when generating new models to explore different possibilities that trigger the pattern. Feel free to leverage various PyTorch APIs, uncommon arguments, and input tensors with different shapes and data types.
+
+# Description of requirements:
+The model should contain the following pattern:
+```
+qk = query @ key.transpose(-2, -1) / math.sqrt(query.size(-1)) # Compute the dot product of the query and key, and scale it
+qk = qk + attn_mask # Add the attention mask to the scaled dot product
+attn_weight = torch.softmax(qk, dim=-1) # Apply softmax to the result
+output = attn_weight @ value # Compute the dot product of the attention weights and the value
+```
+This pattern characterizes a scaled dot-product attention mechanism, which is a key component of Transformer models. In this mechanism, the attention weights are computed as the softmax of the scaled dot product of the query and key tensors, and these weights are then used to compute a weighted sum of the value tensor. The attention mask is used to prevent attention to certain positions.
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, query, key, value, mask):
+        qk = query @ key.transpose(-2, -1) / math.sqrt(query.size(-1))
+        qk = qk + mask
+        attn_weight = torch.softmax(qk, dim=-1)
+        output = attn_weight @ value
+        return output
+# Inputs to the model
+Q = torch.randn(1, 64, 56, 56)
+K = torch.randn(1, 64, 56, 56)
+V = torch.randn(1, 64, 56, 56)
+mask = (torch.rand(1, 56, 56) > 0.7).fill_(-1000000000.0)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, Q3, K10, V6, mask):
+        qk = Q3 @ K10.transpose(-2, -1) / math.sqrt(Q3.size(-1))
+        qk = qk + mask
+        attn_weight = torch.softmax(qk, dim=-1)
+        output = attn_weight @ V6
+        return output
+# Inputs to the model
+Q9 = torch.randn(1, 64, 56, 56)
+K2 = torch.randn(1, 64, 56, 56)
+V7 = torch.randn(1, 64, 56, 56)
+mask = (torch.rand(1, 56, 56) > 0.7).fill_(-1000000000.0)
+# Model ends
+
+# Model begins
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+    def forward(self, Q15, KKK7, VVV2, mask):
+        qk = Q15 @ KKK7.transpose(-2, -1) / math.sqrt(Q15.size(-1))
+        qk = qk + mask
+        attn_weight = torch.softmax(qk, dim=-1)
+        output = attn_weight @ VVV2
+        return output
+# Inputs to the model
+Q8 = torch.randn(1, 64, 56, 56)
+KKK9 = torch.randn(1, 64, 56, 56)
+VVV6 = torch.randn(1, 64, 56, 56)
+mask = (torch.rand(1, 56, 56) > 0.7).fill_(-1000000000.0)
+# Model ends
+
+# Model begins

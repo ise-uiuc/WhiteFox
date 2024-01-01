@@ -1,0 +1,58 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `AllReduceReassociate` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+
+```
+t1 = tf.all_reduce(input_tensor1, ...)
+t2 = tf.all_reduce(input_tensor2, ...)
+t3 = tf.some_binary_operation(t1, t2)
+```
+
+The pattern describes that there are two `all_reduce` operators in the model. The first `all_reduce` operator performs a reduction operation on `input_tensor1` and the second `all_reduce` operator performs a reduction operation on `input_tensor2`. The output of these two `all_reduce` operations are then used as inputs to a binary operation.
+
+The following conditions should also be met:
+
+1. The binary operation should be a valid all-reduce reduction function. This includes operations like addition, multiplication, maximum, and minimum.
+
+2. The `all_reduce` operations should be compatible. This means they should have the same reduction operation, the same replica groups, and the same channel id. If there are type conversions before the `all_reduce` operations, the conversions should preserve values and precision.
+
+3. The reassociation of the `all_reduce` operations should be profitable. This means the total number of elements in the shapes of the original `all_reduce` operations should be greater than or equal to the number of elements in the shape of the reassociated operation.
+
+4. The module should not contain any all-reduce operations with constrained layouts.
+
+# Model

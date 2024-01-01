@@ -1,0 +1,15 @@
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.inp = torch.randn(3, 3).cuda
+        # self.inp.size()
+        # v1 = torch.tensor([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+        # v2 = (v1 + v1).size()
+    def forward(self, x1, x2):
+        v1 = torch.mm(x1, x2)
+        v2 = v1 + self.inp + self.inp
+        return v2
+# Inputs to the model
+x1 = torch.randn(3, 3, requires_grad=True).cuda
+x2 = torch.randn(3, 3, requires_grad=True).cuda

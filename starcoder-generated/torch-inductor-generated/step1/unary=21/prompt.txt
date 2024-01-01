@@ -1,0 +1,35 @@
+### Please generate a valid PyTorch model example with public PyTorch APIs meets the specified requirements. Plus, please also generate the input tensor for the newly generated model.
+
+# Description of requirements
+The model should contain a pattern of `mul(mul(_convolution_pointwise.default, 0.5), add(erf(mul(_convolution_pointwise.default, 0.7071067811865476)), 1))`. 
+The pattern means the first argument of the outermost operator `mul` is the output of another `mul` operation, which multiplies the output of the `_convolution_pointwise.default` operator with 0.5. The second argument of the outermost `mul` operator is the output of an `add` operation. The `add` operation adds 1 to the output of an `erf` operation, which takes as input the output of a `mul` operation. This `mul` operation multiplies the output of the `_convolution_pointwise.default` operator with 0.7071067811865476.
+
+# Model
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = torch.nn.Conv2d(3, 8, 3, stride=1, padding=1)
+ 
+    def forward(self, x):
+        v1 = self.conv(x)
+        v2 = v1 * 0.5
+        v3 = v1 * 0.7071067811865476
+        v4 = torch.erf(v3)
+        v5 = v4 + 1
+        v6 = v2 * v5
+        return v6
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+x = torch.randn(1, 3, 64, 64)
+__output__ = m(x1)
+
+### Please generate a valid PyTorch model example with public PyTorch APIs meets the specified requirements. Plus, please also generate the input tensor for the newly generated model. The model should be different from the previous one.
+
+# Description of requirements
+The model should contain a pattern of `tanh(_convolution_pointwise.default)`. 
+The pattern means the `tanh` operator is applied to the output of the `_convolution_pointwise.default` operator. The `_convolution_pointwise.default` operator performs a pointwise convolution operation on its inputs. The output of this convolution operation is then passed through the `tanh` activation function, which squashes the output values to the range between -1 and 1. This pattern is commonly used in neural networks where the `tanh` function is used as an activation function to introduce non-linearity into the model.
+
+# Model

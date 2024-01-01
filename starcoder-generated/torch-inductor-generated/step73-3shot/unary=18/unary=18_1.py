@@ -1,0 +1,30 @@
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv3d1 = torch.nn.Conv3d(3, 16, 5, 1, 2)
+        self.deconv3d1 = torch.nn.ConvTranspose3d(16, 64, 2, stride=4)
+        self.tanh1 = nn.Tanh()
+        self.conv3d2 = torch.nn.Conv3d(80, 64, 3, 1, 1)
+        self.deconv3d2 = torch.nn.ConvTranspose3d(64, 64, 4, stride=8)
+        self.relu1 = nn.ReLU()
+        self.conv3d3 = torch.nn.Conv3d(64, 1, 1)
+        self.softmax1 = nn.Softmax()
+        self.sigmoid1 = nn.Sigmoid()
+    def forward(self, x1):
+        v1 = self.conv3d1(x1)
+        v2 = self.tanh1(v1)
+        v3 = torch.cat((v3, v2), 1)
+        v4 = torch.cat((v2, v3), 1)
+        v5 = self.conv3d2(v4)
+        v6 = self.relu(v5)
+        v7 = self.conv3d3(v6)
+        v8 = self.softmax(v7)
+        v9 = self.get_tensor_shape(v8)
+        v10 = nn.PixelShuffle(2)(v8)
+        v11 = torch.reshape(v10, (v9_0, -1, 1, 4, 4))
+        v12 = torch.unfold(v11, kernel_size=(4, 4), dilation=(2, 2), padding=(0, 0), stride=(2, 2))
+        v13 = torch.unfold(v11, kernel_size=(4, 4), dilation=(2, 2), padding=(0, 0), stride=(2, 2))
+        return self.sigmoid(v13)
+# Inputs to the model
+x1 = torch.randn(1, 3, 64, 64, 64)

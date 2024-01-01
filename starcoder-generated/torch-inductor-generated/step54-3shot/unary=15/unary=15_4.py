@@ -1,0 +1,38 @@
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = torch.nn.Conv2d(3, 112, 7, stride=1, padding=1)
+        self.conv2 = torch.nn.Conv2d(112, 72, 5, stride=1, padding=1)
+        self.conv3 = torch.nn.Conv2d(184, 72, 5, stride=1, padding=1)
+        self.conv4 = torch.nn.Conv2d(112, 64, 5, stride=1, padding=1)
+        self.conv5 = torch.nn.Conv2d(72, 64, 5, stride=1, padding=1)
+        self.dropout1 = torch.nn.Dropout2d(p=0.06883763663456566)
+        self.dropout2 = torch.nn.Dropout2d(p=0.08554690240744858)
+        self.dropout3 = torch.nn.Dropout(p=0.07708536056003571)
+        self.dropout4 = torch.nn.Dropout(p=0.09050031307573318)
+        self.bn1 = torch.nn.BatchNorm2d(96)
+        self.bn2 = torch.nn.BatchNorm2d(144)
+    def forward(self, x1):
+        v1 = self.conv1(x1)
+        v1a = self.bn1(v1)
+        v2 = torch.relu(v1a)
+        v3 = self.conv2(v2)
+        v3a = self.bn2(v3)
+        v4 = torch.relu(v3a)
+        v4 = torch.nn.functional.interpolate(v4, scale_factor=2.0, mode='nearest')
+        v5 = torch.cat((v1,v4), 1)
+        v6 = self.conv3(v5)
+        v6a = torch.nn.functional.interpolate(v6, scale_factor=2.0, mode='nearest')
+        v2 = torch.nn.functional.pad(v2, (1, 1, 1, 1))
+        v7 = torch.cat((v2,v6a), 1)
+        v7a = self.dropout1(v7)
+        v8 = self.conv4(v7a)
+        v8a = self.dropout2(v8)
+        v9 = self.conv5(v8a)
+        v10b = self.dropout3(v9)
+        v11 = torch.relu(v10b)
+        v11c = self.dropout4(v11)
+        return v11c
+# Inputs to the model
+x1 = torch.randn(1, 3, 224, 224)

@@ -1,0 +1,69 @@
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA.
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+# Model
+class Model(tf.keras.Model):
+
+  def __init__(self):
+    super(Model, self).__init__()
+
+  def call(self, x1):
+    x2 = tf.reshape(x1, [2,2])
+    return tf.reshape(x2, [4])
+
+# Initializing the model
+m = Model()
+
+# Inputs to the model
+input_shape = [4]
+x1 = tf.constant([4.,5.,6.,7.], shape=input_shape)
+
+# Call model
+y = m(x1)
+
+
+### Please generate one valid TensorFlow model that satisfies requirements below.
+You should only use public TensorFlow APIs. The model can be used as the input to trigger the optimization pass `AllReduceSimplifier` in TensorFlow XLA.
+
+# Description
+The model should contain the following patterns:
+
+1. The model contains `AllGather` or `ReduceScatter` operations where the input and output shapes are compatible. This means that the shape of the tensor before and after the operation remains the same.
+
+```python
+# Example of AllGather operation
+t1 = tf.distribute.all_gather(input_tensor, axis=0)
+
+# Example of ReduceScatter operation
+t2 = tf.distribute.experimental.reducescatter(input_tensor, reduction='sum')
+```
+
+2. The model contains `AllReduce` operations where the shape of the tensor is an array (not a tuple), and the operation is a cross-replica operation. The size of the replica group should be the same for all groups, or the input tensor is replicated at all replicas, or the size of the replica group is 1.
+
+```python
+# Example of AllReduce operation
+t3 = tf.distribute.experimental.all_reduce(input_tensor, reduction='sum')
+```
+
+3. The model contains `AllReduce` operations where the reduction function is either `Add`, `Minimum`, `Maximum`, `Or`, or `And`. The size of the replica group should be 1, or the reduction function should be one of the mentioned functions.
+
+```python
+# Example of AllReduce operation with Add reduction function
+t4 = tf.distribute.experimental.all_reduce(input_tensor, reduction='sum')
+
+# Example of AllReduce operation with Minimum reduction function
+t5 = tf.distribute.experimental.all_reduce(input_tensor, reduction='minimum')
+```
+
+In all these cases, the optimization pass `AllReduceSimplifier` can be triggered, leading the function to return true.
+
+# Model

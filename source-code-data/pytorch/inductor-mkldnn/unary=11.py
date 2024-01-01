@@ -1,0 +1,21 @@
+CallFunction(
+    aten.div,
+    CallFunction(
+        aten.clamp_max,
+        CallFunction(
+            aten.clamp_min,
+            CallFunction(
+                aten.add,
+                CallFunction(
+                    mkldnn._convolution_transpose_pointwise.default,
+                    *_conv_transpose_args,
+                    _users=1,
+                ),
+                3,
+            ),
+            0,
+        ),
+        6,
+    ),
+    6,
+)

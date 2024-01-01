@@ -1,0 +1,124 @@
+### Please describe the characteristics of the TensorFlow model that can trigger the optimization pass `FuseFullyConnectedAndMul` when converted to a TensorFlow Lite model. The model can be used to reach out the `return success();` line in the function `matchAndRewrite`. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# Code of the function and its helper functions
+```cpp
+// Fuse Mul with proceeding FullyConnected.
+struct FuseFullyConnectedAndMul : public OpRewritePattern<TFL::MulOp> {
+  using OpRewritePattern<TFL::MulOp>::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(TFL::MulOp mul_op,
+                                PatternRewriter &rewriter) const override {
+    // If we are broadcasting on the lhs then don't fold the multiply as it
+    // would increase the amount of compute done by the fully connected op.
+    if (mul_op.getLhs().getType() != mul_op.getType()) return failure();
+
+    // Mul.
+    DenseElementsAttr cst;
+    Value constant_val = mul_op.getRhs();
+    if (!matchPattern(constant_val, m_Constant(&cst))) return failure();
+
+    // Fully Connected.
+    auto fc_op = dyn_cast_or_null<TFL::FullyConnectedOp>(
+        mul_op.getLhs().getDefiningOp());
+    if (!fc_op) return failure();
+    Value filter = fc_op.getFilter();
+    Value bias = fc_op.getBias();
+    ElementsAttr cst_tmp;
+    if (!matchPattern(filter, m_Constant(&cst_tmp))) return failure();
+    if (!bias.getType().isa<NoneType>() &&
+        !matchPattern(bias, m_Constant(&cst_tmp)))
+      return failure();
+    if (fc_op.getFusedActivationFunction() != "NONE") return failure();
+
+    // Only fuse multiplier if all dimensions other than the depth dimension
+    // are equal to 1 since otherwise
+    // `matmul(x, filter) * cst != matmul(x, filter * cst)`
+    // even if `filter` and `cst` are be broadcastable.
+    auto shape = cst.getType().getShape();
+    if (!IsDimensionsDegenerateExceptLastOne(shape)) return failure();
+
+    int64_t element_size = shape.empty() ? 1 : shape[shape.size() - 1];
+    // Expand and transpose the multiplier since weights are using the
+    // OHWI data format in TFLite.
+    int64_t normalized_shape[2] = {element_size, 1};
+    auto new_cst = cst.reshape(RankedTensorType::get(
+        normalized_shape, cst.getType().getElementType()));
+    Type new_type = new_cst.getType();
+    if (!IsBroadcastableElementsAttrAndType(new_type, filter.getType())) {
+      return failure();
+    }
+
+    return success();
+  }
+};
+```
+
+# Description
+The model should contain the following pattern:
+```
+filter = tf.Variable([...]) # a constant tensor
+cst = tf.Variable([...]) # a constant tensor, shape = [1, 1, ..., 1, last_dim]
+y = tf.matmul(input_tensor, filter) * cst # Mul is applied on the output of FullyConnectedOp
+```
+This pattern characterizes scenarios where a FullyConnectedOp is invoked on a tensor and a constant filter input, and then a Mul operation is invoked on the output tensor and a constant tensor. The FullyConnected operation should have the following properties:
+   - The filter input should be a constant tensor.
+   - The bias input should either be of NoneType or a constant tensor.
+   - The fused activation function should be "NONE".
+The constant tensor from the Mul operation should have all dimensions equal to 1, except for the last dimension. The constant tensor from the Mul operation should be broadcastable with the filter tensor of the FullyConnected operation after reshaping and transposing the constant tensor.
+
+### Please describe the characteristics of the TensorFlow model that can trigger the optimization pass `RemoveReshapeAfterFullyConnected` when converted to a TensorFlow Lite model. The model can be used to reach out the `return success();` line in the function `matchAndRewrite`. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# Code of the function and its helper functions
+```cpp
+// Remove Reshape after FullyConnected when `keep_num_dims=false`, the Reshape
+// does not alter the last dimension and it restores the batch dimensions
+// collapsed by the FullyConnected op due to `keep_num_dims=false`. For example,
+//
+//   // %input: tensor<4x16x32xf32>
+//   %fc = tfl.fully_connected(%input, %filter, %bias)
+//           {keep_num_dims = false, weights_format = "DEFAULT"}
+//   %shape = arith.constant dense<[4, 16, 32]> : tensor<3xi32>
+//   %rs = tfl.reshape(%fc, %shape)
+//
+// can be canonicalized to
+//
+//   %fc = tfl.fully_connected(%input, %filter, %bias)
+//           {keep_num_dims = true, weights_format = "DEFAULT"}
+struct RemoveReshapeAfterFullyConnected
+    : public OpRewritePattern<TFL::ReshapeOp> {
+  using OpRewritePattern::OpRewritePattern;
+
+  LogicalResult matchAndRewrite(TFL::ReshapeOp reshape_op,
+                                PatternRewriter &rewriter) const override {
+
+    auto fully_connected_op = llvm::dyn_cast_or_null<TFL::FullyConnectedOp>(
+        reshape_op.getInput().getDefiningOp());
+    if (!fully_connected_op || fully_connected_op.getNumResults() != 1 ||
+        fully_connected_op.getWeightsFormat() != "DEFAULT" ||
+        fully_connected_op.getKeepNumDims())
+      return failure();
+    if (!reshape_op.getInput().hasOneUse()) return failure();
+
+    auto input_shape =
+        fully_connected_op.getInput().getType().cast<ShapedType>();
+    auto output_shape = fully_connected_op.getType(0).cast<ShapedType>();
+    auto reshape_shape = reshape_op.getType().cast<ShapedType>();
+    if (!input_shape.hasStaticShape() || !output_shape.hasStaticShape() ||
+        !reshape_shape.hasStaticShape())
+      return failure();
+
+    // Check that the reshape doesn't modify the last dimension and it restores
+    // the input (batch) dimension with the exception of the feature (last)
+    // dimension.
+    if (output_shape.getShape().empty() || reshape_shape.getShape().empty() ||
+        output_shape.getShape().back() != reshape_shape.getShape().back() ||
+        input_shape.getShape().drop_back() !=
+            reshape_shape.getShape().drop_back())
+      return failure();
+    
+    return success();
+  }
+};
+```
+
+# Description

@@ -1,0 +1,7 @@
+The model should contain the following pattern:
+```
+t1 = torch.cat([tensor1, tensor2, ...], dim=...) # Concatenate tensors along a dimension
+t2 = t1.view(...) # Reshape the concatenated tensor
+t3 = torch.relu(t2) # Apply a pointwise unary operation (e.g., ReLU or Tanh) to the reshaped tensor
+```
+This pattern characterizes scenarios where a tensor is reshaped after concatenation and then a pointwise unary operation (like ReLU or Tanh) is applied. The unary operation should be the only user of the reshaped tensor. The optimization `sink_cat_after_pointwise` is triggered when such a pattern is detected in the model.

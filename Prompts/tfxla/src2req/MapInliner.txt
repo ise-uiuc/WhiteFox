@@ -1,0 +1,88 @@
+### Please describe the characteristics of the TensorFlow model that trigger the optimization pass `ReshapeReshapeForwarding` in TensorFlow XLA. The model can be used to reach out the `return true;` line in function `ReshapeReshapeForwarding`, leading the function to return true. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# The code of the function and its helper functions:
+
+```cpp
+// Reshape(Reshape(A, []->[1]), [1]->[]) ==> A
+StatusOr<bool> ReshapeReshapeForwarding(HloInstruction* reshape) {
+  if (reshape->opcode() != HloOpcode::kReshape) {
+    return false;
+  }
+  auto reshape_2 = reshape->mutable_operand(0);
+  if (reshape_2->opcode() != HloOpcode::kReshape) {
+    return false;
+  }
+
+  if (!Shape::Equal()(reshape->shape(), reshape_2->operand(0)->shape())) {
+    return false;
+  }
+  TF_RETURN_IF_ERROR(
+      reshape->ReplaceAllUsesWith(reshape_2->mutable_operand(0)));
+
+  return true;
+}
+```
+
+# Description
+The model should contain the following pattern:
+```
+t1 = tf.reshape(input_tensor, ...)
+t2 = tf.reshape(t1, input_tensor.shape)
+```
+The pattern describes that there are two reshape operators in the model. The first `reshape` operator transforms a tensor input `input_tensor` from `input_tensor.shape` to any new shape, and the second `reshape` operator transforms the output of first `reshape` back to `input_tensor.shape`.
+
+
+### Please describe the characteristics of the TensorFlow model that trigger the optimization pass `MapInliner` in TensorFlow XLA. The model can be used to reach out the `changed_ = true;` line in function `MapInlinerVisitor::HandleMap`, leading the function to return true. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the model. Do not describe the function code or what happens after the optimization is triggered.
+
+# The code of the function and its helper functions:
+
+```cpp
+Status MapInlinerVisitor::HandleMap(HloInstruction* map) {
+  HloComputation* function = map->to_apply();
+  HloInstruction& root = *function->root_instruction();
+  // Only inlining functions that are simply a single operation until a better
+  // profitability model for inlining is defined.
+  if (hlo_query::AllOperandsAreParameters(root)) {
+    if (root.opcode() == HloOpcode::kFusion) {
+      // Cloning not supported for these instructions.
+      return OkStatus();
+    }
+    VLOG(10) << "inlining map({X ... Y}, op) => : op(X ... Y) with function "
+             << root.ToShortString();
+    if (root.opcode() == HloOpcode::kParameter) {
+      // If the root is a parameter, then use the corresponding operand as the
+      // result of the computation.
+      TF_RETURN_IF_ERROR(
+          map->ReplaceAllUsesWith(map->operands()[root.parameter_number()]));
+      TF_RETURN_IF_ERROR(computation_->RemoveInstruction(map));
+    } else if (root.opcode() == HloOpcode::kConstant) {
+      // If the input is a constant then the shape of the constant could be
+      // different than the map shape. Hence, a broadcast is needed, else the
+      // cloned operand with new shape and operands work.
+      //
+      // The constant is in an embedded computation and needs to be recreated
+      // as part of the computation that the broadcast is inserted into.
+      HloInstruction* constant = computation_->AddInstruction(root.Clone());
+      HloInstruction* placed_instruction = computation_->AddInstruction(
+          HloInstruction::CreateBroadcast(map->shape(), constant, {}));
+      TF_RETURN_IF_ERROR(
+          computation_->ReplaceInstruction(map, placed_instruction));
+    } else {
+      std::vector<HloInstruction*> params;
+      for (int64_t o = 0; o < root.operands().size(); o++) {
+        params.push_back(map->operands()[root.operand(o)->parameter_number()]);
+      }
+      HloInstruction* placed_instruction = computation_->AddInstruction(
+          root.CloneWithNewOperands(map->shape(), params));
+      TF_RETURN_IF_ERROR(
+          computation_->ReplaceInstruction(map, placed_instruction));
+    }
+    changed_ = true;
+    return OkStatus();
+  }
+
+  return OkStatus();
+}
+```
+
+# Description
