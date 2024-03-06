@@ -1,0 +1,10 @@
+@register_graph_pattern(
+    CallFunction(
+        torch.cat,
+        getitem_split,
+        dim=Ignored(),
+        _users=MULTIPLE,
+    ),
+    pass_dict=merge_getitem_cat_pass,
+    extra_check=config_flag("split_cat_fx_passes"),
+)

@@ -1,0 +1,14 @@
+RepeatedExpr(
+    CallFunction(
+        torch.squeeze,
+        GetItem(
+            TorchSplit(
+                KeywordArg("split_input"),
+                KeywordArg("split_sizes"),
+            ),
+            Ignored(),
+        ),
+        dim=KeywordArg("dim"),
+        _users=MULTIPLE,
+    )
+)

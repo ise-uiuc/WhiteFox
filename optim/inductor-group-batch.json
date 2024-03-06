@@ -1,0 +1,98 @@
+{
+    "BatchLayernormFusion": {
+        "hints": [
+            {
+                "type": "not-none",
+                "var": "group_key",
+                "func": "BatchLayernormFusion.match",
+                "codes": [
+                    "source-code-data/pytorch/inductor-group-batch/BatchLayernormFusion.py"
+                ]
+            }
+        ]
+    },
+    "BatchLinearLHSFusion": {
+        "hints": [
+            {
+                "type": "not-none",
+                "var": "group_key",
+                "func": "BatchLinearLHSFusion.match",
+                "codes": [
+                    "source-code-data/pytorch/inductor-group-batch/BatchLinearLHSFusion.py"
+                ]
+            }
+        ]
+    },
+    "BatchPointwiseOpsPostGradFusion": {
+        "hints": [
+            {
+                "type": "not-none",
+                "var": "group_key",
+                "func": "BatchPointwiseOpsPostGradFusion.match",
+                "codes": [
+                    "source-code-data/pytorch/inductor-group-batch/BatchPointwiseOpsPostGradFusion.py"
+                ]
+            }
+        ]
+    },
+    "BatchPointwiseOpsPreGradFusion": {
+        "hints": [
+            {
+                "type": "not-none",
+                "var": "group_key",
+                "func": "BatchPointwiseOpsPreGradFusion.match",
+                "codes": [
+                    "source-code-data/pytorch/inductor-group-batch/BatchPointwiseOpsPreGradFusion.py"
+                ]
+            }
+        ]
+    },
+    "GroupLinearFusion": {
+        "hints": [
+            {
+                "type": "not-none",
+                "var": "group_key",
+                "func": "GroupLinearFusion.match",
+                "codes": [
+                    "source-code-data/pytorch/inductor-group-batch/GroupLinearFusion.py"
+                ]
+            }
+        ]
+    },
+    "PostGradBatchLinearFusion": {
+        "hints": [
+            {
+                "type": "not-none",
+                "var": "group_key",
+                "func": "PostGradBatchLinearFusion.match",
+                "codes": [
+                    "source-code-data/pytorch/inductor-group-batch/PostGradBatchLinearFusion.py"
+                ]
+            }
+        ]
+    },
+    "PreGradBatchLinearFusion": {
+        "hints": [
+            {
+                "type": "not-none",
+                "var": "group_key",
+                "func": "PreGradBatchLinearFusion.match",
+                "codes": [
+                    "source-code-data/pytorch/inductor-group-batch/PreGradBatchLinearFusion.py"
+                ]
+            }
+        ]
+    },
+    "efficient_conv_bn_eval": {
+        "hints": [
+            {
+                "type": "trigger",
+                "func": "efficient_conv_bn_eval.match",
+                "target_line": "new_node = graph.create_node",
+                "codes": [
+                    "source-code-data/pytorch/efficient_conv_bn_eval.py"
+                ]
+            }
+        ]
+    }
+}

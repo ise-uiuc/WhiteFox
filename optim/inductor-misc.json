@@ -1,0 +1,22 @@
+{
+  "randperm_index_add_pattern": {
+    "hints": [
+      {
+        "type": "pattern",
+        "codes": [
+          "source-code-data/pytorch/inductor-misc/randperm_index_add_pattern.py"
+        ]
+      }
+    ]
+  },
+  "randperm_index_pattern": {
+    "hints": [
+      {
+        "type": "pattern",
+        "codes": [
+          "source-code-data/pytorch/inductor-misc/randperm_index_pattern.py"
+        ]
+      }
+    ]
+  }
+}
