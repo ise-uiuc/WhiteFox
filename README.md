@@ -1,17 +1,23 @@
-# WhiteFox: White-box Compiler Fuzzing Empowered by Large Language Models
+# 🦊 WhiteFox: White-box Compiler Fuzzing Empowered by Large Language Models
 
-This repository contains the artifact for [WhiteFox](https://arxiv.org/abs/2310.15991).
+<p align="left">
+    <a href="https://arxiv.org/abs/2310.15991"><img src="https://img.shields.io/badge/arXiv-2312.02120-b31b1b.svg?style=for-the-badge">
+</p>
+
+> [!IMPORTANT]
+> We are keeping improving the documents and adding more implementation details. Please stay tuned at [README-DEV.md](README-DEV.md) for more information.
 
 ## About
-WhiteFox is the first white-box compiler fuzzer using LLMs with source-code information to test compiler optimization.
-WhiteFox adopts a dual-model framework: (i) an analysis LLM examines the low-level optimization source code and produces requirements on the high-level test programs that can trigger the optimization; (ii) a generation LLM produces test programs based on the summarized requirements.
 
-## Detected Bugs
-To date, WhiteFox has found in total 96 bugs for the compilers under test, with 80 confirmed as previously unknown and 51 already fixed.
+* 🦊**WhiteFox** is the first white-box compiler fuzzer using LLMs with source-code information to test compiler optimization.
+* WhiteFox adopts a dual-model framework: (i) an analysis LLM examines the low-level optimization source code and produces requirements on the high-level test programs that can trigger the optimization; (ii) a generation LLM produces test programs based on the summarized requirements.
+
+> [!IMPORTANT]
+> * **WhiteFox** has detected **96** bugs 🐛 in the PyTorch Inductor, Tensorflow XLA, TensorFlow Lite and LLVM, with 80 confirmed as previously unknown and **61** of them are fixed.
 
 We provide a list of confirmed bug reports in [bugs](bugs.csv).
 
-## Getting Started
+## 🔨 Getting Started
 
 ### Prerequisites
 
@@ -108,9 +114,3 @@ cd torch-exec && python run_torch.py --input-dir=../starcoder-generated/torch-in
 ```
 
 The output of the execution will be in `torch-exec/_results-torch`.
-
-
-## TODO
-
-- [ ] Add the scripts for the other compilers.
-- [ ] Add the steps to instrument the compilers to collect optimization triggering information. (Or a docker)
