@@ -1,7 +1,7 @@
 # 🦊 WhiteFox: White-box Compiler Fuzzing Empowered by Large Language Models
 
 <p align="left">
-    <a href="https://arxiv.org/abs/2310.15991"><img src="https://img.shields.io/badge/arXiv-2312.02120-b31b1b.svg?style=for-the-badge">
+    <a href="https://arxiv.org/abs/2310.15991"><img src="https://img.shields.io/badge/arXiv-2310.15991-b31b1b.svg?style=for-the-badge">
 </p>
 
 > [!IMPORTANT]
