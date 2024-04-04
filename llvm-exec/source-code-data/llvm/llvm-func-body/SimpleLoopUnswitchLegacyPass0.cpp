@@ -1,0 +1,88 @@
+unswitchLoop(Loop &L, DominatorTree &DT, LoopInfo &LI, AssumptionCache &AC,
+             AAResults &AA, TargetTransformInfo &TTI, bool Trivial,
+             bool NonTrivial,
+             function_ref<void(bool, bool, ArrayRef<Loop *>)> UnswitchCB,
+             ScalarEvolution *SE, MemorySSAUpdater *MSSAU,
+             ProfileSummaryInfo *PSI, BlockFrequencyInfo *BFI,
+             function_ref<void(Loop &, StringRef)> DestroyLoopCB) {
+  assert(L.isRecursivelyLCSSAForm(DT, LI) &&
+         "Loops must be in LCSSA form before unswitching.");
+
+  // Must be in loop simplified form: we need a preheader and dedicated exits.
+  if (!L.isLoopSimplifyForm())
+    return false;
+
+  // Try trivial unswitch first before loop over other basic blocks in the loop.
+  if (Trivial && unswitchAllTrivialConditions(L, DT, LI, SE, MSSAU)) {
+    // If we unswitched successfully we will want to clean up the loop before
+    // processing it further so just mark it as unswitched and return.
+    UnswitchCB(/*CurrentLoopValid*/ true, false, {});
+    LLVM_DEBUG(dbgs() << "UnswitchCB(/*CurrentLoopValid*/ true, false, {});\n");
+    return true;
+  }
+
+  // Check whether we should continue with non-trivial conditions.
+  // EnableNonTrivialUnswitch: Global variable that forces non-trivial
+  //                           unswitching for testing and debugging.
+  // NonTrivial: Parameter that enables non-trivial unswitching for this
+  //             invocation of the transform. But this should be allowed only
+  //             for targets without branch divergence.
+  //
+  // FIXME: If divergence analysis becomes available to a loop
+  // transform, we should allow unswitching for non-trivial uniform
+  // branches even on targets that have divergence.
+  // https://bugs.llvm.org/show_bug.cgi?id=48819
+  bool ContinueWithNonTrivial =
+      EnableNonTrivialUnswitch || (NonTrivial && !TTI.hasBranchDivergence());
+  if (!ContinueWithNonTrivial)
+    return false;
+
+  // Skip non-trivial unswitching for optsize functions.
+  if (L.getHeader()->getParent()->hasOptSize())
+    return false;
+
+  // Returns true if Loop L's loop nest is cold, i.e. if the headers of L,
+  // of the loops L is nested in, and of the loops nested in L are all cold.
+  auto IsLoopNestCold = [&](const Loop *L) {
+    // Check L and all of its parent loops.
+    auto *Parent = L;
+    while (Parent) {
+      if (!PSI->isColdBlock(Parent->getHeader(), BFI))
+        return false;
+      Parent = Parent->getParentLoop();
+    }
+    // Next check all loops nested within L.
+    SmallVector<const Loop *, 4> Worklist;
+    Worklist.insert(Worklist.end(), L->getSubLoops().begin(),
+                    L->getSubLoops().end());
+    while (!Worklist.empty()) {
+      auto *CurLoop = Worklist.pop_back_val();
+      if (!PSI->isColdBlock(CurLoop->getHeader(), BFI))
+        return false;
+      Worklist.insert(Worklist.end(), CurLoop->getSubLoops().begin(),
+                      CurLoop->getSubLoops().end());
+    }
+    return true;
+  };
+
+  // Skip cold loops in cold loop nests, as unswitching them brings little
+  // benefit but increases the code size
+  if (PSI && PSI->hasProfileSummary() && BFI && IsLoopNestCold(&L)) {
+    LLVM_DEBUG(dbgs() << " Skip cold loop: " << L << "\n");
+    return false;
+  }
+
+  // Perform legality checks.
+  if (!isSafeForNoNTrivialUnswitching(L, LI))
+    return false;
+
+  // Try to unswitch the best invariant condition. We prefer this full unswitch to
+  // a partial unswitch when possible below the threshold.
+  if (unswitchBestCondition(L, DT, LI, AC, AA, TTI, UnswitchCB, SE, MSSAU,
+                            DestroyLoopCB))
+    return true;
+
+  // No other opportunities to unswitch.
+  return false;
+}
+

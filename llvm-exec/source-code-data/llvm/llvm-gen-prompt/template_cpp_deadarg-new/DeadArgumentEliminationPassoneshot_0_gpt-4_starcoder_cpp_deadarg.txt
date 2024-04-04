@@ -1,24 +1,20 @@
-The C++ code should contain a function with variable arguments (denoted by `...`), which is directly called in the `main` function. This function should be defined (not just declared), have internal linkage (usually achieved by declaring it as `static`), and should not have its address taken. The function should not have the `naked` attribute, and should not contain any calls marked as `musttail` or any calls to the `llvm.vastart` intrinsic. 
+The C++ code should contain a function with variable arguments (denoted by "...") that is directly called in the `main` function. This function should be static, meaning it has local linkage, and it should not be a naked function (a function without a prologue or epilogue). The function should not contain any calls to `va_start` or any must-tail calls. 
 
 Here is an example of such a code:
 
 ```cpp
 // define a function with variable arguments
 static int varargs_func(int x, ...) {
-    // Do something here with input arguments, but don't use va_start or similar
+    // Do something here with input arguments, but don't use va_start or make must-tail calls
     int result = x + 1; // result is related to x
     return result;
 }
 
 int main() {
-    // declare some variables
-    int x = 10; 
-    int y = 20; 
-    int z = 30; 
     // invoke the func varargs_func
-    int result = varargs_func(x, y, z, 40, 50); // you can pass the arguments with any number, any type
+    int result = varargs_func(1, 2, 3, 4, 5); // you can pass any number of arguments of any type
     return result;
 }
 ```
 
-In this code, `varargs_func` is a function with variable arguments that meets all the conditions mentioned above. It is directly called in the `main` function, and the result of this call is used as the return value of `main`. This code can trigger the `DeadArgumentEliminationPass` optimization in LLVM, reaching the `F.replaceAllUsesWith(ConstantExpr::getBitCast(NF, F.getType()));` line and making the boolean variable `Changed` equal to `True`.
+In this example, `varargs_func` is a function with variable arguments that is directly called in the `main` function. It is static, does not contain any calls to `va_start` or any must-tail calls, and is not a naked function. Therefore, this code can trigger the `DeadArgumentEliminationPass` optimization in LLVM, reaching the `F.replaceAllUsesWith(ConstantExpr::getBitCast(NF, F.getType()));` line and making the boolean variable `Changed` equal to `True`.
