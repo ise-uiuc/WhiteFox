@@ -1,0 +1,21 @@
+The C++ code should contain the following pattern:
+
+```cpp
+// define a global constant array
+const int global_array[] = {1, 2, 3, 4, 5};
+
+int main() {
+    // allocate an array on stack
+    int stack_array[sizeof(global_array)/sizeof(int)];
+
+    // copy the global array to the stack array
+    memcpy(stack_array, global_array, sizeof(global_array));
+
+    // use the stack array
+    int result = stack_array[ANY_INDEX]; // ANY_INDEX is a valid index of stack_array
+
+    return result;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists an allocation of an array on the stack (`stack_array`), and a subsequent `memcpy` operation that copies a global constant array (`global_array`) into the stack array. The stack array is then used in the program, and the result of this usage is returned by the `main` function. The size of the stack array should be equal to the size of the global array. The `memcpy` operation should copy the entire global array into the stack array. The `main` function must return a value related to this optimization for further comparison.

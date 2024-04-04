@@ -1,0 +1,26 @@
+The C++ code should contain the following pattern:
+
+```cpp
+// define two functions with identical bodies
+int identical_func1(int x) {
+    RANDOM_CODE; // Do something here with input argument x
+    int result = x OPERATOR ANY_VALUE; // result is related to x
+    return result;
+}
+
+int identical_func2(int x) {
+    RANDOM_CODE; // Do exactly the same thing as identical_func1
+    int result = x OPERATOR ANY_VALUE; // result is related to x
+    return result;
+}
+
+int main() {
+    RANDOM_CODE;  // declare some variables
+    int x = ANY_VALUE; // declare variable x
+    // invoke the func identical_func1 and identical_func2
+    int result1 = identical_func1(x);
+    int result2 = identical_func2(x);
+    return result1 + result2;
+}
+```
+This pattern characterizes scenarios where within the `main` function, there exist calls to `identical_func1` and `identical_func2`, and the results of these calls are being used. `identical_func1` and `identical_func2` are identical in their function bodies, which means they perform exactly the same operations and return the same type of value. The `main` function must return a value related to this optimization for further comparison.

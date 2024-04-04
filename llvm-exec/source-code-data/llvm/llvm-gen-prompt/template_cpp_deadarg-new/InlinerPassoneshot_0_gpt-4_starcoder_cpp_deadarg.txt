@@ -1,0 +1,22 @@
+The C++ code should contain the following pattern:
+
+```cpp
+// define a function that will be inlined
+inline int inlined_func(int x) {
+    RANDOM_CODE; // Do something here with input arguments
+    int result = x OPERATOR ANY_VALUE; // result is related to x
+    return result;
+}
+
+int main() {
+    RANDOM_CODE;  // declare some variables
+    int x = ANY_VALUE; // declare variable x
+    // invoke the func inlined_func
+    int result = inlined_func(x); // you can pass the arguments with any number, any type
+    return result;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists a call to `inlined_func`, and the result of this call is being used. `inlined_func` is marked as `inline`, which accepts an `int` argument, then returns a single `int` value that is determined by the argument. The `main` function must return a value related to this optimization for further comparison. 
+
+The `inlined_func` function should be small and simple enough to be inlined. The decision to inline a function is made by the compiler based on various heuristics, such as the size of the function, the complexity of the function, and the number of calls to the function. In general, small, frequently called functions are good candidates for inlining.

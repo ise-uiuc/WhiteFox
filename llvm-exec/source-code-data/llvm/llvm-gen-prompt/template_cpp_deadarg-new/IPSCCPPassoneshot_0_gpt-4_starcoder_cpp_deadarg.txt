@@ -1,0 +1,16 @@
+The C++ code should contain the following pattern:
+```cpp
+// define a global variable
+int global_var = ANY_VALUE;
+
+// define a function that modifies the global variable
+void modify_global_var() {
+    global_var = ANY_VALUE; // assign a constant value to the global variable
+}
+
+int main() {
+    modify_global_var(); // call the function that modifies the global variable
+    return 0;
+}
+```
+This pattern characterizes scenarios where a global variable `global_var` is defined and initialized with a certain value. Then, a function `modify_global_var` is defined, which modifies the value of `global_var` by assigning it a constant value. In the `main` function, `modify_global_var` is called. The global variable `global_var` is not used elsewhere in the program, and the function `modify_global_var` is only called once in the `main` function. The `main` function must return a value related to this optimization for further comparison.

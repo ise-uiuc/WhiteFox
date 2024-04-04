@@ -1,0 +1,280 @@
+### Please describe the C program that can trigger the optimization pass `DeadArgumentEliminationPass` in LLVM. The C program can used to reach out `F.replaceAllUsesWith(ConstantExpr::getBitCast(NF, F.getType()));` line and make the boolean variable `Changed` equal to `True`. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the C program. Do not describe the function code or what happens after the optimization is triggered. Do not include the optimization name and target line information in your description. Your description must have the `main` function.
+
+# The code of the optimization and its helper functions:
+
+```cpp
+PreservedAnalyses DeadArgumentEliminationPass::run(Module &M,
+                                                   ModuleAnalysisManager &) {
+  bool Changed = false;
+
+  // First pass: Do a simple check to see if any functions can have their "..."
+  // removed.  We can do this if they never call va_start.  This loop cannot be
+  // fused with the next loop, because deleting a function invalidates
+  // information computed while surveying other functions.
+  LLVM_DEBUG(dbgs() << "DeadArgumentEliminationPass - Deleting dead varargs\n");
+  for (Function &F : llvm::make_early_inc_range(M))
+    if (F.getFunctionType()->isVarArg())
+      Changed |= deleteDeadVarargs(F);
+
+  if (!Changed)
+    return PreservedAnalyses::all();
+  return PreservedAnalyses::none();
+}
+
+bool DeadArgumentEliminationPass::deleteDeadVarargs(Function &F) {
+
+  assert(F.getFunctionType()->isVarArg() && "Function isn't varargs!");
+  if (F.isDeclaration() || !F.hasLocalLinkage())
+    return false;
+
+  // Ensure that the function is only directly called.
+  if (F.hasAddressTaken())
+    return false;
+
+  // Don't touch naked functions. The assembly might be using an argument, or
+  // otherwise rely on the frame layout in a way that this analysis will not
+  // see.
+  if (F.hasFnAttribute(Attribute::Naked)) {
+    return false;
+  }
+
+  // Okay, we know we can transform this function if safe.  Scan its body
+  // looking for calls marked musttail or calls to llvm.vastart.
+  for (BasicBlock &BB : F) {
+    for (Instruction &I : BB) {
+      CallInst *CI = dyn_cast<CallInst>(&I);
+      if (!CI)
+        continue;
+      if (CI->isMustTailCall())
+        return false;
+      if (IntrinsicInst *II = dyn_cast<IntrinsicInst>(CI)) {
+        if (II->getIntrinsicID() == Intrinsic::vastart)
+          return false;
+      }
+    }
+  }
+
+  // Fix up any BlockAddresses that refer to the function.
+  F.replaceAllUsesWith(ConstantExpr::getBitCast(NF, F.getType()));
+  // Delete the bitcast that we just created, so that NF does not
+  // appear to be address-taken.
+  NF->removeDeadConstantUsers();
+  // Finally, nuke the old function.
+  F.eraseFromParent();
+  return true;
+}
+```
+
+# Description
+The C program should contain the following pattern:
+```
+// no va_arg in stdarg.h is used
+
+// declare variables
+int x = ANY_VALUE; // declare x
+ANY_TYPE y = ANY_VALUE; // declare y
+ANY_TYPE z = ANY_VALUE; // declare z
+
+// define one function which has variable arguments
+static int varargs_func(int x, ...) {
+  int varargs_func_result = 0; // declare the result
+  RANDOM_CODE; // Do something here with input arguments, but don't generate the codes contain va_args
+  varargs_func_result = x OPERATOR ANY_VALUE; // result is related to x
+  return varargs_func_result ;
+}
+
+int main() {
+  int main_result = 0; // declare the result
+  // invoke the func varargs_func
+  // you can pass the arguments with any value, any type
+  main_result = varargs_func(x, y, z, ANY_VALUE_ANY_TYPE, ANY_VALUE_ANY_TYPE);
+  return main_result; // return the result
+}
+```
+This pattern characterizes scenarios where within the `main` function, there exists a call to `varargs_func`, and the result of this call is being used. `varargs_func` is marked as variable function, which accepts variable arguments, then returns a single `ANY_TYPE` value that is determined by the first argument. The first argument can be any type, e.g. `int`, `float`, `ptr` `struct`, and so on. The functions must be `static`(which will be translated into ir function with internel attribute), no vastart intrinsic(such as `va_arg` in `stdarg.h`). The `main` function must return a value related to this optimization for further comparison.
+
+The `ANY_TYPE` could be `char, unsigned, int, float, double, ptr, struct, array, etc.`. The `ANY_VALUE` should be aligned with the type. The `OPERATOR` could be `+,-,*,/,%,<<,>>,|,&,^,&&,||,==,!=,>,<,>=,<=,~,!,+=,-=,*=,/=,%=,<<=,>>=,&=,^=,|=,++,--,=,?:,->,.,[],()`. The `RANDOM_CODE` could be any code that does not contain `va_arg` in `stdarg.h`. Each declared variable should be initialized, such as `int a[] = {1, 2, 0, 5};`.
+
+### Please describe the C program that can trigger the optimization pass `GlobalOptPass` in LLVM. The C program can used to reach out `ChangeCalleesToFastCall(&F);` line and make the boolean variable `Changed` equal to `True`. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the C program. Do not describe the function code or what happens after the optimization is triggered. Do not include the optimization name and target line information in your description. Your description must have the `main` function.
+
+# The code of the optimization and its helper functions:
+
+```
+optimizeGlobalsInModule(Module &M, const DataLayout &DL,
+                        function_ref<TargetLibraryInfo &(Function &)> GetTLI,
+                        function_ref<TargetTransformInfo &(Function &)> GetTTI,
+                        function_ref<BlockFrequencyInfo &(Function &)> GetBFI,
+                        function_ref<DominatorTree &(Function &)> LookupDomTree,
+                        function_ref<void(Function &F)> ChangedCFGCallback,
+                        function_ref<void(Function &F)> DeleteFnCallback) {
+  SmallPtrSet<const Comdat *, 8> NotDiscardableComdats;
+  bool Changed = false;
+  bool LocalChange = true;
+  std::optional<uint32_t> FirstNotFullyEvaluatedPriority;
+
+  while (LocalChange) {
+    LocalChange = false;    NotDiscardableComdats.clear();
+    for (const GlobalVariable &GV : M.globals())
+      if (const Comdat *C = GV.getComdat())
+        if (!GV.isDiscardableIfUnused() || !GV.use_empty())
+          NotDiscardableComdats.insert(C);
+    for (Function &F : M)
+      if (const Comdat *C = F.getComdat())
+        if (!F.isDefTriviallyDead())
+          NotDiscardableComdats.insert(C);
+    for (GlobalAlias &GA : M.aliases())
+      if (const Comdat *C = GA.getComdat())
+        if (!GA.isDiscardableIfUnused() || !GA.use_empty())
+          NotDiscardableComdats.insert(C);
+
+    // Delete functions that are trivially dead, ccc -> fastcc
+    LocalChange |= OptimizeFunctions(M, GetTLI, GetTTI, GetBFI, LookupDomTree,
+                                     NotDiscardableComdats, ChangedCFGCallback,
+                                     DeleteFnCallback);
+
+    // Optimize global_ctors list.
+    LocalChange |=
+        optimizeGlobalCtorsList(M, [&](uint32_t Priority, Function *F) {
+          if (FirstNotFullyEvaluatedPriority &&
+              *FirstNotFullyEvaluatedPriority != Priority)
+            return false;
+          bool Evaluated = EvaluateStaticConstructor(F, DL, &GetTLI(*F));
+          if (!Evaluated)
+            FirstNotFullyEvaluatedPriority = Priority;
+          return Evaluated;
+        });
+
+    // Optimize non-address-taken globals.
+    LocalChange |= OptimizeGlobalVars(M, GetTTI, GetTLI, LookupDomTree,
+                                      NotDiscardableComdats);
+
+    // Resolve aliases, when possible.
+    LocalChange |= OptimizeGlobalAliases(M, NotDiscardableComdats);
+
+    // Try to remove trivial global destructors if they are not removed
+    // already.
+    Function *CXAAtExitFn = FindCXAAtExit(M, GetTLI);
+    if (CXAAtExitFn)
+      LocalChange |= OptimizeEmptyGlobalCXXDtors(CXAAtExitFn);
+
+    Changed |= LocalChange;
+  }
+
+  return Changed;
+}
+
+OptimizeFunctions(Module &M,
+                  function_ref<TargetLibraryInfo &(Function &)> GetTLI,
+                  function_ref<TargetTransformInfo &(Function &)> GetTTI,
+                  function_ref<BlockFrequencyInfo &(Function &)> GetBFI,
+                  function_ref<DominatorTree &(Function &)> LookupDomTree,
+                  SmallPtrSetImpl<const Comdat *> &NotDiscardableComdats,
+                  function_ref<void(Function &F)> ChangedCFGCallback,
+                  function_ref<void(Function &F)> DeleteFnCallback) {
+
+  // Optimize functions.
+  for (Function &F : llvm::make_early_inc_range(M)) {
+    // Don't perform global opt pass on naked functions; we don't want fast
+    // calling conventions for naked functions.
+    if (F.hasFnAttribute(Attribute::Naked))
+      continue;    // Functions without names cannot be referenced outside this module.
+    if (!F.hasName() && !F.isDeclaration() && !F.hasLocalLinkage())
+      F.setLinkage(GlobalValue::InternalLinkage);
+
+    if (deleteIfDead(F, NotDiscardableComdats, DeleteFnCallback)) {
+    LLVM_DEBUG(dbgs() << "deleteIfDead(F, NotDiscardableComdats, DeleteFnCallback)\n");
+      Changed = true;
+      continue;
+    }
+
+    // LLVM's definition of dominance allows instructions that are cyclic
+    // in unreachable blocks, e.g.:
+    // %pat = select i1 %condition, @global, i16* %pat
+    // because any instruction dominates an instruction in a block that's
+    // not reachable from entry.
+    // So, remove unreachable blocks from the function, because a) there's
+    // no point in analyzing them and b) GlobalOpt should otherwise grow
+    // some more complicated logic to break these cycles.
+    // Notify the analysis manager that we've modified the function's CFG.
+    if (!F.isDeclaration()) {
+      if (removeUnreachableBlocks(F)) {
+        Changed = true;
+        ChangedCFGCallback(F);
+        LLVM_DEBUG(dbgs() << "ChangedCFGCallback(F);\n");
+      }
+    }
+
+    Changed |= processGlobal(F, GetTTI, GetTLI, LookupDomTree);
+
+    if (!F.hasLocalLinkage())
+      continue;
+
+    // If we have an inalloca parameter that we can safely remove the
+    // inalloca attribute from, do so. This unlocks optimizations that
+    // wouldn't be safe in the presence of inalloca.
+    // FIXME: We should also hoist alloca affected by this to the entry
+    // block if possible.
+    if (F.getAttributes().hasAttrSomewhere(Attribute::InAlloca) &&
+        !F.hasAddressTaken() && !hasMustTailCallers(&F) && !F.isVarArg()) {
+      RemoveAttribute(&F, Attribute::InAlloca);
+      LLVM_DEBUG(dbgs() << "RemoveAttribute(&F, Attribute::InAlloca);\n");
+      Changed = true;
+    }
+
+    // FIXME: handle invokes
+    // FIXME: handle musttail
+    if (F.getAttributes().hasAttrSomewhere(Attribute::Preallocated)) {
+      if (!F.hasAddressTaken() && !hasMustTailCallers(&F) &&
+          !hasInvokeCallers(&F)) {
+        RemovePreallocated(&F);
+        LLVM_DEBUG(dbgs() << "RemovePreallocated(&F);\n");
+        Changed = true;
+      }
+      continue;
+    }
+
+    if (hasChangeableCC(&F) && !F.isVarArg() && !F.hasAddressTaken()) {
+      NumInternalFunc++;
+      TargetTransformInfo &TTI = GetTTI(F);
+      // Change the calling convention to coldcc if either stress testing is
+      // enabled or the target would like to use coldcc on functions which are
+      // cold at all call sites and the callers contain no other non coldcc
+      // calls.
+      if (EnableColdCCStressTest ||
+          (TTI.useColdCCForColdCall(F) &&
+           isValidCandidateForColdCC(F, GetBFI, AllCallsCold))) {
+        F.setCallingConv(CallingConv::Cold);
+        changeCallSitesToColdCC(&F);
+        LLVM_DEBUG(dbgs() << "changeCallSitesToColdCC(&F);\n");
+        Changed = true;
+        NumColdCC++;
+      }
+    }
+
+    if (hasChangeableCC(&F) && !F.isVarArg() && !F.hasAddressTaken()) {
+      // If this function has a calling convention worth changing, is not a
+      // varargs function, and is only called directly, promote it to use the
+      // Fast calling convention.
+      F.setCallingConv(CallingConv::Fast);
+      ChangeCalleesToFastCall(&F);
+      LLVM_DEBUG(dbgs() << "ChangeCalleesToFastCall(&F);\n");
+      ++NumFastCallFns;
+      Changed = true;
+    }
+
+    if (F.getAttributes().hasAttrSomewhere(Attribute::Nest) &&
+        !F.hasAddressTaken()) {
+      // The function is not used by a trampoline intrinsic, so it is safe
+      // to remove the 'nest' attribute.
+      RemoveAttribute(&F, Attribute::Nest);
+      LLVM_DEBUG(dbgs() << "RemoveAttribute(&F, Attribute::Nest);\n");
+      ++NumNestRemoved;
+      Changed = true;
+    }
+  }
+  return Changed;
+}
+
+```
+
+# Description

@@ -1,0 +1,20 @@
+The C++ code should contain the following pattern:
+
+```cpp
+// define one function which is marked as inline
+inline int inline_func(int x) {
+    RANDOM_CODE; // Do something here with input arguments
+    int result = x OPERATOR ANY_VALUE; // result is related to x
+    return result;
+}
+
+int main() {
+    RANDOM_CODE;  // declare some variables
+    int x = ANY_VALUE; // declare variable x
+    // invoke the inline_func
+    int result = inline_func(x); // you can pass the arguments with any number, any type
+    return result;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists a call to `inline_func`, and the result of this call is being used. `inline_func` is marked as `inline`, which accepts an `int` argument, then returns a single `int` value that is determined by the argument. The `main` function must return a value related to this optimization for further comparison. The function `inline_func` must not be a coroutine function that has not been split yet.
