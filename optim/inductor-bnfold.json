@@ -1,0 +1,20 @@
+{
+	"splitwithsizes_cat_replace": {
+		"hints": [
+			{
+				"type": "pattern",
+				"codes": [
+					"source-code-data/pytorch/inductor-binary-folding/bnfold.py"
+				]
+			},
+			{
+				"type": "trigger",
+				"target_line": "return True",
+				"func": "_is_foldable_pattern",
+				"codes": [
+					"source-code-data/pytorch/inductor-binary-folding/_is_foldable_pattern.py"
+				]
+			}
+		]
+	}
+}

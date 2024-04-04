@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import logging
 from pprint import pprint
+import random
 
 from vllm import LLM, SamplingParams
 
@@ -39,7 +40,7 @@ def main():
     parser.add_argument(
         "--hf-home",
         type=str,
-        default=None,
+        default="/JawTitan/huggingface/hub",
         help="HuggingFace home dir",
     )
     parser.add_argument(
@@ -51,7 +52,8 @@ def main():
     parser.add_argument("-n", "--num", type=int, default=10)
     parser.add_argument("--max-tokens", type=int, default=4096)
     parser.add_argument("--split-size", type=int, default=20)
-    parser.add_argument("--log-file", type=str, default="starcoder.log")
+    parser.add_argument("--log-file", type=str, default="whitefox-llm-gen.log")
+    parser.add_argument("--model", type=str, default="ise-uiuc/Magicoder-S-DS-6.7B")
 
     args = parser.parse_args()
     pprint(args)
@@ -70,9 +72,11 @@ def main():
     output_dir.mkdir(exist_ok=True, parents=True)
 
     llm = LLM(
-        model="bigcode/starcoderbase",
+        model=args.model,
         dtype="bfloat16",
         download_dir=HF_CACHE_DIR,
+        max_model_len=16000,
+        swap_space=20,
     )
 
     prompts = []
@@ -87,26 +91,31 @@ def main():
     n = args.num
     max_tokens = args.max_tokens
 
-    sampling_params = SamplingParams(
-        n=n, temperature=1.0, top_p=1.0, max_tokens=max_tokens, stop=EOF_STRINGS
-    )
-
     split_size = args.split_size
+    unit_num = 20
     for k in range(0, len(prompts), split_size):
-        st_time = time.time()
-        end_idx = min(k + split_size, len(prompts))
-        outputs = llm.generate(prompts[k:end_idx], sampling_params)
-        used_time = time.time() - st_time
-        logging.info(f"Time taken: {used_time} seconds")
+        for j in range(0, n, unit_num):
+            cur_num = min(unit_num, n - j)
 
-        for i, output in enumerate(outputs):
-            filename = filenames[i + k]
-            output_file_dir = output_dir / filename
-            output_file_dir.mkdir(exist_ok=True, parents=True)
-            for j, text in enumerate(output.outputs):
-                generated_text = text.text
-                (output_file_dir / f"{filename}-{j}.py").write_text(generated_text)
-        (output_dir / f"generated-{k}-time.log").write_text(str(used_time))
+            st_time = time.time()
+            end_idx = min(k + split_size, len(prompts))
+
+            sampling_params = SamplingParams(
+                n=cur_num, temperature=1.0, top_p=1.0, max_tokens=max_tokens, stop=EOF_STRINGS, seed=random.randint(0, 10000)
+            )
+
+            outputs = llm.generate(prompts[k:end_idx], sampling_params)
+            used_time = time.time() - st_time
+            logging.info(f"Time taken: {used_time} seconds")
+
+            for i, output in enumerate(outputs):
+                filename = filenames[i + k]
+                output_file_dir = output_dir / filename
+                output_file_dir.mkdir(exist_ok=True, parents=True)
+                for r, text in enumerate(output.outputs):
+                    generated_text = text.text
+                    (output_file_dir / f"{filename}-{j+r}.py").write_text(generated_text)
+            (output_dir / f"generated-{k}-{j}-time.log").write_text(str(used_time))
 
 
 if __name__ == "__main__":

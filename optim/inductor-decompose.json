@@ -1,0 +1,56 @@
+{
+	"mm_decomp": {
+		"hints": [
+			{
+				"type": "pattern",
+				"codes": [
+					"source-code-data/pytorch/inductor-decompose/mm.py"
+				]
+			},
+			{
+				"type": "trigger",
+				"target_line": "return True",
+				"func": "should_decompose_mm",
+				"codes": [
+					"source-code-data/pytorch/inductor-decompose/should_decompose_mm.py"
+				]
+			}
+		]
+	},
+	"addmm_decomp": {
+		"hints": [
+			{
+				"type": "pattern",
+				"codes": [
+					"source-code-data/pytorch/inductor-decompose/addmm.py"
+				]
+			},
+			{
+				"type": "trigger",
+				"target_line": "return True",
+				"func": "should_decompose_mm",
+				"codes": [
+					"source-code-data/pytorch/inductor-decompose/should_decompose_mm.py"
+				]
+			}
+		]
+	},
+	"bmm_decomp": {
+		"hints": [
+			{
+				"type": "pattern",
+				"codes": [
+					"source-code-data/pytorch/inductor-decompose/bmm.py"
+				]
+			},
+			{
+				"type": "trigger",
+				"target_line": "return True",
+				"func": "should_decompose_mm",
+				"codes": [
+					"source-code-data/pytorch/inductor-decompose/should_decompose_bmm.py"
+				]
+			}
+		]
+	}
+}

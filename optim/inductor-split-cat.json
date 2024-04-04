@@ -1,0 +1,114 @@
+{
+  "merge_getitem_cat": {
+    "hints": [
+      {
+        "type": "pattern",
+        "codes": [
+          "source-code-data/pytorch/inductor-split-cat/merge_getitem_cat.py"
+        ]
+      },
+      {
+        "type": "trigger",
+        "target_line": "optimization() # Trigger here",
+        "func": "merge_getitem_cat",
+        "codes": [
+          "source-code-data/pytorch/inductor-split-cat/merge_getitem_cat-func.py"
+        ]
+      }
+    ]
+  },
+  "merge_split_squeeze": {
+    "hints": [
+      {
+        "type": "pattern",
+        "codes": [
+          "source-code-data/pytorch/inductor-split-cat/merge_split_squeeze.py"
+        ]
+      },
+      {
+        "type": "trigger",
+        "target_line": "optimization() # Trigger here",
+        "func": "merge_split_squeeze",
+        "codes": [
+          "source-code-data/pytorch/inductor-split-cat/merge_split_squeeze-func.py"
+        ]
+      }
+    ]
+  },
+  "merge_splits": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "optimization() # Trigger here",
+        "func": "TorchSplit._match",
+        "codes": [
+          "source-code-data/pytorch/inductor-split-cat/merge_splits.py"
+        ]
+      }
+    ]
+  },
+  "merge_stack_tahn_unbind": {
+    "hints": [
+      {
+        "type": "pattern",
+        "codes": [
+          "source-code-data/pytorch/inductor-split-cat/merge_stack_tahn_unbind.py"
+        ]
+      },
+      {
+        "type": "trigger",
+        "target_line": "optimization() # Trigger here",
+        "func": "merge_stack_tahn_unbind",
+        "codes": [
+          "source-code-data/pytorch/inductor-split-cat/merge_stack_tahn_unbind-func.py"
+        ]
+      }
+    ]
+  },
+  "merge_unbind_stack": {
+    "hints": [
+      {
+        "type": "pattern",
+        "codes": [
+          "source-code-data/pytorch/inductor-split-cat/merge_unbind_stack.py"
+        ]
+      }
+    ]
+  },
+  "mutate_cat_node": {
+    "hints": [
+      {
+        "type": "pattern",
+        "codes": [
+          "source-code-data/pytorch/inductor-split-cat/mutate_cat_node.py"
+        ]
+      },
+      {
+        "type": "trigger",
+        "target_line": "optimization() # Trigger here",
+        "func": "mutate_cat_node",
+        "codes": [
+          "source-code-data/pytorch/inductor-split-cat/mutate_cat_node-func.py"
+        ]
+      }
+    ]
+  },
+  "simplify_split_cat": {
+    "hints": [
+      {
+        "type": "pattern",
+        "codes": [
+          "source-code-data/pytorch/inductor-split-cat/simplify_split_cat.py"
+        ]
+      },
+      {
+        "type": "trigger",
+        "target_line": "optimization() # Trigger here",
+        "func": "simplify_split_cat",
+        "codes": [
+          "source-code-data/pytorch/inductor-split-cat/simplify_split_cat-func.py"
+        ]
+      }
+    ]
+  }
+}

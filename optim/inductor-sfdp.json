@@ -58,5 +58,115 @@
                 ]
             }
         ]
+    },
+    "sfdp=6": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-sfdp/sfdp=6.py"
+                ]
+            }
+        ]
+    },
+    "sfdp=7": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-sfdp/sfdp=7.py"
+                ]
+            }
+        ]
+    },
+    "sfdp=8": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-sfdp/sfdp=8.py"
+                ]
+            }
+        ]
+    },
+    "sfdp=9": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-sfdp/sfdp=9.py"
+                ]
+            }
+        ]
+    },
+    "sfdp=10": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-sfdp/sfdp=10.py"
+                ]
+            }
+        ]
+    },
+    "sfdp=11": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-sfdp/sfdp=11.py"
+                ]
+            }
+        ]
+    },
+    "sfdp=12": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-sfdp/sfdp=12.py"
+                ]
+            }
+        ]
+    },
+    "sfdp=13": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-sfdp/sfdp=13.py"
+                ]
+            }
+        ]
+    },
+    "sfdp=14": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-sfdp/sfdp=14.py"
+                ]
+            }
+        ]
+    },
+    "sfdp=15": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-sfdp/sfdp=15.py"
+                ]
+            }
+        ]
+    },
+    "sfdp=16": {
+        "hints": [
+            {
+                "type": "pattern",
+                "codes": [
+                    "source-code-data/pytorch/inductor-sfdp/sfdp=16.py"
+                ]
+            }
+        ]
     }
 }
