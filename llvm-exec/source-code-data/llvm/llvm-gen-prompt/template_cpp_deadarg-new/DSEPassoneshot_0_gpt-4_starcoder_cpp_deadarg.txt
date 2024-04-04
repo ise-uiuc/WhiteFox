@@ -10,4 +10,4 @@ int main() {
 }
 ```
 
-This pattern characterizes scenarios where a memory location is written to more than once, with the earlier write(s) being dead stores because they are immediately overwritten by the later write(s) before the memory location is read from. The memory location is typically allocated dynamically using `new` or `malloc`, and deallocated using `delete` or `free`. The `main` function must return a value related to this optimization for further comparison.
+This pattern characterizes scenarios where a memory location is written to more than once, with the earlier write(s) being completely overwritten by the later write(s), making the earlier write(s) dead stores. The memory location is typically allocated dynamically (e.g., using `new` or `malloc`). The `main` function must return a value related to this optimization for further comparison.

@@ -1,21 +1,15 @@
-The C program should contain the following pattern:
+The C++ code should contain the following pattern:
+```cpp
+// define two or more global variables with the same initial value
+static const int global_var1 = ANY_VALUE;
+static const int global_var2 = ANY_VALUE;
 
-```c
-// declare constants
-const ANY_TYPE const1 = ANY_VALUE; // declare const1
-const ANY_TYPE const2 = ANY_VALUE; // declare const2
-
-// define main function
 int main() {
-  // use the constants
-  ANY_TYPE var1 = const1; // use const1
-  ANY_TYPE var2 = const2; // use const2
-  // do something with var1 and var2
-  // ...
-  return 0;
+    RANDOM_CODE;  // declare some variables
+    int x = global_var1; // use global_var1
+    int y = global_var2; // use global_var2
+    int result = x OPERATOR y; // result is related to x and y
+    return result;
 }
 ```
-
-This pattern characterizes scenarios where within the `main` function, there exist multiple constants (`const1`, `const2`, etc.) of any type (`ANY_TYPE`), and these constants are used to initialize variables (`var1`, `var2`, etc.). The constants should have the same value (`ANY_VALUE`), and they are not marked as "used" in the global scope. The `main` function must return a value related to this optimization for further comparison.
-
-The `ANY_TYPE` could be `char, unsigned, int, float, double, ptr, struct, array, etc.`. The `ANY_VALUE` should be aligned with the type. Each declared constant should be initialized, such as `const int a[] = {1, 2, 0, 5};`.
+This pattern characterizes scenarios where within the `main` function, there exist two or more global variables with the same initial value. These global variables must be `static` and `const`, and their initial values can be any type, e.g. `int`, `float`, `ptr`, `struct`, and so on. The `main` function must use these global variables and return a value related to these global variables for further comparison.
