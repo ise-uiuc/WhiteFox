@@ -1,28 +1,20 @@
-The C program should contain the following pattern:
+The C++ code should contain the following pattern:
 
-```c
-// declare variables
-int x = ANY_VALUE; // declare x
-ANY_TYPE y = ANY_VALUE; // declare y
-ANY_TYPE z = ANY_VALUE; // declare z
-
-// define one function which has no side effects and does not influence the control flow or return value of the function
-static ANY_TYPE dead_func(ANY_TYPE x, ANY_TYPE y, ANY_TYPE z) {
-  ANY_TYPE dead_func_result = 0; // declare the result
-  RANDOM_CODE; // Do something here with input arguments, but don't generate the codes that have side effects or influence the control flow or return value of the function
-  dead_func_result = x OPERATOR ANY_VALUE; // result is related to x
-  return dead_func_result ;
-}
-
+```cpp
 int main() {
-  int main_result = 0; // declare the result
-  // invoke the func dead_func
-  // you can pass the arguments with any value, any type
-  main_result = dead_func(x, y, z);
-  UNUSED_CODE; // Do something here that does not use the result of dead_func
-  return 0; // return 0
+    int x = ANY_VALUE; // declare variable x
+    int y = ANY_VALUE; // declare variable y
+    int z = ANY_VALUE; // declare variable z
+
+    // Perform some operations that do not affect the final result
+    int a = x + y; // a is not used afterwards
+    int b = y * z; // b is not used afterwards
+
+    // The final result is not related to a and b
+    int result = x * z; // result is only related to x and z
+
+    return result;
 }
 ```
-This pattern characterizes scenarios where within the `main` function, there exists a call to `dead_func`, and the result of this call is not being used. `dead_func` is a function that accepts variable arguments, then returns a single `ANY_TYPE` value that is determined by the first argument. The first argument can be any type, e.g. `int`, `float`, `ptr` `struct`, and so on. The `main` function must return a value unrelated to this optimization for further comparison.
 
-The `ANY_TYPE` could be `char, unsigned, int, float, double, ptr, struct, array, etc.`. The `ANY_VALUE` should be aligned with the type. The `OPERATOR` could be `+,-,*,/,%,<<,>>,|,&,^,&&,||,==,!=,>,<,>=,<=,~,!,+=,-=,*=,/=,%=,<<=,>>=,&=,^=,|=,++,--,=,?:,->,.,[],()`. The `RANDOM_CODE` and `UNUSED_CODE` could be any code that does not have side effects or influence the control flow or return value of the function. Each declared variable should be initialized, such as `int a[] = {1, 3, 4};`.
+This pattern characterizes scenarios where within the `main` function, there are some computations (like `a = x + y` and `b = y * z`) that do not affect the final result of the function. These computations are considered "dead code" because their results are not used in any subsequent computations or in the return statement. The `main` function must return a value related to this optimization for further comparison.

@@ -10,4 +10,4 @@ int main() {
     return ANY_VALUE; // return any value
 }
 ```
-This pattern characterizes scenarios where within the `main` function, there is no call to `unused_func`. The `unused_func` is a function that is defined but never used in the program. The `main` function must return a value related to this optimization for further comparison.
+This pattern characterizes scenarios where there exists a function `unused_func` that is defined but never called or used in the program. The `unused_func` can contain any code, but it must not be invoked anywhere in the program. The `main` function can contain any code and return any value. The `unused_func` function must be a global function, not a static function or a member function of a class or struct. The `main` function must return a value related to this optimization for further comparison.
