@@ -1,0 +1,21 @@
+The C++ code should contain the following pattern:
+
+```cpp
+struct ANY_STRUCT {
+    ANY_TYPE member1;
+    ANY_TYPE member2;
+    // ... more members
+};
+
+int main() {
+    ANY_STRUCT s1 = {ANY_VALUE, ANY_VALUE, ...}; // initialize s1
+    ANY_STRUCT s2 = {ANY_VALUE, ANY_VALUE, ...}; // initialize s2
+
+    // Store the value of s1 into s2
+    s2 = s1;
+
+    return 0;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists a `StoreInst` operation, which is storing the value of one struct into another struct. The struct can contain any number of members of any type. The `StoreInst` operation must be simple, meaning it does not have any volatile, atomic, or synchronization semantics. The value being stored should be memset'able a byte at a time, such as "0", "-1", or any width, as well as things like 0xA0A0A0A0 and 0.0. The `main` function must return a value related to this optimization for further comparison.

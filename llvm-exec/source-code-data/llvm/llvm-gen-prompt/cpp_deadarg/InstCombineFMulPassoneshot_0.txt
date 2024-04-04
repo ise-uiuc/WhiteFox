@@ -1,0 +1,283 @@
+### Please describe the C program that can trigger the optimization pass `DeadArgumentEliminationPass` in LLVM. The C program can used to reach out `F.replaceAllUsesWith(ConstantExpr::getBitCast(NF, F.getType()));` line and make the boolean variable `Changed` equal to `True`. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the C program. Do not describe the function code or what happens after the optimization is triggered. Do not include the optimization name and target line information in your description. Your description must have the `main` function.
+
+# The code of the optimization and its helper functions:
+
+```cpp
+PreservedAnalyses DeadArgumentEliminationPass::run(Module &M,
+                                                   ModuleAnalysisManager &) {
+  bool Changed = false;
+
+  // First pass: Do a simple check to see if any functions can have their "..."
+  // removed.  We can do this if they never call va_start.  This loop cannot be
+  // fused with the next loop, because deleting a function invalidates
+  // information computed while surveying other functions.
+  LLVM_DEBUG(dbgs() << "DeadArgumentEliminationPass - Deleting dead varargs\n");
+  for (Function &F : llvm::make_early_inc_range(M))
+    if (F.getFunctionType()->isVarArg())
+      Changed |= deleteDeadVarargs(F);
+
+  if (!Changed)
+    return PreservedAnalyses::all();
+  return PreservedAnalyses::none();
+}
+
+bool DeadArgumentEliminationPass::deleteDeadVarargs(Function &F) {
+
+  assert(F.getFunctionType()->isVarArg() && "Function isn't varargs!");
+  if (F.isDeclaration() || !F.hasLocalLinkage())
+    return false;
+
+  // Ensure that the function is only directly called.
+  if (F.hasAddressTaken())
+    return false;
+
+  // Don't touch naked functions. The assembly might be using an argument, or
+  // otherwise rely on the frame layout in a way that this analysis will not
+  // see.
+  if (F.hasFnAttribute(Attribute::Naked)) {
+    return false;
+  }
+
+  // Okay, we know we can transform this function if safe.  Scan its body
+  // looking for calls marked musttail or calls to llvm.vastart.
+  for (BasicBlock &BB : F) {
+    for (Instruction &I : BB) {
+      CallInst *CI = dyn_cast<CallInst>(&I);
+      if (!CI)
+        continue;
+      if (CI->isMustTailCall())
+        return false;
+      if (IntrinsicInst *II = dyn_cast<IntrinsicInst>(CI)) {
+        if (II->getIntrinsicID() == Intrinsic::vastart)
+          return false;
+      }
+    }
+  }
+
+  // Fix up any BlockAddresses that refer to the function.
+  F.replaceAllUsesWith(ConstantExpr::getBitCast(NF, F.getType()));
+  // Delete the bitcast that we just created, so that NF does not
+  // appear to be address-taken.
+  NF->removeDeadConstantUsers();
+  // Finally, nuke the old function.
+  F.eraseFromParent();
+  return true;
+}
+```
+
+# Description
+The C program should contain the following pattern:
+```
+// no va_arg in stdarg.h is used
+
+// declare variables
+int x = ANY_VALUE; // declare x
+ANY_TYPE y = ANY_VALUE; // declare y
+ANY_TYPE z = ANY_VALUE; // declare z
+
+// define one function which has variable arguments
+static int varargs_func(int x, ...) {
+  int varargs_func_result = 0; // declare the result
+  RANDOM_CODE; // Do something here with input arguments, but don't generate the codes contain va_args
+  varargs_func_result = x OPERATOR ANY_VALUE; // result is related to x
+  return varargs_func_result ;
+}
+
+int main() {
+  int main_result = 0; // declare the result
+  // invoke the func varargs_func
+  // you can pass the arguments with any value, any type
+  main_result = varargs_func(x, y, z, ANY_VALUE_ANY_TYPE, ANY_VALUE_ANY_TYPE);
+  return main_result; // return the result
+}
+```
+This pattern characterizes scenarios where within the `main` function, there exists a call to `varargs_func`, and the result of this call is being used. `varargs_func` is marked as variable function, which accepts variable arguments, then returns a single `ANY_TYPE` value that is determined by the first argument. The first argument can be any type, e.g. `int`, `float`, `ptr` `struct`, and so on. The functions must be `static`(which will be translated into ir function with internel attribute), no vastart intrinsic(such as `va_arg` in `stdarg.h`). The `main` function must return a value related to this optimization for further comparison.
+
+The `ANY_TYPE` could be `char, unsigned, int, float, double, ptr, struct, array, etc.`. The `ANY_VALUE` should be aligned with the type. The `OPERATOR` could be `+,-,*,/,%,<<,>>,|,&,^,&&,||,==,!=,>,<,>=,<=,~,!,+=,-=,*=,/=,%=,<<=,>>=,&=,^=,|=,++,--,=,?:,->,.,[],()`. The `RANDOM_CODE` could be any code that does not contain `va_arg` in `stdarg.h`. Each declared variable should be initialized, such as `int a[] = {1, 2, 0, 5};`.
+
+### Please describe the C program that can trigger the optimization pass `InstCombineFMulPass` in LLVM. The C program can used to reach out `Value *XC = Builder.CreateFMulFMF(X, C, &I);` line and make the boolean variable `Changed` equal to `True`. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the C program. Do not describe the function code or what happens after the optimization is triggered. Do not include the optimization name and target line information in your description. Your description must have the `main` function.
+
+# The code of the optimization and its helper functions:
+
+```
+Instruction *InstCombinerImpl::visitFMul(BinaryOperator &I) {
+  if (Value *V = simplifyFMulInst(I.getOperand(0), I.getOperand(1),
+                                  I.getFastMathFlags(),
+                                  SQ.getWithInstruction(&I)))
+    return replaceInstUsesWith(I, V);
+
+  if (I.hasAllowReassoc()) {
+    // Reassociate constant RHS with another constant to form constant
+    // expression.
+    if (match(Op1, m_Constant(C)) && C->isFiniteNonZeroFP()) {
+      Constant *C1;
+      if (match(Op0, m_OneUse(m_FDiv(m_Constant(C1), m_Value(X))))) {
+        // (C1 / X) * C --> (C * C1) / X
+        Constant *CC1 =
+            ConstantFoldBinaryOpOperands(Instruction::FMul, C, C1, DL);
+        if (CC1 && CC1->isNormalFP())
+          return BinaryOperator::CreateFDivFMF(CC1, X, &I);
+      }
+      if (match(Op0, m_FDiv(m_Value(X), m_Constant(C1)))) {
+        // (X / C1) * C --> X * (C / C1)
+        Constant *CDivC1 =
+            ConstantFoldBinaryOpOperands(Instruction::FDiv, C, C1, DL);
+        if (CDivC1 && CDivC1->isNormalFP())
+          return BinaryOperator::CreateFMulFMF(X, CDivC1, &I);        // If the constant was a denormal, try reassociating differently.
+        // (X / C1) * C --> X / (C1 / C)
+        Constant *C1DivC =
+            ConstantFoldBinaryOpOperands(Instruction::FDiv, C1, C, DL);
+        if (C1DivC && Op0->hasOneUse() && C1DivC->isNormalFP())
+          return BinaryOperator::CreateFDivFMF(X, C1DivC, &I);
+      }
+
+      // We do not need to match 'fadd C, X' and 'fsub X, C' because they are
+      // canonicalized to 'fadd X, C'. Distributing the multiply may allow
+      // further folds and (X * C) + C2 is 'fma'.
+      if (match(Op0, m_OneUse(m_FAdd(m_Value(X), m_Constant(C1))))) {
+        // (X + C1) * C --> (X * C) + (C * C1)
+        if (Constant *CC1 = ConstantFoldBinaryOpOperands(
+                Instruction::FMul, C, C1, DL)) {
+          Value *XC = Builder.CreateFMulFMF(X, C, &I);
+          return BinaryOperator::CreateFAddFMF(XC, CC1, &I);
+        }
+      }
+      if (match(Op0, m_OneUse(m_FSub(m_Constant(C1), m_Value(X))))) {
+        // (C1 - X) * C --> (C * C1) - (X * C)
+        if (Constant *CC1 = ConstantFoldBinaryOpOperands(
+                Instruction::FMul, C, C1, DL)) {
+          Value *XC = Builder.CreateFMulFMF(X, C, &I);
+          return BinaryOperator::CreateFSubFMF(CC1, XC, &I);
+        }
+      }
+    }
+
+    Value *Z;
+    if (match(&I, m_c_FMul(m_OneUse(m_FDiv(m_Value(X), m_Value(Y))),
+                           m_Value(Z)))) {
+      // Sink division: (X / Y) * Z --> (X * Z) / Y
+      Value *NewFMul = Builder.CreateFMulFMF(X, Z, &I);
+      return BinaryOperator::CreateFDivFMF(NewFMul, Y, &I);
+    }
+
+    // sqrt(X) * sqrt(Y) -> sqrt(X * Y)
+    // nnan disallows the possibility of returning a number if both operands are
+    // negative (in that case, we should return NaN).
+    if (I.hasNoNaNs() && match(Op0, m_OneUse(m_Sqrt(m_Value(X)))) &&
+        match(Op1, m_OneUse(m_Sqrt(m_Value(Y))))) {
+      Value *XY = Builder.CreateFMulFMF(X, Y, &I);
+      Value *Sqrt = Builder.CreateUnaryIntrinsic(Intrinsic::sqrt, XY, &I);
+      return replaceInstUsesWith(I, Sqrt);
+    }
+
+    // The following transforms are done irrespective of the number of uses
+    // for the expression "1.0/sqrt(X)".
+    //  1) 1.0/sqrt(X) * X -> X/sqrt(X)
+    //  2) X * 1.0/sqrt(X) -> X/sqrt(X)
+    // We always expect the backend to reduce X/sqrt(X) to sqrt(X), if it
+    // has the necessary (reassoc) fast-math-flags.
+    if (I.hasNoSignedZeros() &&
+        match(Op0, (m_FDiv(m_SpecificFP(1.0), m_Value(Y)))) &&
+        match(Y, m_Sqrt(m_Value(X))) && Op1 == X)
+      return BinaryOperator::CreateFDivFMF(X, Y, &I);
+    if (I.hasNoSignedZeros() &&
+        match(Op1, (m_FDiv(m_SpecificFP(1.0), m_Value(Y)))) &&
+        match(Y, m_Sqrt(m_Value(X))) && Op0 == X)
+      return BinaryOperator::CreateFDivFMF(X, Y, &I);
+
+    // Like the similar transform in instsimplify, this requires 'nsz' because
+    // sqrt(-0.0) = -0.0, and -0.0 * -0.0 does not simplify to -0.0.
+    if (I.hasNoNaNs() && I.hasNoSignedZeros() && Op0 == Op1 &&
+        Op0->hasNUses(2)) {
+      // Peek through fdiv to find squaring of square root:
+      // (X / sqrt(Y)) * (X / sqrt(Y)) --> (X * X) / Y
+      if (match(Op0, m_FDiv(m_Value(X), m_Sqrt(m_Value(Y))))) {
+        Value *XX = Builder.CreateFMulFMF(X, X, &I);
+        return BinaryOperator::CreateFDivFMF(XX, Y, &I);
+      }
+      // (sqrt(Y) / X) * (sqrt(Y) / X) --> Y / (X * X)
+      if (match(Op0, m_FDiv(m_Sqrt(m_Value(Y)), m_Value(X)))) {
+        Value *XX = Builder.CreateFMulFMF(X, X, &I);
+        return BinaryOperator::CreateFDivFMF(Y, XX, &I);
+      }
+    }
+
+    // pow(X, Y) * X --> pow(X, Y+1)
+    // X * pow(X, Y) --> pow(X, Y+1)
+    if (match(&I, m_c_FMul(m_OneUse(m_Intrinsic<Intrinsic::pow>(m_Value(X),
+                                                                m_Value(Y))),
+                           m_Deferred(X)))) {
+      Value *Y1 =
+          Builder.CreateFAddFMF(Y, ConstantFP::get(I.getType(), 1.0), &I);
+      Value *Pow = Builder.CreateBinaryIntrinsic(Intrinsic::pow, X, Y1, &I);
+      return replaceInstUsesWith(I, Pow);
+    }
+
+    if (I.isOnlyUserOfAnyOperand()) {
+      // pow(X, Y) * pow(X, Z) -> pow(X, Y + Z)
+      if (match(Op0, m_Intrinsic<Intrinsic::pow>(m_Value(X), m_Value(Y))) &&
+          match(Op1, m_Intrinsic<Intrinsic::pow>(m_Specific(X), m_Value(Z)))) {
+        auto *YZ = Builder.CreateFAddFMF(Y, Z, &I);
+        auto *NewPow = Builder.CreateBinaryIntrinsic(Intrinsic::pow, X, YZ, &I);
+        return replaceInstUsesWith(I, NewPow);
+      }
+      // pow(X, Y) * pow(Z, Y) -> pow(X * Z, Y)
+      if (match(Op0, m_Intrinsic<Intrinsic::pow>(m_Value(X), m_Value(Y))) &&
+          match(Op1, m_Intrinsic<Intrinsic::pow>(m_Value(Z), m_Specific(Y)))) {
+        auto *XZ = Builder.CreateFMulFMF(X, Z, &I);
+        auto *NewPow = Builder.CreateBinaryIntrinsic(Intrinsic::pow, XZ, Y, &I);
+        return replaceInstUsesWith(I, NewPow);
+      }
+
+      // powi(x, y) * powi(x, z) -> powi(x, y + z)
+      if (match(Op0, m_Intrinsic<Intrinsic::powi>(m_Value(X), m_Value(Y))) &&
+          match(Op1, m_Intrinsic<Intrinsic::powi>(m_Specific(X), m_Value(Z))) &&
+          Y->getType() == Z->getType()) {
+        auto *YZ = Builder.CreateAdd(Y, Z);
+        auto *NewPow = Builder.CreateIntrinsic(
+            Intrinsic::powi, {X->getType(), YZ->getType()}, {X, YZ}, &I);
+        return replaceInstUsesWith(I, NewPow);
+      }
+
+      // exp(X) * exp(Y) -> exp(X + Y)
+      if (match(Op0, m_Intrinsic<Intrinsic::exp>(m_Value(X))) &&
+          match(Op1, m_Intrinsic<Intrinsic::exp>(m_Value(Y)))) {
+        Value *XY = Builder.CreateFAddFMF(X, Y, &I);
+        Value *Exp = Builder.CreateUnaryIntrinsic(Intrinsic::exp, XY, &I);
+        return replaceInstUsesWith(I, Exp);
+      }
+
+      // exp2(X) * exp2(Y) -> exp2(X + Y)
+      if (match(Op0, m_Intrinsic<Intrinsic::exp2>(m_Value(X))) &&
+          match(Op1, m_Intrinsic<Intrinsic::exp2>(m_Value(Y)))) {
+        Value *XY = Builder.CreateFAddFMF(X, Y, &I);
+        Value *Exp2 = Builder.CreateUnaryIntrinsic(Intrinsic::exp2, XY, &I);
+        return replaceInstUsesWith(I, Exp2);
+      }
+    }
+
+    // (X*Y) * X => (X*X) * Y where Y != X
+    //  The purpose is two-fold:
+    //   1) to form a power expression (of X).
+    //   2) potentially shorten the critical path: After transformation, the
+    //  latency of the instruction Y is amortized by the expression of X*X,
+    //  and therefore Y is in a "less critical" position compared to what it
+    //  was before the transformation.
+    if (match(Op0, m_OneUse(m_c_FMul(m_Specific(Op1), m_Value(Y)))) &&
+        Op1 != Y) {
+      Value *XX = Builder.CreateFMulFMF(Op1, Op1, &I);
+      return BinaryOperator::CreateFMulFMF(XX, Y, &I);
+    }
+    if (match(Op1, m_OneUse(m_c_FMul(m_Specific(Op0), m_Value(Y)))) &&
+        Op0 != Y) {
+      Value *XX = Builder.CreateFMulFMF(Op0, Op0, &I);
+      return BinaryOperator::CreateFMulFMF(XX, Y, &I);
+    }
+  }
+
+  return nullptr;
+}
+
+```
+
+# Description

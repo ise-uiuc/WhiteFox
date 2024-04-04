@@ -1,0 +1,15 @@
+The C++ code should contain the following pattern:
+
+```cpp
+int main() {
+    int cond = ANY_CONDITION; // any condition that can be evaluated to true or false
+    int v = cond ? 1 : 2; // a select operation, v is a known non-zero value
+    int p = v; // a phi node, p is equivalent to v
+    if (p == 0) { // a comparison with zero
+        // some code here
+    }
+    return 0;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists a select operation that assigns a known non-zero value to a variable `v`. This variable `v` is then assigned to another variable `p`, which represents a phi node. The phi node `p` is only used in a comparison operation with zero. The `main` function must return a value related to this optimization for further comparison.

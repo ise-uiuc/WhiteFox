@@ -1,18 +1,27 @@
-The C++ code should contain the following pattern:
+The C program should contain the following pattern:
 
-```cpp
+```c
+// declare variables
+int x = ANY_VALUE; // declare x
+ANY_TYPE y = ANY_VALUE; // declare y
+ANY_TYPE z = ANY_VALUE; // declare z
+
+// define one function which has dead code
+void dead_code_func(int x, ANY_TYPE y, ANY_TYPE z) {
+  ANY_TYPE dead_var = ANY_VALUE; // declare a variable
+  dead_var = x OPERATOR y OPERATOR z; // assign a value to the variable
+  // Do something here with input arguments, but don't use the variable dead_var
+  RANDOM_CODE;
+}
+
 int main() {
-    int x = ANY_VALUE; // declare variable x
-    int y = ANY_VALUE; // declare variable y
-    int z = ANY_VALUE; // declare variable z
-
-    // define a dead code block
-    if (false) {
-        z = x + y; // this code will never be executed
-    }
-
-    return 0;
+  // invoke the func dead_code_func
+  // you can pass the arguments with any value, any type
+  dead_code_func(x, y, z);
+  return 0;
 }
 ```
 
-This pattern characterizes scenarios where within the `main` function, there exists a block of code that will never be executed. This is typically represented by an `if (false)` statement, followed by some operations. The operations inside the `if (false)` block are considered "dead code" because they will never be executed, regardless of the input or state of the program. The `main` function must return a value related to this optimization for further comparison.
+This pattern characterizes scenarios where within the `main` function, there exists a call to `dead_code_func`, and within `dead_code_func`, there is a variable `dead_var` that is assigned a value but never used afterwards. The `dead_code_func` function accepts three arguments of any type and does not return a value. The `main` function does not use the return value of `dead_code_func`.
+
+The `ANY_TYPE` could be `char, unsigned, int, float, double, ptr, struct, array, etc.`. The `ANY_VALUE` should be aligned with the type. The `OPERATOR` could be `+,-,*,/,%,<<,>>,|,&,^,&&,||,==,!=,>,<,>=,<=,~,!,+=,-=,*=,/=,%=,<<=,>>=,&=,^=,|=,++,--,=,?:,->,.,[],()`. The `RANDOM_CODE` could be any code that does not use the variable `dead_var`. Each declared variable should be initialized, such as `int a[] = {1, 2, 0, 5};`.

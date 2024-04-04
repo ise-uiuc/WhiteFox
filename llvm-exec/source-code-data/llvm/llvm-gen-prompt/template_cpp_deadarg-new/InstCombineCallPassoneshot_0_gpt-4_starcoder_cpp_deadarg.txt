@@ -1,0 +1,19 @@
+The C++ code should contain the following pattern:
+
+```cpp
+// define a global constant variable
+const char global_var[] = "Hello, World!";
+
+// define a function which uses memmove to copy the global constant variable
+void memmove_func(char* dest) {
+    memmove(dest, global_var, sizeof(global_var));
+}
+
+int main() {
+    char dest[20];
+    memmove_func(dest);
+    return 0;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists a call to `memmove_func`, which uses `memmove` to copy a global constant variable to a destination. The `memmove_func` function must be defined with a pointer argument, and the `memmove` function must be used inside `memmove_func` to copy a global constant variable to the destination pointed by the argument. The `main` function must declare a character array and pass it to `memmove_func`.
