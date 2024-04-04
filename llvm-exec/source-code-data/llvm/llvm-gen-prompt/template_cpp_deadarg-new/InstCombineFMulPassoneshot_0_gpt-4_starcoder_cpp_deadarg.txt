@@ -1,0 +1,18 @@
+The C++ code should contain the following pattern:
+
+```cpp
+float some_func(float x, float y) {
+    float c1 = ANY_CONSTANT; // Declare a constant
+    float result = (x + c1) * y; // Perform an operation that involves addition and multiplication
+    return result;
+}
+
+int main() {
+    float x = ANY_VALUE; // Declare a variable x
+    float y = ANY_VALUE; // Declare a variable y
+    float result = some_func(x, y); // Call the function some_func
+    return 0;
+}
+```
+
+This pattern characterizes scenarios where within the `main` function, there exists a call to `some_func`, and the result of this call is being used. `some_func` is a function that accepts two `float` arguments, then returns a single `float` value that is determined by the addition of the first argument and a constant, and the multiplication of the result with the second argument. The `main` function must return a value related to this optimization for further comparison.

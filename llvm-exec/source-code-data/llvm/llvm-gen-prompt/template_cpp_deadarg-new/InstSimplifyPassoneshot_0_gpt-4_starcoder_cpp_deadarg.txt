@@ -5,11 +5,11 @@ int main() {
     int x = ANY_VALUE; // declare variable x
     int y = ANY_VALUE; // declare variable y
     int z = x + y; // perform some operation
-    if (z == x + y) { // compare the result with the same operation
-        // do something
+    if (z == x + y) { // redundant comparison
+        // some code
     }
     return 0;
 }
 ```
 
-This pattern characterizes scenarios where within the `main` function, there exists a computation (in this case, `x + y`), and the result of this computation is being used in a comparison with the same computation. The `if` statement is redundant because it is comparing the result of a computation with the same computation, which will always be true. The variables `x` and `y` can be any type that supports the `+` operator and the `==` operator, e.g., `int`, `float`, `double`, etc. The `main` function must return a value related to this optimization for further comparison.
+This pattern characterizes scenarios where within the `main` function, there exists a redundant comparison. The variables `x` and `y` are initialized with any value. Then, a new variable `z` is declared and assigned the result of an operation on `x` and `y`. Following this, there is an `if` statement that checks if `z` is equal to the operation on `x` and `y`. This comparison is redundant because `z` is already assigned the result of the operation on `x` and `y`, so the comparison will always be true. This redundancy can trigger the `InstSimplifyPass` optimization in LLVM, which simplifies the instructions and eliminates the redundant comparison, thus making the boolean variable `Changed` equal to `True`.

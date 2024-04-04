@@ -1,0 +1,332 @@
+### Please describe the C program that can trigger the optimization pass `DeadArgumentEliminationPass` in LLVM. The C program can used to reach out `F.replaceAllUsesWith(ConstantExpr::getBitCast(NF, F.getType()));` line and make the boolean variable `Changed` equal to `True`. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the C program. Do not describe the function code or what happens after the optimization is triggered. Do not include the optimization name and target line information in your description. Your description must have the `main` function.
+
+# The code of the optimization and its helper functions:
+
+```cpp
+PreservedAnalyses DeadArgumentEliminationPass::run(Module &M,
+                                                   ModuleAnalysisManager &) {
+  bool Changed = false;
+
+  // First pass: Do a simple check to see if any functions can have their "..."
+  // removed.  We can do this if they never call va_start.  This loop cannot be
+  // fused with the next loop, because deleting a function invalidates
+  // information computed while surveying other functions.
+  LLVM_DEBUG(dbgs() << "DeadArgumentEliminationPass - Deleting dead varargs\n");
+  for (Function &F : llvm::make_early_inc_range(M))
+    if (F.getFunctionType()->isVarArg())
+      Changed |= deleteDeadVarargs(F);
+
+  if (!Changed)
+    return PreservedAnalyses::all();
+  return PreservedAnalyses::none();
+}
+
+bool DeadArgumentEliminationPass::deleteDeadVarargs(Function &F) {
+
+  assert(F.getFunctionType()->isVarArg() && "Function isn't varargs!");
+  if (F.isDeclaration() || !F.hasLocalLinkage())
+    return false;
+
+  // Ensure that the function is only directly called.
+  if (F.hasAddressTaken())
+    return false;
+
+  // Don't touch naked functions. The assembly might be using an argument, or
+  // otherwise rely on the frame layout in a way that this analysis will not
+  // see.
+  if (F.hasFnAttribute(Attribute::Naked)) {
+    return false;
+  }
+
+  // Okay, we know we can transform this function if safe.  Scan its body
+  // looking for calls marked musttail or calls to llvm.vastart.
+  for (BasicBlock &BB : F) {
+    for (Instruction &I : BB) {
+      CallInst *CI = dyn_cast<CallInst>(&I);
+      if (!CI)
+        continue;
+      if (CI->isMustTailCall())
+        return false;
+      if (IntrinsicInst *II = dyn_cast<IntrinsicInst>(CI)) {
+        if (II->getIntrinsicID() == Intrinsic::vastart)
+          return false;
+      }
+    }
+  }
+
+  // Fix up any BlockAddresses that refer to the function.
+  F.replaceAllUsesWith(ConstantExpr::getBitCast(NF, F.getType()));
+  // Delete the bitcast that we just created, so that NF does not
+  // appear to be address-taken.
+  NF->removeDeadConstantUsers();
+  // Finally, nuke the old function.
+  F.eraseFromParent();
+  return true;
+}
+```
+
+# Description
+The C program should contain the following pattern:
+```
+// no va_arg in stdarg.h is used
+
+// declare variables
+int x = ANY_VALUE; // declare x
+ANY_TYPE y = ANY_VALUE; // declare y
+ANY_TYPE z = ANY_VALUE; // declare z
+
+// define one function which has variable arguments
+static int varargs_func(int x, ...) {
+  int varargs_func_result = 0; // declare the result
+  RANDOM_CODE; // Do something here with input arguments, but don't generate the codes contain va_args
+  varargs_func_result = x OPERATOR ANY_VALUE; // result is related to x
+  return varargs_func_result ;
+}
+
+int main() {
+  int main_result = 0; // declare the result
+  // invoke the func varargs_func
+  // you can pass the arguments with any value, any type
+  main_result = varargs_func(x, y, z, ANY_VALUE_ANY_TYPE, ANY_VALUE_ANY_TYPE);
+  return main_result; // return the result
+}
+```
+This pattern characterizes scenarios where within the `main` function, there exists a call to `varargs_func`, and the result of this call is being used. `varargs_func` is marked as variable function, which accepts variable arguments, then returns a single `ANY_TYPE` value that is determined by the first argument. The first argument can be any type, e.g. `int`, `float`, `ptr` `struct`, and so on. The functions must be `static`(which will be translated into ir function with internel attribute), no vastart intrinsic(such as `va_arg` in `stdarg.h`). The `main` function must return a value related to this optimization for further comparison.
+
+The `ANY_TYPE` could be `char, unsigned, int, float, double, ptr, struct, array, etc.`. The `ANY_VALUE` should be aligned with the type. The `OPERATOR` could be `+,-,*,/,%,<<,>>,|,&,^,&&,||,==,!=,>,<,>=,<=,~,!,+=,-=,*=,/=,%=,<<=,>>=,&=,^=,|=,++,--,=,?:,->,.,[],()`. The `RANDOM_CODE` could be any code that does not contain `va_arg` in `stdarg.h`. Each declared variable should be initialized, such as `int a[] = {1, 2, 0, 5};`.
+
+### Please describe the C program that can trigger the optimization pass `LCSSAPass` in LLVM. The C program can used to reach out `Builder.SetInsertPoint(&ExitBB->front());` line and make the boolean variable `Changed` equal to `True`. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the C program. Do not describe the function code or what happens after the optimization is triggered. Do not include the optimization name and target line information in your description. Your description must have the `main` function.
+
+# The code of the optimization and its helper functions:
+
+```
+bool llvm::formLCSSA(Loop &L, const DominatorTree &DT, const LoopInfo *LI,
+                     ScalarEvolution *SE) {
+  bool Changed = false;
+
+  SmallVector<BasicBlock *, 8> ExitBlocks;
+  L.getExitBlocks(ExitBlocks);
+  if (ExitBlocks.empty())
+    return false;
+
+  IRBuilder<> Builder(L.getHeader()->getContext());
+  Changed = formLCSSAForInstructions(Worklist, DT, *LI, SE, Builder);
+
+  return Changed;
+}
+
+bool llvm::formLCSSAForInstructions(SmallVectorImpl<Instruction *> &Worklist,
+                                    const DominatorTree &DT, const LoopInfo &LI,
+                                    ScalarEvolution *SE, IRBuilderBase &Builder,
+                                    SmallVectorImpl<PHINode *> *PHIsToRemove) {
+  SmallVector<Use *, 16> UsesToRewrite;
+  SmallSetVector<PHINode *, 16> LocalPHIsToRemove;
+  PredIteratorCache PredCache;
+  bool Changed = false;
+
+  while (!Worklist.empty()) {
+    UsesToRewrite.clear();    Instruction *I = Worklist.pop_back_val();
+    assert(!I->getType()->isTokenTy() && "Tokens shouldn't be in the worklist");
+    BasicBlock *InstBB = I->getParent();
+    Loop *L = LI.getLoopFor(InstBB);
+    assert(L && "Instruction belongs to a BB that's not part of a loop");
+    if (!LoopExitBlocks.count(L))
+      L->getExitBlocks(LoopExitBlocks[L]);
+    assert(LoopExitBlocks.count(L));
+    const SmallVectorImpl<BasicBlock *> &ExitBlocks = LoopExitBlocks[L];
+
+    if (ExitBlocks.empty())
+      continue;
+
+    for (Use &U : make_early_inc_range(I->uses())) {
+      Instruction *User = cast<Instruction>(U.getUser());
+      BasicBlock *UserBB = User->getParent();
+
+      // Skip uses in unreachable blocks.
+      if (!DT.isReachableFromEntry(UserBB)) {
+        U.set(PoisonValue::get(I->getType()));
+        continue;
+      }
+
+      // For practical purposes, we consider that the use in a PHI
+      // occurs in the respective predecessor block. For more info,
+      // see the `phi` doc in LangRef and the LCSSA doc.
+      if (auto *PN = dyn_cast<PHINode>(User))
+        UserBB = PN->getIncomingBlock(U);
+
+      if (InstBB != UserBB && !L->contains(UserBB))
+        UsesToRewrite.push_back(&U);
+    }
+
+    // If there are no uses outside the loop, exit with no change.
+    if (UsesToRewrite.empty())
+      continue;
+
+    ++NumLCSSA; // We are applying the transformation
+
+    // Invoke instructions are special in that their result value is not
+    // available along their unwind edge. The code below tests to see whether
+    // DomBB dominates the value, so adjust DomBB to the normal destination
+    // block, which is effectively where the value is first usable.
+    BasicBlock *DomBB = InstBB;
+    if (auto *Inv = dyn_cast<InvokeInst>(I))
+      DomBB = Inv->getNormalDest();
+
+    const DomTreeNode *DomNode = DT.getNode(DomBB);
+
+    SmallVector<PHINode *, 16> AddedPHIs;
+    SmallVector<PHINode *, 8> PostProcessPHIs;
+
+    SmallVector<PHINode *, 4> InsertedPHIs;
+    SSAUpdater SSAUpdate(&InsertedPHIs);
+    SSAUpdate.Initialize(I->getType(), I->getName());
+
+    // Force re-computation of I, as some users now need to use the new PHI
+    // node.
+    if (SE)
+      SE->forgetValue(I);
+
+    // Insert the LCSSA phi's into all of the exit blocks dominated by the
+    // value, and add them to the Phi's map.
+    for (BasicBlock *ExitBB : ExitBlocks) {
+      if (!DT.dominates(DomNode, DT.getNode(ExitBB)))
+        continue;
+
+      // If we already inserted something for this BB, don't reprocess it.
+      if (SSAUpdate.HasValueForBlock(ExitBB))
+        continue;
+      Builder.SetInsertPoint(&ExitBB->front());
+      LLVM_DEBUG(dbgs() << "Builder.SetInsertPoint(&ExitBB->front());\n");
+      PHINode *PN = Builder.CreatePHI(I->getType(), PredCache.size(ExitBB),
+                                      I->getName() + ".lcssa");
+      // Get the debug location from the original instruction.
+      PN->setDebugLoc(I->getDebugLoc());
+
+      // Add inputs from inside the loop for this PHI. This is valid
+      // because `I` dominates `ExitBB` (checked above).  This implies
+      // that every incoming block/edge is dominated by `I` as well,
+      // i.e. we can add uses of `I` to those incoming edges/append to the incoming
+      // blocks without violating the SSA dominance property.
+      for (BasicBlock *Pred : PredCache.get(ExitBB)) {
+        PN->addIncoming(I, Pred);
+
+        // If the exit block has a predecessor not within the loop, arrange for
+        // the incoming value use corresponding to that predecessor to be
+        // rewritten in terms of a different LCSSA PHI.
+        if (!L->contains(Pred))
+          UsesToRewrite.push_back(
+              &PN->getOperandUse(PN->getOperandNumForIncomingValue(
+                  PN->getNumIncomingValues() - 1)));
+      }
+
+      AddedPHIs.push_back(PN);
+
+      // Remember that this phi makes the value alive in this block.
+      SSAUpdate.AddAvailableValue(ExitBB, PN);
+
+      // LoopSimplify might fail to simplify some loops (e.g. when indirect
+      // branches are involved). In such situations, it might happen that an
+      // exit for Loop L1 is the header of a disjoint Loop L2. Thus, when we
+      // create PHIs in such an exit block, we are also inserting PHIs into L2's
+      // header. This could break LCSSA form for L2 because these inserted PHIs
+      // can also have uses outside of L2. Remember all PHIs in such situation
+      // as to revisit than later on. FIXME: Remove this if indirectbr support
+      // into LoopSimplify gets improved.
+      if (auto *OtherLoop = LI.getLoopFor(ExitBB))
+        if (!L->contains(OtherLoop))
+          PostProcessPHIs.push_back(PN);
+    }
+
+    // Rewrite all uses outside the loop in terms of the new PHIs we just
+    // inserted.
+    for (Use *UseToRewrite : UsesToRewrite) {
+      Instruction *User = cast<Instruction>(UseToRewrite->getUser());
+      BasicBlock *UserBB = User->getParent();
+
+      // For practical purposes, we consider that the use in a PHI
+      // occurs in the respective predecessor block. For more info,
+      // see the `phi` doc in LangRef and the LCSSA doc.
+      if (auto *PN = dyn_cast<PHINode>(User))
+        UserBB = PN->getIncomingBlock(*UseToRewrite);
+
+      // If this use is in an exit block, rewrite to use the newly inserted PHI.
+      // This is required for correctness because SSAUpdate doesn't handle uses
+      // in the same block.  It assumes the PHI we inserted is at the end of the
+      // block.
+      if (isa<PHINode>(UserBB->begin()) && isExitBlock(UserBB, ExitBlocks)) {
+        UseToRewrite->set(&UserBB->front());
+        continue;
+      }
+
+      // If we added a single PHI, it must dominate all uses and we can directly
+      // rename it.
+      if (AddedPHIs.size() == 1) {
+        UseToRewrite->set(AddedPHIs[0]);
+        continue;
+      }
+
+      // Otherwise, do full PHI insertion.
+      SSAUpdate.RewriteUse(*UseToRewrite);
+    }
+
+    SmallVector<DbgValueInst *, 4> DbgValues;
+    llvm::findDbgValues(DbgValues, I);
+
+    // Update pre-existing debug value uses that reside outside the loop.
+    for (auto *DVI : DbgValues) {
+      BasicBlock *UserBB = DVI->getParent();
+      if (InstBB == UserBB || L->contains(UserBB))
+        continue;
+      // We currently only handle debug values residing in blocks that were
+      // traversed while rewriting the uses. If we inserted just a single PHI,
+      // we will handle all relevant debug values.
+      Value *V = AddedPHIs.size() == 1 ? AddedPHIs[0]
+                                       : SSAUpdate.FindValueForBlock(UserBB);
+      if (V)
+        DVI->replaceVariableLocationOp(I, V);
+    }
+
+    // SSAUpdater might have inserted phi-nodes inside other loops. We'll need
+    // to post-process them to keep LCSSA form.
+    for (PHINode *InsertedPN : InsertedPHIs) {
+      if (auto *OtherLoop = LI.getLoopFor(InsertedPN->getParent()))
+        if (!L->contains(OtherLoop))
+          PostProcessPHIs.push_back(InsertedPN);
+    }
+
+    // Post process PHI instructions that were inserted into another disjoint
+    // loop and update their exits properly.
+    for (auto *PostProcessPN : PostProcessPHIs)
+      if (!PostProcessPN->use_empty())
+        Worklist.push_back(PostProcessPN);
+
+    // Keep track of PHI nodes that we want to remove because they did not have
+    // any uses rewritten.
+    for (PHINode *PN : AddedPHIs)
+      if (PN->use_empty())
+        LocalPHIsToRemove.insert(PN);
+
+    Changed = true;
+  }
+
+  // Remove PHI nodes that did not have any uses rewritten or add them to
+  // PHIsToRemove, so the caller can remove them after some additional cleanup.
+  // We need to redo the use_empty() check here, because even if the PHI node
+  // wasn't used when added to LocalPHIsToRemove, later added PHI nodes can be
+  // using it.  This cleanup is not guaranteed to handle trees/cycles of PHI
+  // nodes that only are used by each other. Such situations has only been
+  // noticed when the input IR contains unreachable code, and leaving some extra
+  // redundant PHI nodes in such situations is considered a minor problem.
+  if (PHIsToRemove) {
+    PHIsToRemove->append(LocalPHIsToRemove.begin(), LocalPHIsToRemove.end());
+  } else {
+    for (PHINode *PN : LocalPHIsToRemove)
+      if (PN->use_empty())
+        PN->eraseFromParent();
+  }
+  return Changed;
+}
+
+```
+
+# Description

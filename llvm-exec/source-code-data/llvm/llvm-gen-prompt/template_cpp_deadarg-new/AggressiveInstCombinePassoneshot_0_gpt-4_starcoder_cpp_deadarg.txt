@@ -9,7 +9,7 @@ int func(int x, int y) {
 
 int main() {
     int x = ANY_VALUE; // declare variable x
-    int y = ANY_VALUE; // declare variable y
+    int y = ANY_VALUE; // declare y
     // invoke the func
     int result = func(x, y);
     // perform a truncation operation on the result
@@ -18,4 +18,4 @@ int main() {
 }
 ```
 
-This pattern characterizes scenarios where within the `main` function, there exists a call to `func`, and the result of this call is being used. `func` is a function that accepts two integer arguments, performs some operation on them, and returns an integer result. The `main` function then performs a truncation operation on this result, converting it to a `short` type. The `main` function must return a value related to this optimization for further comparison.
+This pattern characterizes scenarios where within the `main` function, there exists a call to `func`, and the result of this call is being used. `func` is a function that accepts two integer arguments, performs some operation on them, and returns an integer result. The `main` function then performs a truncation operation on the result of the `func` call, converting it to a `short` type. The `main` function must return a value related to this optimization for further comparison.
