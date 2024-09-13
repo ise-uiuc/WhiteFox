@@ -1,4 +1,4 @@
-# 🦊 WhiteFox: White-box Compiler Fuzzing Empowered by Large Language Models
+# ![Project logo](assets/logo.svg) WhiteFox: White-box Compiler Fuzzing Empowered by Large Language Models
 
 <p align="left">
     <a href="https://arxiv.org/abs/2310.15991"><img src="https://img.shields.io/badge/arXiv-2310.15991-b31b1b.svg?style=for-the-badge">
@@ -6,6 +6,8 @@
 
 > [!IMPORTANT]
 > We are keeping improving the documents and adding more implementation details. Please stay tuned at [README-DEV.md](README-DEV.md) for more information.
+
+![Framework](assets/framework.svg)
 
 ## About
 
