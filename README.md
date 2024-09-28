@@ -85,7 +85,7 @@ We recoomend to use the local mode to generate the tests, which utilizes [vllm](
 You can execute the following command to generate the tests:
 
 ```bash
-python starcoder_gen.py --hf-home={path-to-huggingface} --hf-cache={path-to-huggingface-cache} --prompt-dir=Prompts/torch-inductor/req2test --outdir=starcoder-generated --num=10 
+python starcoder_gen.py --hf-home={path-to-huggingface} --hf-cache={path-to-huggingface-cache} --prompt-dir=Prompts/torch-inductor/req2test ----output-dir=starcoder-generated --num=10 
 ```
 
 The generated tests will be in `starcoder-generated`.

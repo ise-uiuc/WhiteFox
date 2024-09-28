@@ -3,3 +3,4 @@ tensorflow
 openai
 numpy
 vllm
+astunparse
