@@ -84,15 +84,24 @@ int main() {
 The C++ code should contain the following pattern:
 
 ```cpp
-int main() {
-    int x = ANY_VALUE; // declare variable x
-    while (CONDITION) { // CONDITION is a condition that can be evaluated to false at the first iteration
-        RANDOM_CODE; // Do something here, but don't change the CONDITION
+// define a destructor function
+void destructor_func() {
+    // Do something here
+}
+
+// define a global object with a destructor
+struct GlobalObject {
+    ~GlobalObject() {
+        destructor_func();
     }
-    return x;
+} global_obj;
+
+int main() {
+    // Do something here
+    return 0;
 }
 ```
 
-This pattern characterizes scenarios where within the `main` function, there exists a `while` loop with a condition that can be evaluated to `false` at the first iteration. The loop body can contain any code, but it should not change the condition of the loop. The `main` function must return a value related to this optimization for further comparison.
+This pattern characterizes scenarios where there exists a global object `global_obj` with a destructor. The destructor of `global_obj` calls a function `destructor_func`. The `main` function does not need to interact with `global_obj` or `destructor_func` directly. The existence of the global object with a destructor is enough to trigger the optimization pass.
 
 # C++ Code begins

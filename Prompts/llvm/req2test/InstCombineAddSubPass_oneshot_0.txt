@@ -84,15 +84,15 @@ int main() {
 The C++ code should contain the following pattern:
 
 ```cpp
-int main() {
-    int x = ANY_VALUE; // declare variable x
-    while (CONDITION) { // CONDITION is a condition that can be evaluated to false at the first iteration
-        RANDOM_CODE; // Do something here, but don't change the CONDITION
-    }
-    return x;
+float main() {
+    float x = ANY_VALUE; // declare variable x
+    float y = ANY_VALUE; // declare variable y
+    float z = ANY_VALUE; // declare variable z
+    float result = ((x - y) + z) - ANY_VALUE; // the operation sequence is important
+    return result;
 }
 ```
 
-This pattern characterizes scenarios where within the `main` function, there exists a `while` loop with a condition that can be evaluated to `false` at the first iteration. The loop body can contain any code, but it should not change the condition of the loop. The `main` function must return a value related to this optimization for further comparison.
+This pattern characterizes scenarios where within the `main` function, there exists a sequence of floating point operations that includes subtraction and addition. The sequence of operations is important, and it should be in the form of `((x - y) + z) - ANY_VALUE`. The `main` function must return a value related to this optimization for further comparison. The variables `x`, `y`, `z` and `ANY_VALUE` can be any floating point values.
 
 # C++ Code begins

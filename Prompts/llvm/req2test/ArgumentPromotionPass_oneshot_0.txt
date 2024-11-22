@@ -1,4 +1,4 @@
-### Please generate a valid C++ Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value. Please do not include any undefined behavior in your code.
+### Please generate a valid C++ Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value. Please do not include any undefined behavior in your code. The code you generated will be used to test the correctness of the optimization.
 
 # Description of requirements
 
@@ -30,61 +30,83 @@ This pattern characterizes scenarios where within the `main` function, there exi
 ```cpp
 #include <vector>
 #include <string>
+#include <iostream>
+#include <map>
+
+int a, b, c, d, e, f, g, h, i;
+int x;
+long j;
+static long *k = &j;
+long *const l = &j;
+int m() {
+  if (b)
+    return 1;
+  if (c & a)
+    return 1;
+  return 0;
+}
 
 static int varargs_func(int x, ...) {
-  int result = 10;
-  if (x % 2) {
-    result = x * 32 + 15;
-  } else {
-    result = x - 15;
+  f = 3;
+  for (; f >= 0; f--) {
+    e = 0;
+    for (; e <= 3; e++) {
+      d = 3;
+      for (; d >= 0; d--) {
+        g = 0;
+        for (; g <= 3; g++) {
+          i = 0;
+          for (; i <= 3; i++)
+            *l = m() + (int)*k + h + *k + x;
+        }
+      }
+    }
   }
-  if (x > 100) {
-    result = result * 2;
-  } else {
-    result = result * 2;
-  }
-  return result;
+  return *l;
 }
 
-int main() {
-  int result = 0;
-  int a = (1 << 31);
+int main() { 
   std::vector<int> vec = {0, 1, 2, 3};
-  std::string str = "hello";
-  vec.assign(5, 42);
-  int b = varargs_func(a, 18, 25, vec[1], 1.000000, str[3]);
-  result = b;
-  return result;
+  for (int i = 0; i < vec.size(); i++) { // Avoid out-of-bound access
+    vec[i] = i * 2;
+  }
+  x = 3;
+  return varargs_func(x, a, b, c);
 }
 ```
+
 # C++ Code ends
 
-### Please generate a valid C++ Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value.
+### Please generate a valid C++ Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value. Please do not include any undefined behavior in your code. The code you generated will be used to test the correctness of the optimization.
 
 # Description of requirements
 
-The C++ code should contain the following pattern:
+The C program should contain the following pattern:
 
-```cpp
+```c
+// declare variables
+ANY_TYPE x = ANY_VALUE; // declare x
+ANY_TYPE y = ANY_VALUE; // declare y
+ANY_TYPE z = ANY_VALUE; // declare z
+
 // define one function which has pointer arguments
-static ANY_TYPE func_with_ptr_args(ANY_TYPE* arg1, ANY_TYPE* arg2, ...) {
-    RANDOM_CODE; // Do something here with input arguments
-    ANY_TYPE result = ANY_OPERATION; // result is related to the input arguments
-    return result;
+static ANY_TYPE func_with_ptr_args(ANY_TYPE *x, ANY_TYPE *y, ANY_TYPE *z) {
+  ANY_TYPE func_result = 0; // declare the result
+  RANDOM_CODE; // Do something here with input arguments
+  func_result = *x OPERATOR ANY_VALUE; // result is related to *x
+  return func_result;
 }
 
 int main() {
-    RANDOM_CODE;  // declare some variables
-    ANY_TYPE x = ANY_VALUE; // declare variable x
-    ANY_TYPE y = ANY_VALUE; // declare variable y
-    ANY_TYPE* ptr_x = &x; // get the pointer of x
-    ANY_TYPE* ptr_y = &y; // get the pointer of y
-    // invoke the func_with_ptr_args
-    ANY_TYPE result = func_with_ptr_args(ptr_x, ptr_y, ...); // you can pass the arguments with any number, any type
-    return result;
+  int main_result = 0; // declare the result
+  // invoke the func_with_ptr_args
+  main_result = func_with_ptr_args(&x, &y, &z);
+  return main_result; // return the result
 }
 ```
 
-This pattern characterizes scenarios where within the `main` function, there exists a call to `func_with_ptr_args`, and the result of this call is being used. `func_with_ptr_args` is marked as a function which accepts pointer arguments, then returns a single `ANY_TYPE` value that is determined by the input arguments. The input arguments can be any type, e.g. `int`, `float`, `ptr` `struct`, and so on. The functions must be `static`(which will be translated into ir function with internal attribute), and the function should not be a variadic function, naked function, or a function with inalloca attribute. The `main` function must return a value related to this optimization for further comparison.
+This pattern characterizes scenarios where within the `main` function, there exists a call to `func_with_ptr_args`, and the result of this call is being used. `func_with_ptr_args` is a function that accepts pointer arguments, then returns a single `ANY_TYPE` value that is determined by the first argument. The first argument can be any type, e.g. `int`, `float`, `ptr` `struct`, and so on. The functions must be `static`(which will be translated into ir function with internel attribute), not variadic, not naked, not inalloca, not musttail, and not have indirect callers. The `main` function must return a value related to this optimization for further comparison.
+
+The `ANY_TYPE` could be `char, unsigned, int, float, double, ptr, struct, array, etc.`. The `ANY_VALUE` should be aligned with the type. The `OPERATOR` could be `+,-,*,/,%,<<,>>,|,&,^,&&,||,==,!=,>,<,>=,<=,~,!,+=,-=,*=,/=,%=,<<=,>>=,&=,^=,|=,++,--,=,?:,->,.,[],()`. The `RANDOM_CODE` could be any code that does not contain `va_arg` in `stdarg.h`. Each declared variable should be initialized, such as `int a[] = {1, 2, 0, 5};`.
 
 # C++ Code begins

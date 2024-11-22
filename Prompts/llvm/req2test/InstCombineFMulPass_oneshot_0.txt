@@ -84,15 +84,20 @@ int main() {
 The C++ code should contain the following pattern:
 
 ```cpp
+float some_func(float x, float y) {
+    float c1 = ANY_CONSTANT; // Declare a constant
+    float result = (x + c1) * y; // Perform an operation that involves addition and multiplication
+    return result;
+}
+
 int main() {
-    int x = ANY_VALUE; // declare variable x
-    while (CONDITION) { // CONDITION is a condition that can be evaluated to false at the first iteration
-        RANDOM_CODE; // Do something here, but don't change the CONDITION
-    }
-    return x;
+    float x = ANY_VALUE; // Declare a variable x
+    float y = ANY_VALUE; // Declare a variable y
+    float result = some_func(x, y); // Call the function some_func
+    return 0;
 }
 ```
 
-This pattern characterizes scenarios where within the `main` function, there exists a `while` loop with a condition that can be evaluated to `false` at the first iteration. The loop body can contain any code, but it should not change the condition of the loop. The `main` function must return a value related to this optimization for further comparison.
+This pattern characterizes scenarios where within the `main` function, there exists a call to `some_func`, and the result of this call is being used. `some_func` is a function that accepts two `float` arguments, then returns a single `float` value that is determined by the addition of the first argument and a constant, and the multiplication of the result with the second argument. The `main` function must return a value related to this optimization for further comparison.
 
 # C++ Code begins

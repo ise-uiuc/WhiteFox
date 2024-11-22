@@ -1,4 +1,4 @@
-### Please generate a valid C++ Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value. Please do not include any undefined behavior in your code.
+### Please generate a valid C++ Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value. Please do not include any undefined behavior in your code. The code you generated will be used to test the correctness of the optimization.
 
 # Description of requirements
 
@@ -30,36 +30,54 @@ This pattern characterizes scenarios where within the `main` function, there exi
 ```cpp
 #include <vector>
 #include <string>
+#include <iostream>
+#include <map>
+
+int a, b, c, d, e, f, g, h, i;
+int x;
+long j;
+static long *k = &j;
+long *const l = &j;
+int m() {
+  if (b)
+    return 1;
+  if (c & a)
+    return 1;
+  return 0;
+}
 
 static int varargs_func(int x, ...) {
-  int result = 10;
-  if (x % 2) {
-    result = x * 32 + 15;
-  } else {
-    result = x - 15;
+  f = 3;
+  for (; f >= 0; f--) {
+    e = 0;
+    for (; e <= 3; e++) {
+      d = 3;
+      for (; d >= 0; d--) {
+        g = 0;
+        for (; g <= 3; g++) {
+          i = 0;
+          for (; i <= 3; i++)
+            *l = m() + (int)*k + h + *k + x;
+        }
+      }
+    }
   }
-  if (x > 100) {
-    result = result * 2;
-  } else {
-    result = result * 2;
-  }
-  return result;
+  return *l;
 }
 
-int main() {
-  int result = 0;
-  int a = (1 << 31);
+int main() { 
   std::vector<int> vec = {0, 1, 2, 3};
-  std::string str = "hello";
-  vec.assign(5, 42);
-  int b = varargs_func(a, 18, 25, vec[1], 1.000000, str[3]);
-  result = b;
-  return result;
+  for (int i = 0; i < vec.size(); i++) { // Avoid out-of-bound access
+    vec[i] = i * 2;
+  }
+  x = 3;
+  return varargs_func(x, a, b, c);
 }
 ```
+
 # C++ Code ends
 
-### Please generate a valid C++ Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value.
+### Please generate a valid C++ Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value. Please do not include any undefined behavior in your code. The code you generated will be used to test the correctness of the optimization.
 
 # Description of requirements
 
@@ -68,21 +86,25 @@ The C++ code should contain the following pattern:
 ```cpp
 int main() {
     // Declare some variables
-    int x = ANY_VALUE;
-    int y = ANY_VALUE;
+    int x = ANY_VALUE; // Declare variable x
+    int y = ANY_VALUE; // Declare variable y
+    int z = ANY_VALUE; // Declare variable z
 
-    // Perform some operation that can be simplified
-    int z = x + 0; // This can be simplified to z = x;
+    // Perform some operations that can be simplified
+    int a = x + 0; // a is equal to x
+    int b = y * 1; // b is equal to y
+    int c = z & z; // c is equal to z
 
-    // Use the result of the operation
-    int result = z * y;
+    // Perform some operations that are identical to previous ones
+    int d = x + 0; // d is equal to a
+    int e = y * 1; // e is equal to b
+    int f = z & z; // f is equal to c
 
-    return result;
+    // Return a value that is related to the operations
+    return a + b + c + d + e + f;
 }
 ```
 
-This pattern characterizes scenarios where within the `main` function, there exists an operation that can be simplified (e.g., adding zero to a variable). The result of this operation is then used in another operation. The `main` function must return a value related to this optimization for further comparison.
-
-The optimization pass `EarlyCSEPass` in LLVM is designed to eliminate fully redundant instructions as well as trivially dead ones. In the provided C++ code, the operation `x + 0` is fully redundant because adding zero to a variable does not change its value. Therefore, this operation can be replaced with the variable `x` itself. This triggers the `Inst.replaceAllUsesWith(V);` line in the LLVM optimization pass, setting the boolean variable `Changed` to `True`.
+This pattern characterizes scenarios where within the `main` function, there are operations that can be simplified (e.g., adding zero, multiplying by one, bitwise AND with itself), and operations that are identical to previous ones. The `main` function must return a value that is related to these operations for further comparison. The optimization pass `EarlyCSEPass` can simplify these operations and eliminate the redundant ones, triggering the `Inst.replaceAllUsesWith(V);` line and making the boolean variable `Changed` equal to `True`.
 
 # C++ Code begins

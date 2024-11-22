@@ -85,14 +85,16 @@ The C++ code should contain the following pattern:
 
 ```cpp
 int main() {
-    int x = ANY_VALUE; // declare variable x
-    while (CONDITION) { // CONDITION is a condition that can be evaluated to false at the first iteration
-        RANDOM_CODE; // Do something here, but don't change the CONDITION
+    int cond = ANY_CONDITION; // any condition that can be evaluated to true or false
+    int v = cond ? 1 : 2; // a select operation, v is a known non-zero value
+    int p = v; // a phi node, p is equivalent to v
+    if (p == 0) { // a comparison with zero
+        // some code here
     }
-    return x;
+    return 0;
 }
 ```
 
-This pattern characterizes scenarios where within the `main` function, there exists a `while` loop with a condition that can be evaluated to `false` at the first iteration. The loop body can contain any code, but it should not change the condition of the loop. The `main` function must return a value related to this optimization for further comparison.
+This pattern characterizes scenarios where within the `main` function, there exists a select operation that assigns a known non-zero value to a variable `v`. This variable `v` is then assigned to another variable `p`, which represents a phi node. The phi node `p` is only used in a comparison operation with zero. The `main` function must return a value related to this optimization for further comparison.
 
 # C++ Code begins

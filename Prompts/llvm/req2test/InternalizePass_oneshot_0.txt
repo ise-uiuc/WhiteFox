@@ -84,15 +84,22 @@ int main() {
 The C++ code should contain the following pattern:
 
 ```cpp
+// define a global variable with an initializer
+int global_var = 10;
+
+// define a function that uses the global variable
+void func() {
+    global_var += 5;
+}
+
 int main() {
-    int x = ANY_VALUE; // declare variable x
-    while (CONDITION) { // CONDITION is a condition that can be evaluated to false at the first iteration
-        RANDOM_CODE; // Do something here, but don't change the CONDITION
-    }
-    return x;
+    func();
+    return global_var;
 }
 ```
 
-This pattern characterizes scenarios where within the `main` function, there exists a `while` loop with a condition that can be evaluated to `false` at the first iteration. The loop body can contain any code, but it should not change the condition of the loop. The `main` function must return a value related to this optimization for further comparison.
+This pattern characterizes scenarios where within the `main` function, there exists a call to `func`, and the result of this call is being used. `func` is a function that modifies a global variable `global_var`. The `main` function must return a value related to this optimization for further comparison.
+
+The global variable `global_var` is initialized and used in a function `func` that is called in `main`. The global variable and the function are not marked as `static` or `extern`, and they are not used in any other translation units. This means that they are not part of the API of the module and can be internalized. The function `func` and the global variable `global_var` must not be declared in any comdat sections.
 
 # C++ Code begins

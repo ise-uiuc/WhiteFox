@@ -85,14 +85,20 @@ The C++ code should contain the following pattern:
 
 ```cpp
 int main() {
-    int x = ANY_VALUE; // declare variable x
-    while (CONDITION) { // CONDITION is a condition that can be evaluated to false at the first iteration
-        RANDOM_CODE; // Do something here, but don't change the CONDITION
-    }
-    return x;
+    // Declare multiple variables using alloca
+    int* a = (int*) alloca(sizeof(int));
+    int* b = (int*) alloca(sizeof(int));
+    int* c = (int*) alloca(sizeof(int));
+    // Use these variables in some operations
+    *a = 10;
+    *b = 20;
+    *c = *a + *b;
+    return *c;
 }
 ```
 
-This pattern characterizes scenarios where within the `main` function, there exists a `while` loop with a condition that can be evaluated to `false` at the first iteration. The loop body can contain any code, but it should not change the condition of the loop. The `main` function must return a value related to this optimization for further comparison.
+This pattern characterizes scenarios where within the `main` function, there are multiple variables declared using `alloca` function. These variables are then used in some operations. The `main` function must return a value related to these operations for further comparison. 
+
+The `alloca` function is used to allocate memory that is automatically freed when the function that called `alloca` returns. This is used to declare variables which are used in the function. The `alloca` function is used in the beginning of the function, before any other non-alloca instructions.
 
 # C++ Code begins

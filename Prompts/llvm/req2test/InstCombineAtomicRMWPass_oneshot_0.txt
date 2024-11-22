@@ -84,15 +84,17 @@ int main() {
 The C++ code should contain the following pattern:
 
 ```cpp
+#include <atomic>
+
+std::atomic<int> x;
+
 int main() {
-    int x = ANY_VALUE; // declare variable x
-    while (CONDITION) { // CONDITION is a condition that can be evaluated to false at the first iteration
-        RANDOM_CODE; // Do something here, but don't change the CONDITION
-    }
-    return x;
+    int y = 0;
+    x.fetch_add(y, std::memory_order_relaxed);
+    return 0;
 }
 ```
 
-This pattern characterizes scenarios where within the `main` function, there exists a `while` loop with a condition that can be evaluated to `false` at the first iteration. The loop body can contain any code, but it should not change the condition of the loop. The `main` function must return a value related to this optimization for further comparison.
+This pattern characterizes scenarios where within the `main` function, there exists an atomic operation on a global atomic variable `x`. The atomic operation is `fetch_add` which is an idempotent operation (an operation that produces the same result if performed multiple times). The operation is performed with a value `y` which is `0` and the memory order is `std::memory_order_relaxed`. The `main` function must return a value related to this optimization for further comparison.
 
 # C++ Code begins

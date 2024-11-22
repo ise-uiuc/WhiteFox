@@ -85,14 +85,15 @@ The C++ code should contain the following pattern:
 
 ```cpp
 int main() {
-    int x = ANY_VALUE; // declare variable x
-    while (CONDITION) { // CONDITION is a condition that can be evaluated to false at the first iteration
-        RANDOM_CODE; // Do something here, but don't change the CONDITION
-    }
-    return x;
+    ANY_TYPE A = ANY_VALUE; // declare variable A
+    ANY_TYPE B = ANY_VALUE; // declare variable B
+    ANY_TYPE C = ANY_VALUE; // declare variable C
+    // create a XOR operation between (A | B) and (A | C)
+    ANY_TYPE result = (A | B) ^ (A | C);
+    return result;
 }
 ```
 
-This pattern characterizes scenarios where within the `main` function, there exists a `while` loop with a condition that can be evaluated to `false` at the first iteration. The loop body can contain any code, but it should not change the condition of the loop. The `main` function must return a value related to this optimization for further comparison.
+This pattern characterizes scenarios where within the `main` function, there exists a XOR operation between two OR operations. The first OR operation is between variables `A` and `B`, and the second OR operation is between variables `A` and `C`. The result of this XOR operation is being used. The variables `A`, `B`, and `C` can be any type, e.g. `int`, `float`, `ptr`, `struct`, and so on. The `main` function must return a value related to this optimization for further comparison.
 
 # C++ Code begins

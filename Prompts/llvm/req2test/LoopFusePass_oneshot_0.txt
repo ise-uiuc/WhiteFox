@@ -1,4 +1,4 @@
-### Please generate a valid C++ Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value. Please do not include any undefined behavior in your code.
+### Please generate a valid C++ Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value. Please do not include any undefined behavior in your code. The code you generated will be used to test the correctness of the optimization.
 
 # Description of requirements
 
@@ -30,63 +30,67 @@ This pattern characterizes scenarios where within the `main` function, there exi
 ```cpp
 #include <vector>
 #include <string>
+#include <iostream>
+#include <map>
+
+int a, b, c, d, e, f, g, h, i;
+int x;
+long j;
+static long *k = &j;
+long *const l = &j;
+int m() {
+  if (b)
+    return 1;
+  if (c & a)
+    return 1;
+  return 0;
+}
 
 static int varargs_func(int x, ...) {
-  int result = 10;
-  if (x % 2) {
-    result = x * 32 + 15;
-  } else {
-    result = x - 15;
+  f = 3;
+  for (; f >= 0; f--) {
+    e = 0;
+    for (; e <= 3; e++) {
+      d = 3;
+      for (; d >= 0; d--) {
+        g = 0;
+        for (; g <= 3; g++) {
+          i = 0;
+          for (; i <= 3; i++)
+            *l = m() + (int)*k + h + *k + x;
+        }
+      }
+    }
   }
-  if (x > 100) {
-    result = result * 2;
-  } else {
-    result = result * 2;
-  }
-  return result;
+  return *l;
 }
 
-int main() {
-  int result = 0;
-  int a = (1 << 31);
+int main() { 
   std::vector<int> vec = {0, 1, 2, 3};
-  std::string str = "hello";
-  vec.assign(5, 42);
-  int b = varargs_func(a, 18, 25, vec[1], 1.000000, str[3]);
-  result = b;
-  return result;
+  for (int i = 0; i < vec.size(); i++) { // Avoid out-of-bound access
+    vec[i] = i * 2;
+  }
+  x = 3;
+  return varargs_func(x, a, b, c);
 }
 ```
+
 # C++ Code ends
 
-### Please generate a valid C++ Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value.
+### Please generate a valid C++ Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value. Please do not include any undefined behavior in your code. The code you generated will be used to test the correctness of the optimization.
 
 # Description of requirements
 
 The C++ code should contain the following pattern:
-
 ```cpp
 int main() {
-    int array1[ANY_SIZE]; // Declare an array
-    int array2[ANY_SIZE]; // Declare another array
-    int i;
-
-    // First loop
-    for (i = 0; i < ANY_SIZE; i++) {
-        array1[i] = ANY_EXPRESSION; // Perform some operation on array1
+    int array[100];
+    for (int i = 0; i < 100; ++i) {
+        array[i] = i;
     }
-
-    // Second loop
-    for (i = 0; i < ANY_SIZE; i++) {
-        array2[i] = ANY_EXPRESSION; // Perform some operation on array2
-    }
-
     return 0;
 }
 ```
-
-This pattern characterizes scenarios where within the `main` function, there exist two separate loops that iterate over two different arrays (`array1` and `array2`). The loops must be separate and not nested within each other. The size of the arrays and the number of iterations in the loops (`ANY_SIZE`) must be the same. The operations performed on the arrays within the loops (`ANY_EXPRESSION`) can be any valid C++ expressions. The `main` function must return an integer value. 
-
-This pattern is likely to trigger the `LoopFusePass` optimization in LLVM, as it involves two separate loops that could potentially be fused together for performance improvement.
+This pattern characterizes scenarios where within the `main` function, there exists a loop that iterates over an array and performs some operation on each element. The loop does not have a preheader block, which is a basic block that has only one successor, the loop header, and all the other predecessors of the loop header, if any, are outside the loop. The loop also does not have multiple exits going to different blocks. The `main` function must return a value related to this optimization for further comparison.
 
 # C++ Code begins

@@ -1,4 +1,4 @@
-### Please generate a valid C++ Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value. Please do not include any undefined behavior in your code.
+### Please generate a valid C++ Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value. Please do not include any undefined behavior in your code. The code you generated will be used to test the correctness of the optimization.
 
 # Description of requirements
 
@@ -30,60 +30,78 @@ This pattern characterizes scenarios where within the `main` function, there exi
 ```cpp
 #include <vector>
 #include <string>
+#include <iostream>
+#include <map>
+
+int a, b, c, d, e, f, g, h, i;
+int x;
+long j;
+static long *k = &j;
+long *const l = &j;
+int m() {
+  if (b)
+    return 1;
+  if (c & a)
+    return 1;
+  return 0;
+}
 
 static int varargs_func(int x, ...) {
-  int result = 10;
-  if (x % 2) {
-    result = x * 32 + 15;
-  } else {
-    result = x - 15;
+  f = 3;
+  for (; f >= 0; f--) {
+    e = 0;
+    for (; e <= 3; e++) {
+      d = 3;
+      for (; d >= 0; d--) {
+        g = 0;
+        for (; g <= 3; g++) {
+          i = 0;
+          for (; i <= 3; i++)
+            *l = m() + (int)*k + h + *k + x;
+        }
+      }
+    }
   }
-  if (x > 100) {
-    result = result * 2;
-  } else {
-    result = result * 2;
-  }
-  return result;
+  return *l;
 }
 
-int main() {
-  int result = 0;
-  int a = (1 << 31);
+int main() { 
   std::vector<int> vec = {0, 1, 2, 3};
-  std::string str = "hello";
-  vec.assign(5, 42);
-  int b = varargs_func(a, 18, 25, vec[1], 1.000000, str[3]);
-  result = b;
-  return result;
+  for (int i = 0; i < vec.size(); i++) { // Avoid out-of-bound access
+    vec[i] = i * 2;
+  }
+  x = 3;
+  return varargs_func(x, a, b, c);
 }
 ```
+
 # C++ Code ends
 
-### Please generate a valid C++ Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value.
+### Please generate a valid C++ Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value. Please do not include any undefined behavior in your code. The code you generated will be used to test the correctness of the optimization.
 
 # Description of requirements
 
 The C++ code should contain the following pattern:
 
 ```cpp
-// define a function with a loop that has a trivial condition
-void loop_func(int x) {
-    for (int i = 0; i < x; ++i) {
-        if (CONSTANT_CONDITION) { // The condition should be a constant
-            // Do something here
-        } else {
-            // Do something else here
-        }
-    }
+bool condition = ANY_BOOLEAN_VALUE; // a global boolean variable
+
+void foo() {
+    // some code here
 }
 
 int main() {
-    int x = ANY_VALUE; // declare variable x
-    loop_func(x);
+    for (int i = 0; i < ANY_POSITIVE_INTEGER; ++i) {
+        if (condition) {
+            foo();
+        } else {
+            // some other code here
+        }
+    }
     return 0;
 }
 ```
 
-This pattern characterizes scenarios where within the `main` function, there exists a call to `loop_func`, which contains a loop with a trivial condition. The condition should be a constant, which means it does not change during the execution of the loop. The loop should be in a simplified form, which means it has a preheader and dedicated exits. The function should not be marked as `optsize` to avoid optimization for size. The loop should not be cold, which means it is frequently executed. The loop should be safe for non-trivial unswitching, which means it does not contain any side effects that would prevent the unswitching. The `main` function must return a value related to this optimization for further comparison.
+This pattern characterizes scenarios where within the `main` function, there exists a loop with a condition that is invariant across the loop iterations. The condition is a global boolean variable that does not change within the loop. The loop contains an `if-else` statement that executes different code based on the condition. The function `foo` is called when the condition is true. The loop must have a positive integer as the loop count, and the `main` function must return a value related to this optimization for further comparison.
 
 # C++ Code begins
