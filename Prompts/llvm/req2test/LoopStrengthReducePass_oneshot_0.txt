@@ -85,14 +85,16 @@ The C++ code should contain the following pattern:
 
 ```cpp
 int main() {
+    int array[ANY_SIZE]; // declare an array with any size
     int x = ANY_VALUE; // declare variable x
-    while (CONDITION) { // CONDITION is a condition that can be evaluated to false at the first iteration
-        RANDOM_CODE; // Do something here, but don't change the CONDITION
+    int y = ANY_VALUE; // declare variable y
+    for (int i = 0; i < ANY_SIZE; ++i) {
+        array[i] = x * i + y; // the loop contains an induction variable i, and the array[i] is calculated by a linear function of i
     }
-    return x;
+    return 0;
 }
 ```
 
-This pattern characterizes scenarios where within the `main` function, there exists a `while` loop with a condition that can be evaluated to `false` at the first iteration. The loop body can contain any code, but it should not change the condition of the loop. The `main` function must return a value related to this optimization for further comparison.
+This pattern characterizes scenarios where within the `main` function, there exists a loop that iterates over an array. The loop contains an induction variable `i`, and the array element `array[i]` is calculated by a linear function of `i`. The coefficients of the linear function can be any integer values. The `main` function must return a value related to this optimization for further comparison.
 
 # C++ Code begins

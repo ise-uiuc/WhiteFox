@@ -85,14 +85,23 @@ The C++ code should contain the following pattern:
 
 ```cpp
 int main() {
-    int x = ANY_VALUE; // declare variable x
-    while (CONDITION) { // CONDITION is a condition that can be evaluated to false at the first iteration
-        RANDOM_CODE; // Do something here, but don't change the CONDITION
+    int x = ANY_VALUE; // x is a variable with any value
+    switch (x) {
+        case ANY_CASE_1: // ANY_CASE_1 is a constant value
+            // Do something here
+            break;
+        case ANY_CASE_2: // ANY_CASE_2 is a constant value
+            // Do something here
+            break;
+        // More cases can be added here
+        default:
+            // Do something here
+            break;
     }
-    return x;
+    return 0;
 }
 ```
 
-This pattern characterizes scenarios where within the `main` function, there exists a `while` loop with a condition that can be evaluated to `false` at the first iteration. The loop body can contain any code, but it should not change the condition of the loop. The `main` function must return a value related to this optimization for further comparison.
+This pattern characterizes scenarios where within the `main` function, there exists a `switch` statement. The `switch` statement is based on a variable `x`, which can be any value. The `switch` statement contains multiple `case` branches, each of which is associated with a constant value (`ANY_CASE_1`, `ANY_CASE_2`, etc.). Each `case` branch contains some code to execute when the value of `x` matches the constant value of the `case`. There is also a `default` branch that contains some code to execute when the value of `x` does not match any of the `case` branches. The `main` function must return a value related to this optimization for further comparison.
 
 # C++ Code begins
