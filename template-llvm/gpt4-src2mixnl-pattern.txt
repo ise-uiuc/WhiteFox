@@ -1,0 +1,35 @@
+### Please describe the type of C program that has the pattern shown in the code. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the program. Do not describe the optimization pass code or what happens after the optimization is triggered.
+
+# Code of the pattern
+BasicBlock* BB = {...}
+for (Instruction &I : *BB) {
+  if (CallInst *CI = dyn_cast<CallInst>(&I)) {
+    if (Function *F = CI->getCalledFunction()) {
+      if (F->hasName() && !F->isVarArg()) {
+        // Pattern matching code here
+      }
+    }
+  }
+}
+
+# Description
+The C program should contain the following pattern:
+
+```
+void callee(int x) {
+// Function with fixed arguments
+}
+int main() {
+callee(42);    // Direct function call
+return 0;
+}
+
+```
+
+This pattern characterizes scenarios where functions are called directly (not through function pointers) with a fixed number of arguments. The functions should have names (not anonymous) and should not use variable arguments.
+
+### Please describe the type of C program that {}. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the program. Do not describe the optimization pass code or what happens after the optimization is triggered.
+
+{}
+
+# Description

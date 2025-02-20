@@ -1,12 +1,4 @@
-#And the main function gives back an output value. Please initialize all the variables you define with a value.
-
-# Description of requirements
-
-{Description}
-
-# C Code begins
-
-```## Please generate a valid C Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value. Please do not include any undefined behavior in your code.
+### Please generate a valid C Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value. Please do not include any undefined behavior in your code.
 
 # Description of requirements
 
@@ -63,4 +55,12 @@ int main(void) {
 ```
 # C Code ends
 
-### Please generate a valid C Code that meets the requirements below. The code should contain a `main` function. 
+### Please generate a valid C Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value.
+
+# Description of requirements
+
+{Description}
+
+# C Code begins
+
+```

@@ -1,4 +1,4 @@
-### Please generate different valid C Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables, including arrays, you define with a value. Please do not include any undefined behavior in your code. Your generated code should be different from the code in the template.
+markdownCopy### Please generate different valid C Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables, including arrays, you define with a value. Please do not include any undefined behavior in your code. Your generated code should be different from the code in the template.
 
 # Description of requirements
 

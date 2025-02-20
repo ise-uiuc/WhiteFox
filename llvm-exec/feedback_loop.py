@@ -12,9 +12,8 @@ import random
 
 BATCH_SIZE = 10
 
-
 def scan_gen(gen_dirs, existing_gens: set):
-    """Get the new generated files with suffix `.py`."""
+    """Get the new generated files with suffix `.c`."""  
     new_gens = set()
     if not gen_dirs.exists():
         return new_gens
@@ -24,13 +23,12 @@ def scan_gen(gen_dirs, existing_gens: set):
         for gen_file in target_dir.iterdir():
             if not gen_file.is_file():
                 continue
-            if gen_file.suffix != ".py":
+            if gen_file.suffix != ".c":  
                 continue
             if gen_file in existing_gens:
                 continue
             new_gens.add(gen_file)
     return new_gens
-
 
 def gen_prompt(data: dict, gen_dir_path=None, example_dict=None):
     print(example_dict)
@@ -40,17 +38,16 @@ def gen_prompt(data: dict, gen_dir_path=None, example_dict=None):
             if passname_in_pool in example_dict:
                 examples = example_dict[passname_in_pool]
                 gen_prompt_nl2test(
-                    passname, index, "starcoder_cpp_feedback", gen_dir_path, examples
+                    passname, index, "ollama_c_feedback", gen_dir_path, examples
                 )
             else:
                 gen_prompt_nl2test(
                     passname,
                     index,
-                    "starcoder_cpp_deadarg",
+                    "ollama_c_deadarg",
                     gen_dir_path,
                     None,
                 )
-
 
 def update_example_pool(example_pool: dict, stat: dict, chosen: dict):
     print(example_pool)
@@ -99,7 +96,6 @@ def update_example_pool(example_pool: dict, stat: dict, chosen: dict):
                 }
     print(example_pool)
 
-
 def select_examples(examples, num, use_rl):
     length = len(examples)
     keys = list(examples.keys())
@@ -116,7 +112,6 @@ def select_examples(examples, num, use_rl):
         idxs = np.argsort(beta_list)[-num:].tolist()
     return [keys[idx] for idx in idxs]
 
-
 def sample_example_pool(example_pool: dict, shot):
     chosen = {}
     examples_dict = {}
@@ -126,23 +121,22 @@ def sample_example_pool(example_pool: dict, shot):
         chosen[passname] = select_examples(example_pool[passname], shot, True)
         examples_dict[passname] = []
         for chosen_file in chosen[passname]:
-            cpp_file = Path(str(chosen_file).replace(".ll", ".cpp"))
-            with open(cpp_file, "r") as file:
+            c_file = Path(str(chosen_file).replace(".ll", ".c"))  
+            with open(c_file, "r") as file:
                 examples_dict[passname].append(file.read())
     return chosen, examples_dict
 
-
 def translate2ir(gen_file: Path):
-    cpp_gen_file = gen_file.parent / (gen_file.stem + ".cpp")
+    c_gen_file = gen_file.parent / (gen_file.stem + ".c")  
     ll_gen_file = gen_file.parent / (gen_file.stem + ".ll")
-    if not cpp_gen_file.exists():
-        cpp_gen_file.write_text(gen_file.read_text())
+    if not c_gen_file.exists():
+        c_gen_file.write_text(gen_file.read_text())
     command = [
-        "clang++",
+        "clang",  # Changed from clang++ to clang
         "-O0",
         "-mllvm",
         "--debug",
-        str(cpp_gen_file),
+        str(c_gen_file),
         "-S",
         "-emit-llvm",
         "-o",
@@ -154,7 +148,6 @@ def translate2ir(gen_file: Path):
         print(f"Exception for translating {gen_file}:\n  {e}")
         return False
     return result.returncode == 0
-
 
 def execute_trigger(step_gen_dir: Path, number: int, outdir: Path):
     # Initialize the statistics.
@@ -168,15 +161,11 @@ def execute_trigger(step_gen_dir: Path, number: int, outdir: Path):
     target_lines = []
     for passname, pass_infos in data.items():
         for index, pass_info in enumerate(pass_infos["hints"]):
-            # all the target lines
             target_lines.append(pass_info["target_line"])
-
             Statistics[pass_info["target_line"]] = 0
             Statistics["target_lines_triggered"][pass_info["target_line"]] = []
-            # The map from the name to the target line
             Statistics[passname + "_oneshot" + f"_{index}"] = pass_info["target_line"]
 
-    # Execute the trigger.
     while len(existing_gen_files) < number:
         new_gen_files = scan_gen(step_gen_dir, existing_gen_files)
         if len(new_gen_files) == 0:
@@ -190,7 +179,6 @@ def execute_trigger(step_gen_dir: Path, number: int, outdir: Path):
                 continue
             ll_gen_file = gen_file.parent / (gen_file.stem + ".ll")
             dir_name = gen_file.parent.stem
-            # Opt name
             pattern = r"(.+)_oneshot_\d+"
             match = re.match(pattern, gen_file.stem)
             opt = match.group(0) if match is not None else dir_name
@@ -200,7 +188,6 @@ def execute_trigger(step_gen_dir: Path, number: int, outdir: Path):
             out_pass_dir = os.path.join(outdir, target_name, opt)
             os.makedirs(out_pass_dir, exist_ok=True)
 
-            # Execute the trigger.
             trigger_executor(
                 (str(out_pass_dir), str(ll_gen_file.name)),
                 str(ll_gen_file),
@@ -212,7 +199,6 @@ def execute_trigger(step_gen_dir: Path, number: int, outdir: Path):
             )
     return Statistics
 
-
 def feedback_step(
     data: dict, root_prompt_dir: Path, root_gen_dir: Path, step: int, example_pool: dict
 ):
@@ -221,87 +207,13 @@ def feedback_step(
     trigger_dir = root_gen_dir / f"step{step}_trigger"
     trigger_dir.mkdir(parents=True, exist_ok=True)
 
-    # Get the chosen examples.
     chosen, examples_dict = sample_example_pool(example_pool, 3)
-
-    # Generate the prompt for the first time.
     gen_prompt(data, root_prompt_dir / f"step{step}", examples_dict)
 
-    # Execute the prompt.
     stat = execute_trigger(gen_dir, BATCH_SIZE * len(data.keys()), trigger_dir)
-    # Dump the statistics.
     with open(trigger_dir / f"statistics-step{step}.json", "w") as file:
         json.dump(stat, file, indent=4)
-    # Update the example pool.
     update_example_pool(example_pool, stat, chosen)
-    # Dump the example pool.
     with open(trigger_dir / f"example_pool-step{step}.json", "w") as file:
         json.dump(example_pool, file, indent=4)
     return stat
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--json", type=str, default="example.json")
-    parser.add_argument(
-        "--llvm-source", type=str, default=""
-    )
-    parser.add_argument("--total-steps", type=int, default=100)
-    args = parser.parse_args()
-    json_file = args.json
-    with open(json_file, "r") as file:
-        data = json.load(file)
-    llvm_source = Path(args.llvm_source)
-    total_steps = args.total_steps
-
-    example_pool = {}
-    # Change the path in data.
-    for k in data.keys():
-        for idx, _ in enumerate(data[k]["hints"]):
-            data[k]["hints"][idx]["codes"][0] = (
-                llvm_source / data[k]["hints"][idx]["codes"][0]
-            )
-            try:
-                data[k]["hints"][idx]["codes"][1] = (
-                    llvm_source / data[k]["hints"][idx]["codes"][1]
-                )
-            except:
-                pass
-            data[k]["hints"][idx]["examples"][0] = (
-                llvm_source / data[k]["hints"][idx]["examples"][0]
-            )
-            data[k]["hints"][idx]["specific_ir"] = (
-                llvm_source / data[k]["hints"][idx]["specific_ir"]
-            )
-            example_pool[f"{k}_oneshot_{idx}"] = {}
-
-    root_prompt_dir = Path(
-        "/", "JawTitan", "whitefox-data", "prompts-rl", "llvm-opt-1004-debug-5"
-    )
-    root_gen_dir = Path(
-        "/", "JawTitan", "whitefox-data", "starcoder-rl", "llvm-opt-1004-debug-5"
-    )
-
-    total_stat = {
-        "all_files": [],
-        "grammatically correct": [],
-        "grammatically uncorrect": [],
-        "target_lines_triggered": {},
-    }
-    for step in range(1, total_steps + 1):
-        print(f"Step {step}")
-        stat = feedback_step(data, root_prompt_dir, root_gen_dir, step, example_pool)
-
-        # Update the total statistics.
-        total_stat["all_files"].extend(stat["all_files"])
-        total_stat["grammatically correct"].extend(stat["grammatically correct"])
-        total_stat["grammatically uncorrect"].extend(stat["grammatically uncorrect"])
-        for k in stat["target_lines_triggered"]:
-            if k not in total_stat["target_lines_triggered"]:
-                total_stat["target_lines_triggered"][k] = []
-            total_stat["target_lines_triggered"][k].extend(
-                stat["target_lines_triggered"][k]
-            )
-        # Dump the total statistics.
-        with open(root_gen_dir / f"total-statistics-step{step}.json", "w") as file:
-            json.dump(total_stat, file, indent=4)

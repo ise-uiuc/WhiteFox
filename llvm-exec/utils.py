@@ -2,39 +2,67 @@ import os
 import shutil
 
 def extract_function_body(cpp_file, function_name):
-	with open(cpp_file, 'r') as file:
-		lines = file.readlines()
-	start_line = -1
-	end_line = -1
-	in_function = False
+    """Extract a function body from a C++ source file."""
+    try:
+        with open(cpp_file, 'r') as file:
+            lines = file.readlines()
+    except Exception as e:
+        print(f"Error reading file {cpp_file}: {e}")
+        return None
 
-	count_braces = 0
-	for i, line in enumerate(lines):
-		if line.strip().startswith('PreservedAnalyses ' + function_name) or (function_name in line):
-			start_line = i
-			in_function = True
-			func_begin = True
-		if in_function:
-			count_braces += line.count("{")
-			if func_begin and ';' in line:
-				in_function = False
-				func_begin = False
-				continue
-			if func_begin and count_braces == 0:
-				continue
-			else:
-				func_begin=False
-			count_braces -= line.count("}")
-			if "}" in line:
-				end_line = i
-			if count_braces == 0 and i != start_line:
-				break
+    # Normalize function name for matching
+    normalized_func_name = function_name.split('(')[0].strip()
+    if '::' in normalized_func_name:
+        normalized_func_name = normalized_func_name.split('::')[-1]
 
-	if start_line != -1 and end_line != -1:
-		function_body = ''.join(lines[start_line:end_line+1])
-		return function_body
-	else:
-		return None
+    start_line = -1
+    end_line = -1
+    in_function = False
+    count_braces = 0
+    func_begin = False
+
+    for i, line in enumerate(lines):
+        line_content = line.strip()
+        
+        # Check various function declaration patterns
+        is_function_start = any([
+            line_content.startswith(f'PreservedAnalyses {normalized_func_name}'),
+            line_content.startswith(f'bool {normalized_func_name}'),
+            line_content.startswith(f'void {normalized_func_name}'),
+            line_content.startswith(f'static bool {normalized_func_name}'),
+            line_content.startswith(f'static void {normalized_func_name}'),
+            line_content.startswith(f'bool llvm::{normalized_func_name}'),
+            normalized_func_name in line_content and '(' in line_content and '{' in line_content
+        ])
+
+        if is_function_start:
+            start_line = i 
+            in_function = True
+            func_begin = True
+            count_braces = 0
+
+        if in_function:
+            count_braces += line.count("{")
+            if func_begin and ';' in line:
+                in_function = False
+                func_begin = False
+                continue
+            if func_begin and count_braces == 0:
+                continue
+            else:
+                func_begin = False
+            count_braces -= line.count("}")
+            if "}" in line:
+                end_line = i
+            if count_braces == 0 and i != start_line:
+                break
+
+    if start_line != -1 and end_line != -1:
+        function_body = ''.join(lines[start_line:end_line+1])
+        return function_body
+
+    print(f"Warning: Function '{function_name}' not found in {cpp_file}")
+    return None
 
 def simplify_func(func_list:list, func_body_list:list, target_line:str, target_dict:dict, outfile:str=None):
 	'''
@@ -47,9 +75,13 @@ def simplify_func(func_list:list, func_body_list:list, target_line:str, target_d
 	'''
 
 	func_body_list_after = []
-	
+	processed_bodies = []
 	# remove the redundant `return false;`
 	for func_name, func_body in zip(func_list, func_body_list):
+		if func_body is None:
+			print(f"Skipping null body for {func_name}")
+			continue
+
 		print(func_name)
 		paragraphs = func_body.split('\n\n')  # Split on blank lines
 
@@ -418,5 +450,3 @@ Codes Below are only for debug!
 
 if __name__ == "__main__":
     pass
-
-

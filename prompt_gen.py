@@ -150,7 +150,20 @@ class Src2Test(Optim):
             fillings += _fillings
 
         fillings = self._join(fillings)
-        return template.format(fillings, code.strip())
+        
+        # Escape any curly braces in the code by doubling them
+        escaped_code = code.strip().replace("{", "{{").replace("}", "}}")
+        
+        try:
+            return template.format(fillings, escaped_code)
+        except KeyError as e:
+            print(f"Warning: String formatting failed with template for {opt}")
+            print(f"Error: {str(e)}")
+            # Alternative approach: replace placeholders manually
+            result = template
+            result = result.replace("{0}", fillings)
+            result = result.replace("{1}", escaped_code)
+            return result
 
 
 class Src2TestTFLite(Src2Test):
@@ -166,7 +179,16 @@ class Src2TestTFLite(Src2Test):
             _code = self._get_hint_code(hint, use_mini)
             code += _code
 
-        return template.format(code.strip())
+        # Escape curly braces in code
+        escaped_code = code.strip().replace("{", "{{").replace("}", "}}")
+        
+        try:
+            return template.format(escaped_code)
+        except KeyError as e:
+            print(f"Warning: String formatting failed with template for {opt}")
+            print(f"Error: {str(e)}")
+            # Fallback: manual replacement
+            return template.replace("{0}", escaped_code)
 
 
 class Src2NLTFLite(Src2TestTFLite):
@@ -359,8 +381,22 @@ class SrcNL2Test(Optim):
 
         fillings = self._join(fillings)
         nl = self.nls[opt]
-        return template.format(fillings, code.strip(), nl.strip())
-
+        
+        # Escape curly braces in code and nl
+        escaped_code = code.strip().replace("{", "{{").replace("}", "}}")
+        escaped_nl = nl.strip().replace("{", "{{").replace("}", "}}")
+        
+        try:
+            return template.format(fillings, escaped_code, escaped_nl)
+        except KeyError as e:
+            print(f"Warning: String formatting failed with template for {opt}")
+            print(f"Error: {str(e)}")
+            # Fallback: manual replacement
+            result = template
+            result = result.replace("{0}", fillings)
+            result = result.replace("{1}", escaped_code)
+            result = result.replace("{2}", escaped_nl)
+            return result
 
 class SrcNL2TestTFLite(SrcNL2Test):
     PLACEHOLDER_OPTIM_NAME = "PLACEHOLDER_TFLITE_OPTIMIZATION_NAME"
@@ -387,14 +423,16 @@ class SrcNL2TestTFLite(SrcNL2Test):
     def get_prompt(self, template, opt, use_mini=False):
         if opt not in self.nls:
             return None
+            
         nl = self.nls[opt]
         code = self.get_optim_source_code(opt, use_mini=use_mini)
-
-        prompt = template.replace(self.PLACEHOLDER_OPTIM_NAME, opt)
+        
+        # Instead of using format(), use replace() for placeholders
+        prompt = template
+        prompt = prompt.replace(self.PLACEHOLDER_OPTIM_NAME, opt)
         prompt = prompt.replace(self.PLACEHOLDER_SRC_CODE, code)
         prompt = prompt.replace(self.PLACEHOLDER_DESC, nl)
         return prompt
-
 
 class SrcNL2TestTFXLA(SrcNL2TestTFLite):
     PLACEHOLDER_OPTIM_NAME = "PLACEHOLDER_TFXLA_OPTIMIZATION_NAME"
@@ -421,6 +459,7 @@ class SrcNL2TestTFXLA(SrcNL2TestTFLite):
     def get_prompt(self, template, opt, use_mini=False):
         if opt not in self.nls:
             return None
+            
         nl = self.nls[opt]
         code = self.get_optim_source_code(opt, use_mini=use_mini)
 
@@ -431,15 +470,15 @@ class SrcNL2TestTFXLA(SrcNL2TestTFLite):
             func_name = hint["func"]
             target_line = hint["target_line"]
 
-        prompt = template.replace(self.PLACEHOLDER_OPTIM_NAME, opt)
+        # Use replace() instead of format() to avoid issues with curly braces
+        prompt = template
+        prompt = prompt.replace(self.PLACEHOLDER_OPTIM_NAME, opt)
         prompt = prompt.replace(self.PLACEHOLDER_SRC_CODE, code)
         prompt = prompt.replace(self.PLACEHOLDER_DESC, nl)
         prompt = prompt.replace(self.PLACEHOLDER_TARGET_LINE, target_line)
         prompt = prompt.replace(self.PLACEHOLDER_FUNC_NAME, func_name)
-
         return prompt
-
-
+    
 class SrcNL2TestFeedbackTFLite(SrcNL2TestTFLite):
     PLACEHOLDER_OPTIM_NAME = "PLACEHOLDER_TFLITE_OPTIMIZATION_NAME"
     PLACEHOLDER_SRC_CODE = "PLACEHOLDER_SRC_CODE"

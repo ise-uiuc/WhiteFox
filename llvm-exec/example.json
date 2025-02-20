@@ -1,381 +1,348 @@
 {
-    "ADCEPass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "Worklist.push_back(&I);",
-                "func": [
-                    "ADCEChanged AggressiveDeadCodeElimination::performDeadCodeElimination()",
-                    "ADCEChanged AggressiveDeadCodeElimination::removeDeadInstructions()"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/Scalar/ADCE.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Feature/OperandBundles/adce.ll"
-                ],
-                "specific_ir": "llvm/test/transforms/adce/delete-profiling-calls-to-constant.ll"
-            }
-        ]
-    },
-    "ArgumentPromotionPass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "C.getOuterRefSCC().replaceNodeFunction(N, *NewF);",
-                "func": [
-                    "static Function *promoteArguments(",
-                    "PreservedAnalyses ArgumentPromotionPass::run"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/IPO/ArgumentPromotion.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Transforms/ArgumentPromotion/dbg.ll"
-                ],
-                "specific_ir": "llvm/test/Transforms/DeadArgElim/2006-06-27-struct-ret.ll"
-            }
-        ]
-    },
-    "ConstantMergePass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "GV.eraseFromParent();",
-                "func": [
-                    "PreservedAnalyses ConstantMergePass::run(",
-                    "static bool mergeConstants("
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/IPO/ConstantMerge.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Transforms/ConstantMerge/merge-dbg.ll"
-                ],
-                "specific_ir": ""
-            }
-        ]
-    },
-    "DCEPass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "I->eraseFromParent();",
-                "func": [
-                    "static bool eliminateDeadCode(",
-                    "static bool DCEInstruction(Instruction *I"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/Scalar/DCE.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Transforms/DCE/guards.ll"
-                ],
-                "specific_ir": ""
-            }
-        ]
-    },
-    "DeadArgumentEliminationPass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "F.replaceAllUsesWith(ConstantExpr::getBitCast(NF, F.getType()));",
-                "func": [
-                    "DeadArgumentEliminationPass::run",
-                    "DeadArgumentEliminationPass::deleteDeadVarargs"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/IPO/DeadArgumentElimination.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Transforms/DeadArgElim/2013-05-17-VarargsAndBlockAddress.ll"
-                ],
-                "specific_ir": "llvm/test/Transforms/DeadArgElim/2013-05-17-VarargsAndBlockAddress.ll"
-            }
-        ]
-    },
-    "DSEPass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "State.deleteDeadInstruction(DeadI);",
-                "func": [
-                    "PreservedAnalyses DSEPass::run",
-                    "static bool eliminateDeadStores("
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/Scalar/DeadStoreElimination.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Feature/OperandBundles/dse.ll"
-                ],
-                "specific_ir": "llvm/test/Transforms/GVN/lifetime-simple.ll"
-            }
-        ]
-    },
-    "GlobalDCEPass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "F->replaceNonMetadataUsesWith(ConstantPointerNull::get(F->getType()));",
-                "func": [
-                    "PreservedAnalyses GlobalDCEPass::run"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/IPO/GlobalDCE.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Transforms/GlobalDCE/2002-07-17-ConstantRef.ll"
-                ],
-                "specific_ir": "llvm/test/Transforms/GlobalDCE/virtual-functions-relative-pointers-bad.ll"
-            }
-        ]
-    },
-    "GlobalOptPass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "ChangeCalleesToFastCall(&F);",
-                "func": [
-                    "optimizeGlobalsInModule(Module &M",
-                    "OptimizeFunctions(Module &M"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/IPO/GlobalOpt.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Transforms/GlobalOpt/load-store-global-no-null-opt.ll"
-                ],
-                "specific_ir": "llvm/test/Transforms/DeadArgElim/2006-06-27-struct-ret.ll"
-            }
-        ]
-    },
-    "LoopFusePass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "Preheader = InsertPreheaderForLoop(L, DT, LI, MSSAU, PreserveLCSSA);",
-                "func": [
-                    "bool llvm::simplifyLoop",
-                    "static bool simplifyOneLoop"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/Utils/LoopSimplify.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Transforms/LoopFusion/simple.ll"
-                ],
-                "specific_ir": "llvm/test/Transforms/IndVarSimplify/udiv-invariant-but-traps.ll"
-            }
-        ]
-    },
-    "GVNPass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "Changed |= performScalarPRE(CurInst);",
-                "func": [
-                    "bool GVNPass::runImpl",
-                    "bool GVNPass::performPRE(Function &F)"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/Scalar/GVN.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Transforms/GVN/gvn-loop-load-pre-order.ll"
-                ],
-                "specific_ir": "llvm/test/Transforms/ADCE/2002-07-29-Segfault.ll"
-            }
-        ]
-    },
-    "LCSSAPass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "Builder.SetInsertPoint(&ExitBB->front());",
-                "func": [
-                    "bool llvm::formLCSSA(Loop &L, const DominatorTree &DT, const LoopInfo *LI",
-                    "bool llvm::formLCSSAForInstructions(SmallVectorImpl<Instruction *> &Worklist"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/Utils/LCSSA.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Transforms/LoopVersioning/lcssa.ll"
-                ],
-                "specific_ir": "llvm/test/Transforms/IndVarSimplify/udiv-invariant-but-traps.ll"
-            }
-        ]
-    },
-    "LICMPass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "U = PoisonValue::get(I.getType());",
-                "func": [
-                    "bool llvm::sinkRegion",
-                    "static bool sink"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/Scalar/LICM.cpp"
-                ],
-                "examples": [
-                    "llvm/test/CodeGen/X86/postra-licm.ll"
-                ],
-                "specific_ir": ""
-            }
-        ]
-    },
-    "LoopDeletionPass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "breakLoopBackedge(L, DT, SE, LI, MSSA);",
-                "func": [
-                    "PreservedAnalyses LoopDeletionPass::run(Loop &L, LoopAnalysisManager &AM",
-                    "breakBackedgeIfNotTaken(Loop *L, DominatorTree &DT, ScalarEvolution &SE"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/Scalar/LoopDeletion.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Transforms/LoopDeletion/diundef.ll"
-                ],
-                "specific_ir": "llvm/test/Transforms/GlobalOpt/2009-01-13-phi-user.ll"
-            }
-        ]
-    },
-    "LoopExtractorPass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "LI.erase(L);",
-                "func": [
-                    "bool LoopExtractor::extractLoops",
-                    "bool LoopExtractor::extractLoop(Loop *L, LoopInfo &LI, DominatorTree &DT)"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/IPO/LoopExtractor.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Transforms/CodeExtractor/LoopExtractor.ll"
-                ],
-                "specific_ir": ""
-            }
-        ]
-    },
-    "LoopSimplifyCFGPass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "bool Changed = BranchFolder.run();",
-                "func": [
-                    "static bool simplifyLoopCFG",
-                    "static bool constantFoldTerminators"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/Scalar/LoopSimplifyCFG.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Transforms/LoopSimplify/2004-04-12-LoopSimplify-SwitchBackedges.ll"
-                ],
-                "specific_ir": "llvm/test/Transforms/ADCE/2002-07-29-Segfault.ll"
-            }
-        ]
-    },
-    "SimpleLoopUnswitchLegacyPass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "UnswitchCB(/*CurrentLoopValid*/ true, false, {});",
-                "func": [
-                    "unswitchLoop(Loop &L, DominatorTree &DT, LoopInfo &LI, AssumptionCache &AC"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/Scalar/SimpleLoopUnswitch.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Transforms/SimpleLoopUnswitch/msan.ll"
-                ],
-                "specific_ir": "llvm/test/Transforms/ADCE/2002-05-28-Crash-distilled.ll"
-            }
-        ]
-    },
-    "AggressiveInstCombinePass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "ReduceExpressionGraph(NewDstSclTy);",
-                "func": [
-                    "static bool runImpl(Function &F, AssumptionCache &AC, TargetTransformInfo &TTI,",
-                    "bool TruncInstCombine::run(Function &F)"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/AggressiveInstCombine/AggressiveInstCombine.cpp",
-                    "llvm/lib/Transforms/AggressiveInstCombine/TruncInstCombine.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Transforms/AggressiveInstCombine/funnel.ll"
-                ],
-                "specific_ir": ""
-            }
-        ]
-    },
-    "EarlyCSEPass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "Inst.replaceAllUsesWith(V);",
-                "func": [
-                    "bool EarlyCSE::run()",
-                    "bool EarlyCSE::processNode"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/Scalar/EarlyCSE.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Transforms/EarlyCSE/guards.ll"
-                ],
-                "specific_ir": "llvm/test/Transforms/InstCombine/2008-05-22-IDivVector.ll"
-            }
-        ]
-    },
-    "InstSimplifyPass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "DeadInstsInBB.push_back(&I);",
-                "func": [
-                    "PreservedAnalyses InstSimplifyPass::run",
-                    "static bool runImpl(Function &F, const SimplifyQuery &SQ)"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/Scalar/InstSimplifyPass.cpp"
-                ],
-                "examples": [
-                    "llvm/test/Transforms/InstSimplify/is_fpclass.ll"
-                ],
-                "specific_ir": ""
-            }
-        ]
-    },
-    "PromotePass": {
-        "hints": [
-            {
-                "type": "trigger",
-                "target_line": "PromoteMemToReg(Allocas, DT, &AC);",
-                "func": [
-                    "PreservedAnalyses PromotePass::run",
-                    "static bool promoteMemoryToRegister"
-                ],
-                "codes": [
-                    "llvm/lib/Transforms/Utils/Mem2Reg.cpp"
-                ],
-                "examples": [
-                    "llvm/test/DebugInfo/Generic/assignment-tracking/mem2reg/single-block-alloca.ll"
-                ],
-                "specific_ir": "llvm/test/Transforms/InstSimplify/returned.ll"
-            }
-        ]
-    }
+  "ADCEPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "Worklist.push_back(&I);",
+        "func": [
+          "ADCEChanged AggressiveDeadCodeElimination::performDeadCodeElimination()",
+          "ADCEChanged AggressiveDeadCodeElimination::removeDeadInstructions()"
+        ],
+        "codes": ["/app/llvm-project/llvm/lib/Transforms/Scalar/ADCE.cpp"],
+        "examples": [
+          "/app/llvm-project/llvm/test/Feature/OperandBundles/adce.ll"
+        ],
+        "specific_ir": "llvm/test/transforms/adce/delete-profiling-calls-to-constant.ll"
+      }
+    ]
+  },
+  "ArgumentPromotionPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "C.getOuterRefSCC().replaceNodeFunction(N, *NewF);",
+        "func": [
+          "static Function *promoteArguments(",
+          "PreservedAnalyses ArgumentPromotionPass::run"
+        ],
+        "codes": [
+          "/app/llvm-project/llvm/lib/Transforms/IPO/ArgumentPromotion.cpp"
+        ],
+        "examples": [
+          "/app/llvm-project/llvm/test/Transforms/ArgumentPromotion/dbg.ll"
+        ],
+        "specific_ir": "llvm/test/Transforms/DeadArgElim/2006-06-27-struct-ret.ll"
+      }
+    ]
+  },
+  "ConstantMergePass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "GV.eraseFromParent();",
+        "func": [
+          "PreservedAnalyses ConstantMergePass::run(",
+          "static bool mergeConstants("
+        ],
+        "codes": [
+          "/app/llvm-project/llvm/lib/Transforms/IPO/ConstantMerge.cpp"
+        ],
+        "examples": [
+          "/app/llvm-project/llvm/test/Transforms/ConstantMerge/merge-dbg.ll"
+        ],
+        "specific_ir": ""
+      }
+    ]
+  },
+  "DCEPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "I->eraseFromParent();",
+        "func": [
+          "static bool eliminateDeadCode(",
+          "static bool DCEInstruction(Instruction *I"
+        ],
+        "codes": ["/app/llvm-project/llvm/lib/Transforms/Scalar/DCE.cpp"],
+        "examples": ["/app/llvm-project/llvm/test/Transforms/DCE/guards.ll"],
+        "specific_ir": ""
+      }
+    ]
+  },
+  "DeadArgumentEliminationPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "F.replaceAllUsesWith(ConstantExpr::getBitCast(NF, F.getType()));",
+        "func": [
+          "DeadArgumentEliminationPass::run",
+          "DeadArgumentEliminationPass::deleteDeadVarargs"
+        ],
+        "codes": [
+          "/app/llvm-project/llvm/lib/Transforms/IPO/DeadArgumentElimination.cpp"
+        ],
+        "examples": [
+          "/app/llvm-project/llvm/test/Transforms/DeadArgElim/2013-05-17-VarargsAndBlockAddress.ll"
+        ],
+        "specific_ir": "/app/llvm-project/llvm/test/Transforms/DeadArgElim/2013-05-17-VarargsAndBlockAddress.ll"
+      }
+    ]
+  },
+  "DSEPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "State.deleteDeadInstruction(DeadI);",
+        "func": [
+          "PreservedAnalyses DSEPass::run",
+          "static bool eliminateDeadStores("
+        ],
+        "codes": [
+          "/app/llvm-project/llvm/lib/Transforms/Scalar/DeadStoreElimination.cpp"
+        ],
+        "examples": [
+          "/app/llvm-project/llvm/test/Feature/OperandBundles/dse.ll"
+        ],
+        "specific_ir": "/app/llvm-project/llvm/test/Transforms/GVN/lifetime-simple.ll"
+      }
+    ]
+  },
+  "GlobalDCEPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "F->replaceNonMetadataUsesWith(ConstantPointerNull::get(F->getType()));",
+        "func": ["PreservedAnalyses GlobalDCEPass::run"],
+        "codes": ["/app/llvm-project/llvm/lib/Transforms/IPO/GlobalDCE.cpp"],
+        "examples": [
+          "/app/llvm-project/llvm/test/Transforms/GlobalDCE/2002-07-17-ConstantRef.ll"
+        ],
+        "specific_ir": "/app/llvm-project/llvm/test/Transforms/GlobalDCE/virtual-functions-relative-pointers-bad.ll"
+      }
+    ]
+  },
+  "GlobalOptPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "ChangeCalleesToFastCall(&F);",
+        "func": [
+          "optimizeGlobalsInModule(Module &M",
+          "OptimizeFunctions(Module &M"
+        ],
+        "codes": ["/app/llvm-project/llvm/lib/Transforms/IPO/GlobalOpt.cpp"],
+        "examples": [
+          "/app/llvm-project/llvm/test/Transforms/GlobalOpt/load-store-global-no-null-opt.ll"
+        ],
+        "specific_ir": "/app/llvm-project/llvm/test/Transforms/DeadArgElim/2006-06-27-struct-ret.ll"
+      }
+    ]
+  },
+  "LoopFusePass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "Preheader = InsertPreheaderForLoop(L, DT, LI, MSSAU, PreserveLCSSA);",
+        "func": ["bool llvm::simplifyLoop", "static bool simplifyOneLoop"],
+        "codes": [
+          "/app/llvm-project/llvm/lib/Transforms/Utils/LoopSimplify.cpp"
+        ],
+        "examples": [
+          "/app/llvm-project/llvm/test/Transforms/LoopFusion/simple.ll"
+        ],
+        "specific_ir": "/app/llvm-project/llvm/test/Transforms/IndVarSimplify/udiv-invariant-but-traps.ll"
+      }
+    ]
+  },
+  "GVNPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "Changed |= performScalarPRE(CurInst);",
+        "func": [
+          "bool GVNPass::runImpl",
+          "bool GVNPass::performPRE(Function &F)"
+        ],
+        "codes": ["/app/llvm-project/llvm/lib/Transforms/Scalar/GVN.cpp"],
+        "examples": [
+          "/app/llvm-project/llvm/test/Transforms/GVN/gvn-loop-load-pre-order.ll"
+        ],
+        "specific_ir": "/app/llvm-project/llvm/test/Transforms/ADCE/2002-07-29-Segfault.ll"
+      }
+    ]
+  },
+  "LCSSAPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "Builder.SetInsertPoint(&ExitBB->front());",
+        "func": [
+          "bool llvm::formLCSSA(Loop &L, const DominatorTree &DT, const LoopInfo *LI",
+          "bool llvm::formLCSSAForInstructions(SmallVectorImpl<Instruction *> &Worklist"
+        ],
+        "codes": ["/app/llvm-project/llvm/lib/Transforms/Utils/LCSSA.cpp"],
+        "examples": [
+          "/app/llvm-project/llvm/test/Transforms/LoopVersioning/lcssa.ll"
+        ],
+        "specific_ir": "/app/llvm-project/llvm/test/Transforms/IndVarSimplify/udiv-invariant-but-traps.ll"
+      }
+    ]
+  },
+  "LICMPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "U = PoisonValue::get(I.getType());",
+        "func": ["bool llvm::sinkRegion", "static bool sink"],
+        "codes": ["/app/llvm-project/llvm/lib/Transforms/Scalar/LICM.cpp"],
+        "examples": ["/app/llvm-project/llvm/test/CodeGen/X86/postra-licm.ll"],
+        "specific_ir": ""
+      }
+    ]
+  },
+  "LoopDeletionPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "breakLoopBackedge(L, DT, SE, LI, MSSA);",
+        "func": [
+          "PreservedAnalyses LoopDeletionPass::run(Loop &L, LoopAnalysisManager &AM",
+          "breakBackedgeIfNotTaken(Loop *L, DominatorTree &DT, ScalarEvolution &SE"
+        ],
+        "codes": [
+          "/app/llvm-project/llvm/lib/Transforms/Scalar/LoopDeletion.cpp"
+        ],
+        "examples": [
+          "/app/llvm-project/llvm/test/Transforms/LoopDeletion/diundef.ll"
+        ],
+        "specific_ir": "llvm/test/Transforms/GlobalOpt/2009-01-13-phi-user.ll"
+      }
+    ]
+  },
+  "LoopExtractorPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "LI.erase(L);",
+        "func": [
+          "bool LoopExtractor::extractLoops",
+          "bool LoopExtractor::extractLoop(Loop *L, LoopInfo &LI, DominatorTree &DT)"
+        ],
+        "codes": [
+          "/app/llvm-project/llvm/lib/Transforms/IPO/LoopExtractor.cpp"
+        ],
+        "examples": [
+          "/app/llvm-project/llvm/test/Transforms/CodeExtractor/LoopExtractor.ll"
+        ],
+        "specific_ir": ""
+      }
+    ]
+  },
+  "LoopSimplifyCFGPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "bool Changed = BranchFolder.run();",
+        "func": [
+          "static bool simplifyLoopCFG",
+          "static bool constantFoldTerminators"
+        ],
+        "codes": [
+          "/app/llvm-project/llvm/lib/Transforms/Scalar/LoopSimplifyCFG.cpp"
+        ],
+        "examples": [
+          "/app/llvm-project/llvm/test/Transforms/LoopSimplify/2004-04-12-LoopSimplify-SwitchBackedges.ll"
+        ],
+        "specific_ir": "/app/llvm-project/llvm/test/Transforms/ADCE/2002-07-29-Segfault.ll"
+      }
+    ]
+  },
+  "SimpleLoopUnswitchLegacyPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "UnswitchCB(/*CurrentLoopValid*/ true, false, {});",
+        "func": [
+          "unswitchLoop(Loop &L, DominatorTree &DT, LoopInfo &LI, AssumptionCache &AC"
+        ],
+        "codes": [
+          "/app/llvm-project/llvm/lib/Transforms/Scalar/SimpleLoopUnswitch.cpp"
+        ],
+        "examples": [
+          "/app/llvm-project/llvm/test/Transforms/SimpleLoopUnswitch/msan.ll"
+        ],
+        "specific_ir": "/app/llvm-project/llvm/test/Transforms/ADCE/2002-05-28-Crash-distilled.ll"
+      }
+    ]
+  },
+  "AggressiveInstCombinePass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "ReduceExpressionGraph(NewDstSclTy);",
+        "func": [
+          "static bool runImpl(Function &F, AssumptionCache &AC, TargetTransformInfo &TTI,",
+          "bool TruncInstCombine::run(Function &F)"
+        ],
+        "codes": [
+          "/app/llvm-project/llvm/lib/Transforms/AggressiveInstCombine/AggressiveInstCombine.cpp",
+          "/app/llvm-project/llvm/lib/Transforms/AggressiveInstCombine/TruncInstCombine.cpp"
+        ],
+        "examples": [
+          "/app/llvm-project/llvm/test/Transforms/AggressiveInstCombine/funnel.ll"
+        ],
+        "specific_ir": ""
+      }
+    ]
+  },
+  "EarlyCSEPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "Inst.replaceAllUsesWith(V);",
+        "func": ["bool EarlyCSE::run()", "bool EarlyCSE::processNode"],
+        "codes": ["/app/llvm-project/llvm/lib/Transforms/Scalar/EarlyCSE.cpp"],
+        "examples": [
+          "/app/llvm-project/llvm/test/Transforms/EarlyCSE/guards.ll"
+        ],
+        "specific_ir": "/app/llvm-project/llvm/test/Transforms/InstCombine/2008-05-22-IDivVector.ll"
+      }
+    ]
+  },
+  "InstSimplifyPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "DeadInstsInBB.push_back(&I);",
+        "func": [
+          "PreservedAnalyses InstSimplifyPass::run",
+          "static bool runImpl(Function &F, const SimplifyQuery &SQ)"
+        ],
+        "codes": [
+          "/app/llvm-project/llvm/lib/Transforms/Scalar/InstSimplifyPass.cpp"
+        ],
+        "examples": [
+          "/app/llvm-project/llvm/test/Transforms/InstSimplify/is_fpclass.ll"
+        ],
+        "specific_ir": ""
+      }
+    ]
+  },
+  "PromotePass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "PromoteMemToReg(Allocas, DT, &AC);",
+        "func": [
+          "PreservedAnalyses PromotePass::run",
+          "static bool promoteMemoryToRegister"
+        ],
+        "codes": ["/app/llvm-project/llvm/lib/Transforms/Utils/Mem2Reg.cpp"],
+        "examples": [
+          "/app/llvm-project/llvm/test/DebugInfo/Generic/assignment-tracking/mem2reg/single-block-alloca.ll"
+        ],
+        "specific_ir": "/app/llvm-project/llvm/test/Transforms/InstSimplify/returned.ll"
+      }
+    ]
+  }
 }
