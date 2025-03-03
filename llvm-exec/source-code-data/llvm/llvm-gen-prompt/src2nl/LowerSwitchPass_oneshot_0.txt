@@ -1,0 +1,36 @@
+### Please describe the type of C program that triggers the optimization shown in the code. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the program. Do not describe the optimization pass code or what happens after the optimization is triggered.
+
+# Code of the pass
+
+PreservedAnalyses LowerSwitchPass::run(Function &F,
+                                       FunctionAnalysisManager &AM) {
+  LazyValueInfo *LVI = &AM.getResult<LazyValueAnalysis>(F);
+  AssumptionCache *AC = AM.getCachedResult<AssumptionAnalysis>(F);
+  return LowerSwitch(F, LVI, AC) ? PreservedAnalyses::none()
+                                 : PreservedAnalyses::all();
+}
+
+bool LowerSwitch(Function &F, LazyValueInfo *LVI, AssumptionCache *AC) {
+  bool Changed = false;
+  SmallPtrSet<BasicBlock *, 8> DeleteList;
+
+    if (SwitchInst *SI = dyn_cast<SwitchInst>(Cur.getTerminator())) {
+      Changed = true;
+      ProcessSwitchInst(SI, DeleteList, AC, LVI);
+    }
+  }
+
+  return Changed;
+}
+
+
+
+# Target line to focus on
+
+// No specific target line provided
+
+# Pass name
+
+LowerSwitchPass
+
+# Description

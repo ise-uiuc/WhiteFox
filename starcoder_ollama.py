@@ -25,7 +25,7 @@ EOF_STRINGS = [
     "'''",
     "# Model ends",
     "# LLVM IR ends",
-    "# C++ Code ends",
+    "# C Code ends",
 ]
 
 def generate_with_ollama(prompt, model="starcoder", max_tokens=4096, temperature=1.0, top_p=1.0):

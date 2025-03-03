@@ -2,9 +2,10 @@ import json
 import argparse
 import os
 
-from json_parser import extract_source_from_llvm, extract_func_body_from_source, gen_prompt
-from gen_prompt_c import gen_prompt_nl2test
-from utils import statistics
+from json_parser import extract_source_from_llvm, extract_func_body_from_source
+# Import functions from gen_prompt_llvm_c.py
+# Note: You'll need to adjust these imports to match the actual functions in your gen_prompt_llvm_c.py
+from gen_prompt_c import generate_src2nl_prompt, prepare_optimizations
 
 def setup_directories():
     """Create all required directories"""
@@ -12,6 +13,7 @@ def setup_directories():
         "source-code-data/llvm/llvm-lib",
         "source-code-data/llvm/llvm-func-body",
         "source-code-data/llvm/llvm-gen-prompt",
+        "source-code-data/llvm/llvm-gen-prompt/src2nl",
         "prompt/demo"
     ]
     for directory in directories:
@@ -23,6 +25,8 @@ if __name__ == "__main__":
     parser.add_argument("--json", type=str, default="example.json")
     parser.add_argument("--llvm-source", type=str, default="")
     parser.add_argument("--model", type=str, choices=['ollama', 'starcoder'], default='ollama')
+    parser.add_argument("--template", type=str, default="template_src2nl_llvm.md")
+    parser.add_argument("--skip-extraction", action="store_true", help="Skip extraction of source files")
     args = parser.parse_args()
 
     print(f"Loading JSON from {args.json}")
@@ -39,14 +43,22 @@ if __name__ == "__main__":
     print("Updating paths with LLVM source location...")
     for k in data.keys():
         for idx, _ in enumerate(data[k]["hints"]):
-            data[k]["hints"][idx]["codes"][0] = os.path.join(args.llvm_source, data[k]["hints"][idx]["codes"][0])
-            try:
-                data[k]["hints"][idx]["codes"][1] = os.path.join(args.llvm_source, data[k]["hints"][idx]["codes"][1])
-            except:
-                pass
-            data[k]["hints"][idx]["examples"][0] = os.path.join(args.llvm_source, data[k]["hints"][idx]["examples"][0])
-            data[k]["hints"][idx]["specific_ir"] = os.path.join(args.llvm_source, data[k]["hints"][idx]["specific_ir"])
+            if args.llvm_source:
+                data[k]["hints"][idx]["codes"][0] = os.path.join(args.llvm_source, data[k]["hints"][idx]["codes"][0])
+                try:
+                    if len(data[k]["hints"][idx]["codes"]) > 1:
+                        data[k]["hints"][idx]["codes"][1] = os.path.join(args.llvm_source, data[k]["hints"][idx]["codes"][1])
+                except:
+                    pass
+                
+                if "examples" in data[k]["hints"][idx]:
+                    data[k]["hints"][idx]["examples"][0] = os.path.join(args.llvm_source, data[k]["hints"][idx]["examples"][0])
+                
+                if "specific_ir" in data[k]["hints"][idx] and data[k]["hints"][idx]["specific_ir"]:
+                    data[k]["hints"][idx]["specific_ir"] = os.path.join(args.llvm_source, data[k]["hints"][idx]["specific_ir"])
 
+# Then modify the extraction steps to check this flag
+if not args.skip_extraction:
     print("\nStep 1: Extracting source files...")
     extract_source_from_llvm(data)
 
@@ -54,48 +66,25 @@ if __name__ == "__main__":
     extract_func_body_from_source(data)
 
     print("\nStep 3: Generating prompts...")
-    model_prefix = "ollama_c_" if args.model == 'ollama' else "starcoder_c_"
-    gen_dir = "prompt/demo" if args.model == 'ollama' else "source-code-data/llvm/llvm-gen-prompt"
+    # Define output directory for src2nl prompts
+    src2nl_dir = "source-code-data/llvm/llvm-gen-prompt/src2nl"
+    os.makedirs(src2nl_dir, exist_ok=True)
 
-    # Step 3a: First generate src2nl (source → requirements)
+    # Step 3a: Generate src2nl prompts using gen_prompt_llvm_c.py
     print("\nStep 3a: Generating source-to-requirements prompts...")
-    gen_prompt(data, file_string="src2nl", gen_dir_path=gen_dir)
+    
+    # Convert data to format expected by gen_prompt_llvm_c.py
+    optimizations = []
+    for pass_name, pass_info in data.items():
+        opt_info = pass_info.copy()
+        opt_info["pass_name"] = pass_name
+        optimizations.append(opt_info)
+    
+    # Generate prompts for each optimization
+    for opt_info in optimizations:
+        generate_src2nl_prompt(opt_info, args.template, src2nl_dir)
 
-    # Step 3b: Then generate nl2test using those requirements
-    print("\nStep 3b: Generating test prompts...")
-    for passname, pass_info in data.items():
-        print(f"\nProcessing {passname} for tests...")
-        for index, hint in enumerate(pass_info["hints"]):
-            try:
-                # Generate without feedback
-                description = f"Generate C code that demonstrates the {passname} optimization. "
-                description += f"Focus on the pattern: {hint['target_line']}"
-                
-                print(f"  Generating deadarg prompt for {passname} index {index}")
-                gen_prompt_nl2test(
-                    passname,
-                    index,
-                    model_prefix + "deadarg",
-                    gen_dir,
-                    None,
-                    description=description
-                )
-                
-                # Generate with feedback
-                print(f"  Generating feedback prompt for {passname} index {index}")
-                gen_prompt_nl2test(
-                    passname,
-                    index,
-                    model_prefix + "feedback",
-                    gen_dir,
-                    ["int main(void) { return 0; }", "int main(void) { return 1; }"],
-                    description=description
-                )
-            except Exception as e:
-                print(f"Error generating test prompts for {passname} index {index}: {str(e)}")
-                raise
-
-    print("\nDone! Generated files can be found in:")
+    print("\nDone! Generated src2nl prompts can be found in:")
     print(f"- Source files: source-code-data/llvm/llvm-lib/")
     print(f"- Function bodies: source-code-data/llvm/llvm-func-body/")
-    print(f"- Generated prompts: {gen_dir}/")
+    print(f"- Generated prompts: {src2nl_dir}/")

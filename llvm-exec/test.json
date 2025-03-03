@@ -1,0 +1,12 @@
+{
+  "TestPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "int result = x + y;",
+        "func": ["bool TestPass::runOnFunction(Function &F)"],
+        "codes": ["llvm-exec/test_code.c"]
+      }
+    ]
+  }
+}

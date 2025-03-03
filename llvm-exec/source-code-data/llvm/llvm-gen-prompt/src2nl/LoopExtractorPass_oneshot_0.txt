@@ -1,0 +1,36 @@
+### Please describe the type of C program that triggers the optimization shown in the code. The description should be concise and clear. Use code to illustrate patterns or constraints as needed. Please only describe the characteristics of the program. Do not describe the optimization pass code or what happens after the optimization is triggered.
+
+# Code of the pass
+
+bool LoopExtractor::extractLoops(Loop::iterator From, Loop::iterator To,
+                                 LoopInfo &LI, DominatorTree &DT) {
+  bool Changed = false;
+  SmallVector<Loop *, 8> Loops;
+
+    Changed |= extractLoop(L, LI, DT);
+    if (!NumLoops)
+      break;
+  }
+  return Changed;
+}
+
+bool LoopExtractor::extractLoop(Loop *L, LoopInfo &LI, DominatorTree &DT) {
+
+  assert(NumLoops != 0);
+  Function &Func = *L->getHeader()->getParent();
+  AssumptionCache *AC = LookupAssumptionCache(Func);
+  CodeExtractorAnalysisCache CEAC(Func);
+  CodeExtractor Extractor(DT, *L, false, nullptr, nullptr, AC);
+  if (Extractor.extractCodeRegion(CEAC)) 
+
+
+
+# Target line to focus on
+
+LI.erase(L);
+
+# Pass name
+
+LoopExtractorPass
+
+# Description

@@ -1,0 +1,426 @@
+{
+  "DCEPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "I->eraseFromParent();"
+      }
+    ]
+  },
+  "MergeFunctionsPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "InstCombineComparesPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "IPSCCPPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "InstCombinePHIPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "LowerGlobalDtorsPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "DeadArgumentEliminationPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "F.replaceAllUsesWith(ConstantExpr::getBitCast(NF, F.getType()));"
+      }
+    ]
+  },
+  "InlinerPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "InternalizePass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "InstCombineAddSubPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "JumpThreadingPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "PromotePass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "PromoteMemToReg(Allocas, DT, &AC);"
+      }
+    ]
+  },
+  "LoopExtractorPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "LI.erase(L);"
+      }
+    ]
+  },
+  "ADCEPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "Worklist.push_back(&I);"
+      }
+    ]
+  },
+  "SimpleLoopUnswitchLegacyPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "UnswitchCB(/*CurrentLoopValid*/ true, false, {});"
+      }
+    ]
+  },
+  "AggressiveInstCombinePass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "ReduceExpressionGraph(NewDstSclTy);"
+      }
+    ]
+  },
+  "LoopStrengthReducePass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "InstCombineFMulPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "StripSymbolsPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "LICMPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "U = PoisonValue::get(I.getType());"
+      }
+    ]
+  },
+  "ReassociatePass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "InstCombineAShrPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "LowerInvokePass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "LowerSwitchPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "SROAPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "ArgumentPromotionPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "C.getOuterRefSCC().replaceNodeFunction(N, *NewF);"
+      }
+    ]
+  },
+  "SimplifyCFGPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "SCCPPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "IndVarSimplifyPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "SinkingPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "InstCombineLoadStoreAllocaPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "InstCombineCallPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "InstSimplifyPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "DeadInstsInBB.push_back(&I);"
+      }
+    ]
+  },
+  "AlwaysInlinerPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "InstCombineCastPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "LoopSimplifyCFGPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "bool Changed = BranchFolder.run();"
+      }
+    ]
+  },
+  "ConstantMergePass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "GV.eraseFromParent();"
+      }
+    ]
+  },
+  "MemCpyOptPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "LCSSAPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "Builder.SetInsertPoint(&ExitBB->front());"
+      }
+    ]
+  },
+  "InstCombineXorPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "CodeGenPreparePass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "LowerAtomicPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "InstCombineMulPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "LoopFusePass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "Preheader = InsertPreheaderForLoop(L, DT, LI, MSSAU, PreserveLCSSA);"
+      }
+    ]
+  },
+  "InstCombineAtomicRMWPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "RegToMemPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "GlobalDCEPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "F->replaceNonMetadataUsesWith(ConstantPointerNull::get(F->getType()));"
+      }
+    ]
+  },
+  "LoopDeletionPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "breakLoopBackedge(L, DT, SE, LI, MSSA);"
+      }
+    ]
+  },
+  "DSEPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "State.deleteDeadInstruction(DeadI);"
+      }
+    ]
+  },
+  "EarlyCSEPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "Inst.replaceAllUsesWith(V);"
+      }
+    ]
+  },
+  "InstCombineSelectPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "// No specific target line provided"
+      }
+    ]
+  },
+  "GVNPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "Changed |= performScalarPRE(CurInst);"
+      }
+    ]
+  },
+  "TestPass": {
+    "hints": [
+      {
+        "type": "trigger",
+        "target_line": "int result = x + y;"
+      }
+    ]
+  }
+}
