@@ -1,0 +1,9 @@
+{
+    "requirement": "ReassociatePass_requirements",
+    "responses": [
+        {
+            "raw": "\nThe following code shows a possible solution:\n\n```c\n// Template for reassociation\nint function_with_reassociable_ops(int a, int b, int c) {\n    // Operations that could be reassociated for better optimization\n    return (a + b) + c;\n}\n\nint main() {\n    int x = 10;\n    int y = 20;\n    int z = 30;\n    int result = function_with_reassociable_ops(x, y, z);\n    return result;\n}\n```",
+            "extracted_code": "// Template for reassociation\nint function_with_reassociable_ops(int a, int b, int c) {\n    // Operations that could be reassociated for better optimization\n    return (a + b) + c;\n}\n\nint main() {\n    int x = 10;\n    int y = 20;\n    int z = 30;\n    int result = function_with_reassociable_ops(x, y, z);\n    return result;\n}"
+        }
+    ]
+}

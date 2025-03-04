@@ -1,119 +1,225 @@
+#!/usr/bin/env python3
 """
-Accelerate the generation of StarCoder programs using Ollama.
+Script to read requirements from llvm-exec/source-code-data/llvm/llvm-exec/requirements,
+generate C programs using Ollama's StarCoder model, and save the outputs to a specified directory.
 
 Usage:
-  python starcoder_ollama.py --prompt-dir={} --output-dir={} --n={} \
-  --max-tokens={} --split-size={} --log-file={}
+    python ollama_starcoder.py --requirements-dir=/path/to/llvm-exec/source-code-data/llvm/llvm-exec/requirements --output-dir=/path/to/output --num=10
+
+The script will:
+1. Scan the requirements directory for .txt files
+2. Send each requirement to the Ollama StarCoder model
+3. Extract C programs from the responses
+4. Save the extracted C programs to individual files in the output directory
 """
 
 import argparse
-import time
-import os
-from pathlib import Path
-import logging
-from pprint import pprint
-import random
-import requests
 import json
+import os
+import re
+import time
+from datetime import datetime
+from pathlib import Path
+import requests
 
-EOF_STRINGS = [
-    "<|endoftext|>",
-    "###",
-    "__output__ =",
-    "if __name__",
-    '"""',
-    "'''",
-    "# Model ends",
-    "# LLVM IR ends",
-    "# C Code ends",
-]
 
-def generate_with_ollama(prompt, model="starcoder", max_tokens=4096, temperature=1.0, top_p=1.0):
-    """Generate text using Ollama API"""
-    url = "http://localhost:11434/api/generate"
-    
-    data = {
-        "model": model,
-        "prompt": prompt,
-        "options": {
-            "num_predict": max_tokens,
-            "temperature": temperature,
-            "top_p": top_p,
-            "stop": EOF_STRINGS
-        },
-        "stream": False
-    }
-    
-    response = requests.post(url, json=data)
-    if response.status_code == 200:
-        return response.json()["response"]
-    else:
-        raise Exception(f"Ollama API error: {response.status_code}")
+class Logger:
+    def __init__(self, log_file: Path, is_print=True) -> None:
+        self.log_file = log_file
+        self.is_print = is_print
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--prompt-dir", type=str, default="prompts")
-    parser.add_argument(
-        "--output-dir",
-        type=str,
-        default="generated-outputs",
-    )
-    parser.add_argument("-n", "--num", type=int, default=10)
-    parser.add_argument("--max-tokens", type=int, default=4096)
-    parser.add_argument("--split-size", type=int, default=20)
-    parser.add_argument("--log-file", type=str, default="whitefox-llm-gen.log")
-    parser.add_argument("--model", type=str, default="starcoder")
+        # Initialize log file
+        self.log_file.parent.mkdir(parents=True, exist_ok=True)
+        self.log_file.touch(exist_ok=True)
+        with open(self.log_file, "a") as f:
+            current_datetime = datetime.now()
+            formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+            f.write("====================\n")
+            f.write(f"[{formatted_datetime}] Start logging.\n")
 
-    args = parser.parse_args()
-    pprint(args)
+    def log(self, msg):
+        if self.is_print:
+            print(msg)
+        timestamp = datetime.now().strftime("%d.%b %Y %H:%M:%S")
+        with open(self.log_file, "a") as f:
+            f.write(f"[{timestamp}] {msg}\n")
 
-    logging.basicConfig(level=logging.INFO, filename=args.log_file)
-    prompt_dir = Path(args.prompt_dir)
-    output_dir = Path(args.output_dir)
-    output_dir.mkdir(exist_ok=True, parents=True)
 
-    prompts = []
-    filenames = []
-    for prompt_file in prompt_dir.glob("*.txt"):
-        with open(prompt_file) as f:
-            prompts.append(f.read())
-        filenames.append(prompt_file.stem)
-    logging.info(f"Number of prompts: {len(prompts)}")
-    print(f"Number of prompts: {len(prompts)}")
+class OllamaStarCoder:
+    def __init__(self, api_url="http://localhost:11434/api/generate", temperature=0.7) -> None:
+        self.api_url = api_url
+        self.temperature = temperature
+        self.model = "starcoder"  # Assuming the model is loaded in Ollama
 
-    n = args.num
-    max_tokens = args.max_tokens
-    split_size = args.split_size
-    
-    for k in range(0, len(prompts), split_size):
-        for j in range(n):
-            st_time = time.time()
-            end_idx = min(k + split_size, len(prompts))
+    def generate(self, prompt, num_samples=1):
+        """Generate code using Ollama's StarCoder model"""
+        outputs = []
+        
+        for _ in range(num_samples):
+            data = {
+                "model": self.model,
+                "prompt": prompt,
+                "temperature": self.temperature,
+                "stream": False
+            }
             
-            for i in range(k, end_idx):
-                try:
-                    generated_text = generate_with_ollama(
-                        prompts[i],
-                        model=args.model,
-                        max_tokens=max_tokens,
-                        temperature=1.0,
-                        top_p=1.0
-                    )
-                    
-                    filename = filenames[i]
-                    output_file_dir = output_dir / filename
-                    output_file_dir.mkdir(exist_ok=True, parents=True)
-                    
-                    output_file = output_file_dir / f"{filename}-{j}.py"
-                    output_file.write_text(generated_text)
-                    
-                except Exception as e:
-                    logging.error(f"Error generating for {filename}: {str(e)}")
-                    continue
+            try:
+                response = requests.post(self.api_url, json=data)
+                if response.status_code == 200:
+                    result = response.json()
+                    outputs.append(result.get("response", ""))
+                else:
+                    print(f"Error from Ollama API: {response.status_code} - {response.text}")
+            except Exception as e:
+                print(f"Exception when calling Ollama API: {str(e)}")
+                
+        return outputs
+
+
+def extract_c_program(response):
+    """Extract C program from the response"""
+    # First try to extract code between C code blocks
+    c_code_pattern = re.compile(r"```c\n(.*?)```", re.DOTALL)
+    matches = c_code_pattern.findall(response)
+    
+    if matches:
+        return matches[0].strip()
+    
+    # If no C code blocks found, check for generic code blocks
+    code_pattern = re.compile(r"```(.*?)```", re.DOTALL)
+    matches = code_pattern.findall(response)
+    
+    if matches:
+        return matches[0].strip()
+    
+    # If no code blocks at all, return the whole response
+    return response.strip()
+
+
+def scan_requirements(requirements_dir: Path, existing_reqs: set):
+    """Scan for new requirement files"""
+    new_reqs = set()
+    
+    for req_file in requirements_dir.glob("**/*.txt"):
+        if req_file.is_file() and req_file not in existing_reqs:
+            new_reqs.add(req_file)
             
-            used_time = time.time() - st_time
-            logging.info(f"Time taken: {used_time} seconds")
-            (output_dir / f"generated-{k}-{j}-time.log").write_text(str(used_time))
+    return new_reqs
+
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Ollama StarCoder for LLVM requirements")
+    parser.add_argument("--requirements-dir", type=str, 
+                        default="llvm-exec/source-code-data/llvm/llvm-exec/requirements",
+                        help="Directory containing requirement files")
+    parser.add_argument("--output-dir", type=str, default="output",
+                        help="Directory to store generated code")
+    parser.add_argument("--num", type=int, default=5,
+                        help="Number of samples to generate per requirement")
+    parser.add_argument("--temperature", type=float, default=0.7,
+                        help="Temperature for generation")
+    parser.add_argument("--api-url", type=str, default="http://localhost:11434/api/generate",
+                        help="Ollama API URL")
+    parser.add_argument("--sleep-time", type=int, default=30,
+                        help="Sleep time between scans (seconds)")
+    parser.add_argument("--continuous", action="store_true",
+                        help="Run in continuous mode, checking for new requirements")
+    
+    args = parser.parse_args()
+    
+    # Set up directories
+    requirements_dir = Path(args.requirements_dir)
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Initialize logger
+    logger = Logger(output_dir / "log.txt")
+    
+    # Log arguments
+    logger.log("Arguments for Ollama StarCoder service")
+    for k, v in vars(args).items():
+        logger.log(f"  {k}: {v}")
+    
+    # Initialize Ollama client
+    ollama = OllamaStarCoder(api_url=args.api_url, temperature=args.temperature)
+    
+    # Track processed requirements
+    existing_reqs = set()
+    
+    # Main loop
+    while True:
+        new_reqs = scan_requirements(requirements_dir, existing_reqs)
+        
+        if len(new_reqs) == 0:
+            if not args.continuous:
+                logger.log("No requirements found. Exiting.")
+                break
+                
+            logger.log(f"No new requirements, sleeping for {args.sleep_time}s...")
+            time.sleep(args.sleep_time)
+            continue
+        
+        # Process new requirements
+        length = len(new_reqs)
+        logger.log(f"Found {length} new requirements, starting generation...")
+        
+        for idx, req_file in enumerate(new_reqs):
+            existing_reqs.add(req_file)
+            
+            # Get relative path structure
+            rel_path = req_file.relative_to(requirements_dir)
+            req_name = req_file.stem
+            
+            # Create output directory for this requirement
+            req_output_dir = output_dir / rel_path.parent / req_name
+            req_output_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Skip if already processed
+            if (req_output_dir / f"{req_name}_1.c").exists():
+                logger.log(f"[{idx+1}/{length}] {req_name}: skipped (already processed)")
+                continue
+                
+            logger.log(f"[{idx+1}/{length}] {req_name}: generating")
+            
+            # Read requirement
+            requirement = req_file.read_text(encoding="utf-8", errors="ignore")
+            (req_output_dir / "requirement.txt").write_text(requirement)
+            
+            # Generate responses
+            try:
+                t_start = time.time()
+                responses = ollama.generate(requirement, num_samples=args.num)
+                generation_time = time.time() - t_start
+                logger.log(f"[{idx+1}/{length}] {req_name}: generated {len(responses)} responses in {generation_time:.2f}s")
+                
+                # Process each response
+                result_data = {"requirement": req_name, "responses": []}
+                
+                for i, response in enumerate(responses):
+                    # Extract C program
+                    c_program = extract_c_program(response)
+                    
+                    # Save to file
+                    output_file = req_output_dir / f"{req_name}_{i+1}.c"
+                    output_file.write_text(c_program)
+                    
+                    # Add to result data
+                    result_data["responses"].append({
+                        "raw": response,
+                        "extracted_code": c_program
+                    })
+                
+                # Save generation time
+                (req_output_dir / "time.txt").write_text(str(generation_time))
+                
+                # Save result data
+                with open(req_output_dir / "results.json", "w") as f:
+                    json.dump(result_data, f, indent=4)
+                    
+            except Exception as e:
+                logger.log(f"Error processing {req_name}: {str(e)}")
+        
+        # Exit if not running in continuous mode
+        if not args.continuous:
+            logger.log("All requirements processed. Exiting.")
+            break

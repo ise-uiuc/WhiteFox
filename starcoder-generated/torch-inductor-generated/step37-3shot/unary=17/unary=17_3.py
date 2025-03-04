@@ -1,2 +1,0 @@
-
-model_string =\

@@ -24,19 +24,19 @@ RUN apt-get install -y \
 
 RUN clang --version && gcc --version
 
-WORKDIR /app
-RUN git clone https://github.com/llvm/llvm-project.git && \
-    cd llvm-project && \
-    mkdir build && \
-    cd build && \
-    cmake -G "Unix Makefiles" \
-          -DLLVM_ENABLE_PROJECTS="clang" \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DLLVM_USE_LINKER=lld \
-          -DCMAKE_C_COMPILER=clang \
-          -DCMAKE_CXX_COMPILER=clang++ \
-          ../llvm && \
-    make -j$(nproc)
+# WORKDIR /app
+# RUN git clone https://github.com/llvm/llvm-project.git && \
+#     cd llvm-project && \
+#     mkdir build && \
+#     cd build && \
+#     cmake -G "Unix Makefiles" \
+#           -DLLVM_ENABLE_PROJECTS="clang" \
+#           -DCMAKE_BUILD_TYPE=Release \
+#           -DLLVM_USE_LINKER=lld \
+#           -DCMAKE_C_COMPILER=clang \
+#           -DCMAKE_CXX_COMPILER=clang++ \
+#           ../llvm && \
+#     make -j$(nproc)
 
 ENV CC=clang \
     CXX=clang++

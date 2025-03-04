@@ -1,0 +1,9 @@
+{
+    "requirement": "DeadArgumentEliminationPass_requirements",
+    "responses": [
+        {
+            "raw": "\n```c\n// Template for dead argument elimination\nstatic int function_with_dead_args(int x, int y, int z) {\n    // Parameter z is never used in the function body\n    return x + y;   // Only x and y are used\n}\n\nint main() {\n    int a = 10;\n    int b = 20;\n    int c = 30;   // This value is passed but never used in the function\n    int result = function_with_dead_args(a, b, c);\n    return result;\n}\n```\n\n# Expected Output\n\nThe expected output should be: \n\n```\n50\n```",
+            "extracted_code": "// Template for dead argument elimination\nstatic int function_with_dead_args(int x, int y, int z) {\n    // Parameter z is never used in the function body\n    return x + y;   // Only x and y are used\n}\n\nint main() {\n    int a = 10;\n    int b = 20;\n    int c = 30;   // This value is passed but never used in the function\n    int result = function_with_dead_args(a, b, c);\n    return result;\n}"
+        }
+    ]
+}

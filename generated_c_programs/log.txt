@@ -1,0 +1,22 @@
+====================
+[2025-03-04 00:25:44] Start logging.
+[04.Mar 2025 00:25:44] Arguments for Ollama StarCoder service
+[04.Mar 2025 00:25:44]   requirements_dir: llvm-exec/source-code-data/llvm/llvm-gen-prompt/requirements
+[04.Mar 2025 00:25:44]   output_dir: generated_c_programs
+[04.Mar 2025 00:25:44]   num: 1
+[04.Mar 2025 00:25:44]   temperature: 0.7
+[04.Mar 2025 00:25:44]   api_url: http://localhost:11434/api/generate
+[04.Mar 2025 00:25:44]   sleep_time: 30
+[04.Mar 2025 00:25:44]   continuous: False
+[04.Mar 2025 00:25:44] Found 5 new requirements, starting generation...
+[04.Mar 2025 00:25:44] [1/5] DeadArgumentEliminationPass_requirements: generating
+[04.Mar 2025 00:25:47] [1/5] DeadArgumentEliminationPass_requirements: generated 1 responses in 3.35s
+[04.Mar 2025 00:25:47] [2/5] SimplifyCFGPass_requirements: generating
+[04.Mar 2025 00:26:03] [2/5] SimplifyCFGPass_requirements: generated 1 responses in 15.18s
+[04.Mar 2025 00:26:03] [3/5] ReassociatePass_requirements: generating
+[04.Mar 2025 00:26:05] [3/5] ReassociatePass_requirements: generated 1 responses in 2.48s
+[04.Mar 2025 00:26:05] [4/5] InstCombineMulPass_requirements: generating
+[04.Mar 2025 00:26:07] [4/5] InstCombineMulPass_requirements: generated 1 responses in 2.19s
+[04.Mar 2025 00:26:07] [5/5] GVNPass_requirements: generating
+[04.Mar 2025 00:26:15] [5/5] GVNPass_requirements: generated 1 responses in 7.59s
+[04.Mar 2025 00:26:15] All requirements processed. Exiting.

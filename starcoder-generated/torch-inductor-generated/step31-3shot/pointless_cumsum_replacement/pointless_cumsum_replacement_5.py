@@ -1,7 +1,0 @@
-
-
-
-
-# Inputs to the model
-
-

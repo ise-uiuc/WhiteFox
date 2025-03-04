@@ -1,4 +1,5 @@
 torch-exec/test.py
+generated_c_program
 torch-exec/test.ipynb
 torch-exec/temp.py
 _results*
