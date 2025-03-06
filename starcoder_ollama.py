@@ -4,17 +4,16 @@ Script to read requirements from llvm-exec/source-code-data/llvm/llvm-exec/requi
 generate C programs using Ollama's StarCoder model, and save the outputs to a specified directory.
 
 Usage:
-    python ollama_starcoder.py --requirements-dir=/path/to/llvm-exec/source-code-data/llvm/llvm-exec/requirements --output-dir=/path/to/output --num=10
+    python starcoder_ollama.py --requirements-dir=/path/to/llvm-exec/source-code-data/llvm/llvm-exec/requirements --output-dir=/path/to/output --num=10
 
 The script will:
 1. Scan the requirements directory for .txt files
 2. Send each requirement to the Ollama StarCoder model
 3. Extract C programs from the responses
-4. Save the extracted C programs to individual files in the output directory
+4. Save the extracted C programs directly to the output directory with passname_timestamp naming
 """
 
 import argparse
-import json
 import os
 import re
 import time
@@ -166,58 +165,36 @@ if __name__ == "__main__":
         for idx, req_file in enumerate(new_reqs):
             existing_reqs.add(req_file)
             
-            # Get relative path structure
-            rel_path = req_file.relative_to(requirements_dir)
-            req_name = req_file.stem
+            # Get the passname (requirement name)
+            passname = req_file.stem
             
-            # Create output directory for this requirement
-            req_output_dir = output_dir / rel_path.parent / req_name
-            req_output_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Skip if already processed
-            if (req_output_dir / f"{req_name}_1.c").exists():
-                logger.log(f"[{idx+1}/{length}] {req_name}: skipped (already processed)")
-                continue
-                
-            logger.log(f"[{idx+1}/{length}] {req_name}: generating")
+            logger.log(f"[{idx+1}/{length}] {passname}: generating")
             
             # Read requirement
             requirement = req_file.read_text(encoding="utf-8", errors="ignore")
-            (req_output_dir / "requirement.txt").write_text(requirement)
             
             # Generate responses
             try:
                 t_start = time.time()
                 responses = ollama.generate(requirement, num_samples=args.num)
                 generation_time = time.time() - t_start
-                logger.log(f"[{idx+1}/{length}] {req_name}: generated {len(responses)} responses in {generation_time:.2f}s")
+                logger.log(f"[{idx+1}/{length}] {passname}: generated {len(responses)} responses in {generation_time:.2f}s")
                 
                 # Process each response
-                result_data = {"requirement": req_name, "responses": []}
-                
                 for i, response in enumerate(responses):
                     # Extract C program
                     c_program = extract_c_program(response)
                     
-                    # Save to file
-                    output_file = req_output_dir / f"{req_name}_{i+1}.c"
-                    output_file.write_text(c_program)
+                    # Generate timestamp
+                    timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")[:17]
                     
-                    # Add to result data
-                    result_data["responses"].append({
-                        "raw": response,
-                        "extracted_code": c_program
-                    })
-                
-                # Save generation time
-                (req_output_dir / "time.txt").write_text(str(generation_time))
-                
-                # Save result data
-                with open(req_output_dir / "results.json", "w") as f:
-                    json.dump(result_data, f, indent=4)
+                    # Save to file directly in output directory
+                    output_file = output_dir / f"{passname}_{timestamp}.c"
+                    output_file.write_text(c_program)
+                    logger.log(f"Saved {output_file}")
                     
             except Exception as e:
-                logger.log(f"Error processing {req_name}: {str(e)}")
+                logger.log(f"Error processing {passname}: {str(e)}")
         
         # Exit if not running in continuous mode
         if not args.continuous:
