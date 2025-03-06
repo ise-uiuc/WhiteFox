@@ -1,0 +1,14 @@
+## File: DSEPassoneshot_0_gpt-4_starcoder_c_deadarg.txt
+The C code should contain the following pattern:
+
+```c
+int main() {
+    int *p = (int*)malloc(sizeof(int)); // allocate memory
+    *p = 10; // store a value
+    *p = 20; // overwrite the value
+    free(p); // deallocate memory
+    return 0;
+}
+```
+
+This pattern characterizes scenarios where a memory location is written to more than once, with the earlier write(s) being completely overwritten by the later write(s), making the earlier write(s) dead stores. The memory location is typically allocated dynamically (e.g., using `malloc`). The `main` function must return a value related to this optimization for further comparison.

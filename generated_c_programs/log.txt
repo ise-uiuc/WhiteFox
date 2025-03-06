@@ -20,3 +20,19 @@
 [04.Mar 2025 00:26:07] [5/5] GVNPass_requirements: generating
 [04.Mar 2025 00:26:15] [5/5] GVNPass_requirements: generated 1 responses in 7.59s
 [04.Mar 2025 00:26:15] All requirements processed. Exiting.
+====================
+[2025-03-04 00:37:54] Start logging.
+[04.Mar 2025 00:37:54] Arguments for Ollama StarCoder service
+[04.Mar 2025 00:37:54]   requirements_dir: Prompts/req2testc
+[04.Mar 2025 00:37:54]   output_dir: generated_c_programs
+[04.Mar 2025 00:37:54]   num: 1
+[04.Mar 2025 00:37:54]   temperature: 0.7
+[04.Mar 2025 00:37:54]   api_url: http://localhost:11434/api/generate
+[04.Mar 2025 00:37:54]   sleep_time: 30
+[04.Mar 2025 00:37:54]   continuous: False
+[04.Mar 2025 00:37:54] Found 2 new requirements, starting generation...
+[04.Mar 2025 00:37:54] [1/2] AggressiveInstCombinePass_oneshot_0: generating
+[04.Mar 2025 00:38:02] [1/2] AggressiveInstCombinePass_oneshot_0: generated 1 responses in 7.93s
+[04.Mar 2025 00:38:02] [2/2] AlwaysInlinerPass_oneshot_0: generating
+[04.Mar 2025 00:38:02] [2/2] AlwaysInlinerPass_oneshot_0: generated 1 responses in 0.01s
+[04.Mar 2025 00:38:02] All requirements processed. Exiting.

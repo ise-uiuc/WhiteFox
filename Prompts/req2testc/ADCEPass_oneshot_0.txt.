@@ -1,0 +1,112 @@
+### Please generate a valid C Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value. Please do not include any undefined behavior in your code. The code you generated will be used to test the correctness of the optimization.
+
+# Description of requirements
+
+The C code should contain the following pattern:
+```
+// no va_arg in stdarg.h is used
+
+// define one function which has variable arguments
+static int varargs_func(int x, ...) {
+    RANDOM_CODE; // Do something here with input arguments, but don't generate the codes contain va_args
+    int result = x OPERATOR ANY_VALUE; // result is related to x
+    return result;
+}
+
+int main() {
+    RANDOM_CODE;  // declare some variables
+    int x = ANY_VALUE; // declare variable x
+    ANY_TYPE y = ANY_VALUE; // declare y
+    ANY_TYPE z = ANY_VALUE; // declare z
+    // invoke the func varargs_func
+    int result = varargs_func(x, y, z, ANY_VALUE, ANY_VALUE); // you can pass the arguments with any number, any type
+    return result;
+}
+```
+This pattern characterizes scenarios where within the `main` function, there exists a call to `varargs_func`, and the result of this call is being used. `varargs_func` is marked as variable function, which accepts variable arguments, then returns a single `ANY_TYPE` value that is determined by the first argument. The first argument can be any type, e.g. `int`, `float`, `ptr` `struct`, and so on. The functions must be `static`(which will be translated into ir function with internel attribute), no vastart intrinsic(such as `va_arg` in `stdarg.h`). The `main` function must return a value related to this optimization for further comparison.
+
+# C Code begins 
+
+```c
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+int a, b, c, d, e, f, g, h, i;
+int x;
+long j;
+static long *k = &j;
+long *const l = &j;
+int m() {
+  if (b)
+    return 1;
+  if (c & a)
+    return 1;
+  return 0;
+}
+
+static int varargs_func(int x, ...) {
+  f = 3;
+  for (; f >= 0; f--) {
+    e = 0;
+    for (; e <= 3; e++) {
+      d = 3;
+      for (; d >= 0; d--) {
+        g = 0;
+        for (; g <= 3; g++) {
+          i = 0;
+          for (; i <= 3; i++)
+            *l = m() + (int)*k + h + *k + x;
+        }
+      }
+    }
+  }
+  return *l;
+}
+
+int main() { 
+  int arr[] = {0, 1, 2, 3};
+  for (int i = 0; i < 4; i++) {
+    arr[i] = i * 2;
+  }
+  x = 3;
+  return varargs_func(x, a, b, c);
+}
+```
+
+# C Code ends
+
+### Please generate a valid C Code that meets the requirements below. The code should contain a `main` function. And the main function gives back an output value. Please initialize all the variables you define with a value. Please do not include any undefined behavior in your code. The code you generated will be used to test the correctness of the optimization.
+
+# Description of requirements
+
+The C program should contain the following pattern:
+
+```c
+// declare variables
+int x = ANY_VALUE; // declare x
+ANY_TYPE y = ANY_VALUE; // declare y
+ANY_TYPE z = ANY_VALUE; // declare z
+
+// define one function which has no side effects and does not influence the control flow or return value of the function
+static ANY_TYPE dead_func(ANY_TYPE x, ANY_TYPE y, ANY_TYPE z) {
+  ANY_TYPE dead_func_result = 0; // declare the result
+  RANDOM_CODE; // Do something here with input arguments, but don't generate the codes that have side effects or influence the control flow or return value of the function
+  dead_func_result = x OPERATOR ANY_VALUE; // result is related to x
+  return dead_func_result ;
+}
+
+int main() {
+  int main_result = 0; // declare the result
+  // invoke the func dead_func
+  // you can pass the arguments with any value, any type
+  main_result = dead_func(x, y, z);
+  UNUSED_CODE; // Do something here that does not use the result of dead_func
+  return 0; // return 0
+}
+```
+This pattern characterizes scenarios where within the `main` function, there exists a call to `dead_func`, and the result of this call is not being used. `dead_func` is a function that accepts variable arguments, then returns a single `ANY_TYPE` value that is determined by the first argument. The first argument can be any type, e.g. `int`, `float`, `ptr` `struct`, and so on. The `main` function must return a value unrelated to this optimization for further comparison.
+
+The `ANY_TYPE` could be `char, unsigned, int, float, double, ptr, struct, array, etc.`. The `ANY_VALUE` should be aligned with the type. The `OPERATOR` could be `+,-,*,/,%,<<,>>,|,&,^,&&,||,==,!=,>,<,>=,<=,~,!,+=,-=,*=,/=,%=,<<=,>>=,&=,^=,|=,++,--,=,?:,->,.,[],()`. The `RANDOM_CODE` and `UNUSED_CODE` could be any code that does not have side effects or influence the control flow or return value of the function. Each declared variable should be initialized, such as `int a[] = {1, 3, 4};`.
+
+# C Code begins

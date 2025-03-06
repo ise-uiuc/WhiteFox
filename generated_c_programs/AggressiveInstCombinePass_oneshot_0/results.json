@@ -1,0 +1,9 @@
+{
+    "requirement": "AggressiveInstCombinePass_oneshot_0",
+    "responses": [
+        {
+            "raw": " \n\n```c\nint func(int x, int y) {\n    int result = x OPERATOR y;  // result is related to x and y\n    return result;\n}\n\nint main() {\n  int a = 0x12345678;\n  int b = 0x1234;\n  short truncated_result = (short)(func(a,b));\n  return truncated_result;\n}\n```\n\n# C Code ends",
+            "extracted_code": "int func(int x, int y) {\n    int result = x OPERATOR y;  // result is related to x and y\n    return result;\n}\n\nint main() {\n  int a = 0x12345678;\n  int b = 0x1234;\n  short truncated_result = (short)(func(a,b));\n  return truncated_result;\n}"
+        }
+    ]
+}
