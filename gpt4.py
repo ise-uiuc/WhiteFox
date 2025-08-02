@@ -3,14 +3,14 @@ You will need to use your own OpenAI API key to run this script.
 """
 
 import argparse
-import openai
+from openai import OpenAI
 import time
 import os
 import json
 from pathlib import Path
 
 # You need to create a file named "openai.key" and put your API key in it
-openai.api_key = Path("openai.key").read_text().strip()
+client = OpenAI(api_key=Path("openai.key").read_text().strip())
 system_message = "You are a source code analyzer for {}."
 
 
@@ -84,7 +84,7 @@ if __name__ == "__main__":
             while True:
                 try:
                     t_start = time.time()
-                    response = openai.ChatCompletion.create(
+                    response = client.chat.completions.create(
                         model=args.model,
                         messages=[
                             {"role": "system", "content": system_message},
@@ -95,7 +95,7 @@ if __name__ == "__main__":
                         top_p=top_p,
                         temperature=temperature,
                         n=n_batch_size,
-                        request_timeout=300,
+                        timeout=300,
                     )
                     g_time = time.time() - t_start
                     break
@@ -103,7 +103,7 @@ if __name__ == "__main__":
                     print(e)
                     time.sleep(10)
             print(f"[{opt_idx+1}/{len(opts)}] {opt} used time: ", g_time)
-            msgs = [resp.message.content for resp in response["choices"]]
+            msgs = [choice.message.content for choice in response.choices]
             codes = []
             for msg in msgs:
                 code = process_msg(msg)
@@ -113,6 +113,6 @@ if __name__ == "__main__":
                     f.write(code)
                 with open(os.path.join(outdir, opt, f"{opt}_{code_idx}.txt"), "w") as f:
                     f.write(msg)
-            ret["response"][i] = {"raw": response, "code": codes, "g_time": g_time}
+            ret["response"][i] = {"raw": response.model_dump(), "code": codes, "g_time": g_time}
         with open(os.path.join(outdir, "outputs.json"), "a") as f:
             f.write(json.dumps(ret, indent=4) + "\n")

@@ -93,6 +93,13 @@ class Optim:
             code += f"# Code of the pattern:\n"
             code += self._src_code(hint["codes"])
             code += "\n"
+        elif hint["type"] == "not-none":
+            fillings += [f"variable `{hint['var']}` is not None in function `{hint['func']}`"]
+            code += (
+                f"# Code of the function `{hint['func']}` and its helper functions\n"
+            )
+            code += self._src_code(hint["codes"], use_mini)
+            code += "\n"
         else:
             raise NotImplementedError
         return code, fillings
@@ -107,7 +114,6 @@ class Optim:
                 continue
             try:
                 nl = (opt_dir / f"{opt_dir.name}_{idx}.txt").read_text().strip()
-                # check whether the opt is in the opts
                 nls[opt_dir.name] = nl
             except:
                 pass
@@ -182,10 +188,27 @@ class Src2NLTFLite(Src2TestTFLite):
             _code = self._get_hint_code(hint, use_mini)
             code += _code
         code_formatted = f"```cpp\n{code.strip()}\n```"
-        # Cannot use template.format because c++ code contains { ... }
         prompt = template.replace(self.PLACEHOLDER_TFLITE_OPTIMIZATION_NAME, opt)
         prompt = prompt.replace(self.PLACEHOLDER_SRC_CODE, code_formatted)
         return prompt
+
+
+class Src2NLTorch(Src2Test):
+    """Source to Natural Language class for PyTorch/Torch Inductor."""
+    
+    def get_prompt(self, template, opt, use_mini=False):
+        opt_info = self.opts[opt]
+        hints = opt_info["hints"]
+
+        fillings = []
+        code = ""
+        for hint in hints:
+            _code, _fillings = self._get_hint_code(hint, use_mini)
+            code += _code
+            fillings += _fillings
+
+        fillings = self._join(fillings)
+        return template.format(fillings, code.strip())
 
 
 class Src2NLTFXLA(Src2NLTFLite):
@@ -212,7 +235,6 @@ class Src2NLTFXLA(Src2NLTFLite):
             target_line = hint["target_line"]
         if target_line not in code:
             print(f"[WARNING] {opt} target line {target_line} does not exist.")
-        # Cannot use template.format because c++ code contains { ... }
         prompt = template.replace(self.PLACEHOLDER_TFLITE_OPTIMIZATION_NAME, opt)
         prompt = prompt.replace(
             self.PLACEHOLDER_SRC_CODE, self.format_source_code(code)
@@ -240,7 +262,6 @@ class SrcNLTest2Template(Optim):
 
     def get_prompt(self, template, opt, use_mini=False, num_of_prompts=10, num_model=2):
         if opt not in self.tests:
-            # only for the triggered ones
             return []
 
         opt_info = self.opts[opt]
@@ -304,7 +325,6 @@ class NLTest2Template(Optim):
 
     def get_prompt(self, template, opt, use_mini=False, num_of_prompts=10, num_model=2):
         if opt not in self.tests:
-            # only for the triggered ones
             return []
 
         nl = self.nls[opt]
@@ -545,7 +565,6 @@ class SrcNLTest2TemplateTFLite(SrcNLTest2Template):
         if "trigger_tests" not in self.tests:
             return []
         if opt not in self.tests["trigger_tests"]:
-            # If there's no triggered test in prior steps, return an empty list
             return []
         return self.tests["trigger_tests"][opt]
 
@@ -571,11 +590,6 @@ class SrcNLTest2TemplateTFLite(SrcNLTest2Template):
             self.tests[f"{opt}_selected"] = idxs
             example_models = []
             for i in idxs:
-                # model_code = self._format_model_code(self.tests[opt][i]['model_code'])
-
-                # input_code = self._format_input_code(self.tests[opt][i]['input_code'].strip())
-
-                # example_models.append(feedback_template.format(model_code, input_code))
                 code = opt_triggering_tests[i]["code"].strip()
                 example_models.append(
                     self.EXAMPLE_TEMPLATE.replace("PLACEHOLDER_EXAMPLE_MODEL", code)
@@ -605,7 +619,6 @@ class SrcNLTest2TemplateTFXLA(SrcNLTest2TemplateTFLite):
                     return self.tests["trigger_tests"][opt_alias]
             except:
                 return []
-            # If there's no triggered test in prior steps, return an empty list
             return []
         return self.tests["trigger_tests"][opt]
 
@@ -652,7 +665,8 @@ if __name__ == "__main__":
             assert args.mini
             optim = Src2NLTFXLA(args.optpath)
         else:
-            optim = Src2Test(args.optpath)
+            # Default to torch
+            optim = Src2NLTorch(args.optpath)
         for opt in optim.get_opts():
             prompt = optim.get_prompt(template, opt, args.mini)
             with open(outdir / f"{opt}.txt", "w") as f:
@@ -673,7 +687,6 @@ if __name__ == "__main__":
                 f.write(prompt)
     elif args.mode == "srcnl2test_feedback":
         if args.lib == "tf":
-            # Use mini by default.
             assert args.mini
 
             def _load_trigger():
@@ -708,7 +721,6 @@ if __name__ == "__main__":
                 args.optpath, args.nlpath, args.nlidx, examples=trigger_examples
             )
         for opt in optim.get_opts():
-            # Generate 100 prompts
             for i in range(100):
                 prompt = optim.get_prompt(template, opt)
                 if prompt is None:
@@ -739,8 +751,6 @@ if __name__ == "__main__":
                 template, opt, num_of_prompts=num_of_prompts, num_model=args.num_model
             )
             if len(prompts) == 0:
-                # No triggering inputs
-                # use step1 prompts
                 prompt = (Path(args.step1dir) / f"{opt}.txt").read_text()
                 with open(outdir / f"{opt}.txt", "w") as f:
                     f.write(prompt)
@@ -748,11 +758,9 @@ if __name__ == "__main__":
                 prompt = prompts[0]
                 with open(outdir / f"{opt}.txt", "w") as f:
                     f.write(prompt)
-        # Dump the updated tests, now containing the ids of selected examples.
         with open(args.testpath, "w") as f:
             json.dump(optim.tests, f, indent=4)
     elif args.mode == "template_nl":
-        # optim = NLTest2Template(args.optpath, args.nlpath, args.testpath, args.nlidx, use_rl=True)
         optim = NLTest2Template(
             args.optpath, args.nlpath, args.testpath, args.nlidx, use_rl=use_rl
         )
@@ -762,8 +770,6 @@ if __name__ == "__main__":
                 template, opt, num_of_prompts=num_of_prompts, num_model=args.num_model
             )
             if len(prompts) == 0:
-                # No triggering inputs
-                # use step1 prompts
                 prompt = (Path(args.step1dir) / f"{opt}.txt").read_text()
                 with open(outdir / f"{opt}.txt", "w") as f:
                     f.write(prompt)
@@ -771,7 +777,6 @@ if __name__ == "__main__":
                 prompt = prompts[0]
                 with open(outdir / f"{opt}.txt", "w") as f:
                     f.write(prompt)
-        # Dump the updated tests, now containing the ids of selected examples.
         with open(args.testpath, "w") as f:
             json.dump(optim.tests, f, indent=4)
     else:
