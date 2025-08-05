@@ -48,7 +48,7 @@ The generated prompts will be in `Prompts-generated` by default.
 After getting the prompts, you can run the following command to generate the requirements:
 
 ```bash
-python gpt4.py --prompt-dir=Prompts/torch-inductor/src2req \ 
+python gpt4.py --prompt-dir=Prompts/torch-inductor/src2req \
     --outdir=Requirements/torch-inductor/req \
     --temperature=0.0 \
     --batch-size=1
